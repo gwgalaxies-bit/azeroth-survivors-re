@@ -5,8 +5,9 @@ auch während du offline bist, und du kommst zurück, um Quests abzugeben, Beute
 Dungeons und Raids zu bestreiten und deine Berufe zu leveln.
 
 Alles läuft im Browser, ohne Server und ohne Build-Schritt. Alle Grafiken sind Rastergrafiken
-(Pixel-Art-PNGs), die `tools/gen_assets.py` prozedural erzeugt: rund 100 Figuren, 150 Icons,
-19 Hintergründe und die UI-Texturen. Es gibt keine Vektorgrafiken und keine fremden Spieldateien.
+(WebP und PNG), die `tools/gen_assets.py` prozedural malt: rund 100 Figuren in dreifacher Auflösung,
+150 Icons à 64 px, 19 Hintergründe in 960×640 und die UI-Texturen (Goldrahmen mit Medaillons,
+Knöpfe, Portrait- und Minimap-Ringe). Es gibt keine Vektorgrafiken und keine fremden Spieldateien.
 
 ## Spielen
 
@@ -38,16 +39,16 @@ Versorgungskiste, Weltboss-Fenster, Tagesquests und die tägliche Anmeldeserie.
 
 | Datei | Inhalt |
 |---|---|
-| `index.html`, `css/style.css` | Layout im Hochformat (max. 480 px breit), Steinpaneele, Goldrahmen, Pergament |
+| `index.html`, `css/style.css` | Layout im Hochformat (max. 480 px breit): Einheitenrahmen, Minimap, Aktionsleiste, Steinpaneele, Goldrahmen, Pergament |
 | `js/data.js` | Inhalte: Klassen, Zonen, Quests, Dungeons, Raids, Talente, Berufe, Erfolge |
 | `js/game.js` | Zustand, Formeln, Kampfsimulation, Beute, Quests, Offline-Fortschritt; kein DOM |
-| `js/scene.js` | Kampfszene auf einem 240×160-Canvas, nearest-neighbour hochskaliert |
+| `js/scene.js` | Kampfszene: 240×160-Koordinaten, in voller Bildschirmauflösung geglättet gezeichnet |
 | `js/ui.js` | Tabs, Ansichten, Modale, Toasts, Angel-Minispiel |
 | `js/main.js` | Start, Hauptschleife, Speichern, synthetisierte Soundeffekte |
 | `js/atlas.js` | Generierter Index der Sprite- und Icon-Atlanten |
-| `tools/` | Python-Generator für alle Grafiken (`numpy`, `Pillow`) |
+| `tools/` | Python-Generator für alle Grafiken (`numpy`, `Pillow` mit WebP); `px.py` enthält den Pixel- und den gemalten Renderer |
 
-Grafiken neu erzeugen:
+Grafiken neu erzeugen (dauert gut eine Minute):
 
 ```bash
 make idle-assets   # python3 idle/tools/gen_assets.py

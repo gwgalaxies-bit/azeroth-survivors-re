@@ -34,5 +34,5 @@ clean: ## Remove the fetched game data and wasm build output
 idle: ## Serve Valdoran Idle (the portrait idle RPG in idle/) at http://127.0.0.1:8091
 	cd idle && python3 -m http.server 8091 --bind 127.0.0.1
 
-idle-assets: ## Regenerate Valdoran Idle's pixel art (needs Python 3 with numpy and Pillow)
+idle-assets: ## Regenerate Valdoran Idle's art (needs Python 3 with numpy and Pillow with WebP)
 	python3 idle/tools/gen_assets.py

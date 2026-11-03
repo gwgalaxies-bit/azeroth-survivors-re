@@ -110,7 +110,7 @@ The survivors mode is `crates/benilla-app/src/survivors/`, running on two upstre
 `idle/` holds a separate, self-contained game: **Valdoran Idle**, a portrait-mode idle RPG in the
 style of a fantasy MMO (quests, dungeons, raids, world bosses, arena, professions, talents). It needs
 no game data and no build step: `make idle`, then open http://127.0.0.1:8091/. All of its art is
-procedurally generated pixel art (`make idle-assets`). See [idle/README.md](idle/README.md).
+procedurally painted raster art (`make idle-assets`). See [idle/README.md](idle/README.md).
 
 ## Legal
 

@@ -4,7 +4,9 @@ import math
 
 from PIL import Image
 
-from px import Canvas, mix, rgb, shade_col
+from px import Canvas, Paint, mix, rgb, shade_col
+
+SC = 3  # output pixels per design pixel
 
 GROUND = 44
 
@@ -145,7 +147,7 @@ def spider(c, P):
 
 
 def slime(c, P):
-    b = c.M(P['body'], contrast=0.8)
+    b = c.M(P['body'], contrast=0.8, gloss=0.8)
     c.ell(24, 33, 17, 13, b, clip=lambda x, y: y <= 43.5, tex=0.06, dith=0.6)
     c.ell(24, 43, 17, 1.6, b, flat=0.3)
     hi = c.M(mix(P['body'], '#ffffff', 0.55))
@@ -184,7 +186,7 @@ def worm(c, P):
 # humanoids
 # ---------------------------------------------------------------------------------------------
 def crown(c, x, y, s=1.0, col='#f0c040', gem='#e03040'):
-    g = c.M(col)
+    g = c.M(col, gloss=0.8)
     c.poly([(x - 5 * s, y + 2 * s), (x - 5 * s, y - 3 * s), (x - 2.5 * s, y), (x, y - 4 * s), (x + 2.5 * s, y),
             (x + 5 * s, y - 3 * s), (x + 5 * s, y + 2 * s)], g, shade=0.75)
     c.px(x, y, gem)
@@ -288,7 +290,7 @@ def humanoid(c, P):
         hm = c.M(P['hood'])
         ell(hx - 1.2, hy - 0.8, hr * 1.18, hr * 1.18, hm, clip=lambda X, Y: ~((X > (cx + (hx + 0.5 - cx) * s)) & (Y > GROUND - (GROUND - (hy - 1.5)) * s)))
     if P.get('helm'):
-        hm = c.M(P['helm'])
+        hm = c.M(P['helm'], gloss=0.7)
         ell(hx, hy - 1.2, hr * 1.08, hr * 0.95, hm, clip=lambda X, Y: Y < GROUND - (GROUND - (hy + 1.2)) * s)
         cap(hx + 1, hy + 0.5, hx + hr, hy + 0.5, 0.9, 0.9, hm)
         if P.get('plume'):
@@ -318,9 +320,24 @@ def humanoid(c, P):
         X2, Y2 = T(hx + hr * 0.9, hy + 3.2)
         c.line(X1, Y1, X2, Y2, shade_col(P['skin'], 0.4))
     elif not P.get('helm'):
-        px(hx + 2.3, hy - 0.6, eyes)
-        if P.get('big_eye'):
-            px(hx + 3.3, hy - 0.6, eyes)
+        if P.get('big_eye') or P.get('beast_eye'):
+            px(hx + 2.3, hy - 0.6, eyes)
+            px(hx + 3.5, hy - 0.6, eyes)
+        else:
+            X, Y = T(hx + 2.5, hy - 0.4)
+            c.ell(X, Y, 0.95 * s, 0.75 * s, c.M('#f4efe6', gloss=0.6), flat=0.85, edge=False)
+            c.dot(X + 0.25 * s, Y + 0.05 * s, 0.5 * s, eyes)
+            X2, Y2 = T(hx + hr * 0.86, hy - 0.4)
+            c.ell(X2, Y2, 0.55 * s, 0.7 * s, c.M('#ece6dc'), flat=0.7, edge=False)
+            c.dot(X2 + 0.1 * s, Y2 + 0.05 * s, 0.38 * s, eyes)
+            b1 = T(hx + 1.3, hy - 1.9)
+            b2 = T(hx + 3.5, hy - 1.75)
+            c.line(b1[0], b1[1], b2[0], b2[1], shade_col(P.get('hair', P.get('beard', '#4a3020')), 0.6), 1.6)
+            m1 = T(hx + 2.3, hy + 2.5)
+            m2 = T(hx + 3.9, hy + 2.3)
+            c.line(m1[0], m1[1], m2[0], m2[1], shade_col(P['skin'], 0.55), 1.2)
+            nx_, ny_ = T(hx + hr * 0.95, hy + 0.9)
+            c.ell(nx_, ny_, 0.9 * s, 0.8 * s, skin, edge=False)
     else:
         px(hx + 2.5, hy + 0.6, P.get('visor_eye', '#ffd040'))
     if P.get('candle'):
@@ -338,13 +355,25 @@ def humanoid(c, P):
         crown(c, X, Y, 0.75 * s, P.get('crown_col', '#f0c040'))
     # body extras
     if P.get('shoulders'):
-        sm = c.M(P['shoulders'])
-        ell(sx + 3, sy + 1, 4.2 * w, 3.0, sm)
+        sm = c.M(P['shoulders'], gloss=0.6)
+        pad = P.get('pad', 1.0)
+        ell(sx - 3.5, sy - 0.5, 3.6 * w * pad, 2.8 * pad, c.M(shade_col(P['shoulders'], 0.75), gloss=0.5))
+        ell(sx + 3, sy + 1, 4.2 * w * pad, 3.0 * pad, sm)
     # near arm
     near_hand = P.get('near_hand', (sx + 8, sy + 9))
     cap(sx + 3, sy + 1, near_hand[0], near_hand[1], ar, ar * 0.9, armc, tex=tex)
     if P.get('shoulders'):
-        ell(sx + 3.5, sy - 0.2, 4.0 * w, 2.6, sm)
+        pad = P.get('pad', 1.0)
+        ell(sx + 3.5, sy - 0.2, 4.0 * w * pad, 2.6 * pad, sm)
+        if P.get('trim_sh'):
+            ell(sx + 3.5, sy + 1.6 * pad, 3.8 * w * pad, 0.9 * pad, c.M(P['trim_sh'], gloss=0.8), edge=False)
+        if P.get('spikes_sh'):
+            spm = c.M(P['spikes_sh'], gloss=0.6)
+            for dx, hh in [(-2.2, 3.2), (0.6, 4.4), (3.2, 3.0)]:
+                a1 = T(sx + 3.5 + dx * pad - 0.9, sy - 1.8 * pad)
+                a2 = T(sx + 3.5 + dx * pad + 0.9, sy - 1.8 * pad)
+                a3 = T(sx + 3.5 + dx * pad + 0.3, sy - 1.8 * pad - hh * pad)
+                c.poly([a1, a2, a3], spm, shade=0.75)
     hand = c.M(P.get('glove', P['skin']))
     ell(near_hand[0], near_hand[1] + 0.5, ar * 0.95, ar * 0.95, hand)
     # weapon
@@ -354,9 +383,9 @@ def humanoid(c, P):
 
 
 def weapon(c, T, s, kind, nh, fh, P):
-    metal = c.M(P.get('metal', '#b8c0cc'), contrast=1.2)
-    wood = c.M(P.get('wood', '#7a5434'))
-    gold = c.M(P.get('gold', '#e0b040'))
+    metal = c.M(P.get('metal', '#b8c0cc'), contrast=1.2, gloss=0.75)
+    wood = c.M(P.get('wood', '#7a5434'), gloss=0.05)
+    gold = c.M(P.get('gold', '#e0b040'), gloss=0.7)
 
     def cap(x1, y1, x2, y2, r1, r2, m, **kw):
         a, b = T(x1, y1)
@@ -391,7 +420,7 @@ def weapon(c, T, s, kind, nh, fh, P):
         c.chain([a, b, d], 1.4 * s, 0.6 * s, metal)
     elif kind == 'staff':
         cap(x - 1, y + 10, x + 2, y - 20, 1.0, 1.0, wood)
-        orb = c.M(P.get('orb', '#8060ff'))
+        orb = c.M(P.get('orb', '#8060ff'), gloss=0.9)
         ell(x + 2.3, y - 22, 2.8, 2.8, orb, amb=0.5)
         X, Y = T(x + 1.6, y - 23)
         c.px(X, Y, '#ffffff')
@@ -420,7 +449,7 @@ def weapon(c, T, s, kind, nh, fh, P):
         cap(fx - 1, fy + 2, fx + 0.5, fy - 2, 1.0, 1.0, wood)
         cap(fx - 3, fy - 2.5, fx + 3, fy - 2, 0.8, 0.8, gold)
         poly([(fx - 1.2, fy - 3), (fx + 1.6, fy - 3), (fx + 3, fy - 21), (fx + 0.5, fy - 22)], metal, shade=0.75, grad=0.4, gdir=(1, 0))
-        sh = c.M(P.get('shield', '#8a2a24'))
+        sh = c.M(P.get('shield', '#8a2a24'), gloss=0.3)
         poly([(x - 3, y - 7), (x + 5, y - 7), (x + 5, y + 2), (x + 1, y + 7), (x - 3, y + 2)], sh, shade=0.62, grad=0.3)
         poly([(x - 1.5, y - 6), (x + 3.5, y - 6), (x + 3.5, y - 5), (x - 1.5, y - 5)], gold, shade=0.8, edge=False)
         X, Y = T(x + 1, y - 1)
@@ -445,7 +474,7 @@ def weapon(c, T, s, kind, nh, fh, P):
 # ---------------------------------------------------------------------------------------------
 def elemental(c, P):
     kind = P['kind']
-    core = c.M(P['core'], contrast=0.8)
+    core = c.M(P['core'], contrast=0.8, gloss=0.5)
     body = c.M(P['body'], contrast=1.1)
     rng = c.rng
     if kind == 'fire':
@@ -503,13 +532,16 @@ def ghost(c, P):
 
 
 def dragon(c, P):
-    sc = c.M(P['scale'])
-    far = c.M(shade_col(P['scale'], 0.65))
+    sc = c.M(P['scale'], gloss=0.35)
+    far = c.M(shade_col(P['scale'], 0.65), gloss=0.2)
     belly = c.M(P['belly'])
-    wing = c.M(P['wing'], contrast=0.9)
-    horn = c.M(P.get('horn', '#e8dcc0'))
+    wing = c.M(P['wing'], contrast=0.9, gloss=0.25)
+    c.nolava.add(wing)
+    horn = c.M(P.get('horn', '#e8dcc0'), gloss=0.4)
     # far wing
-    c.poly([(22, 22), (12, 0), (2, 6), (8, 14), (4, 20), (14, 24)], c.M(shade_col(P['wing'], 0.6)), shade=0.5)
+    wfar = c.M(shade_col(P['wing'], 0.6))
+    c.nolava.add(wfar)
+    c.poly([(22, 22), (12, 1), (2, 6), (8, 14), (4, 20), (14, 24)], wfar, shade=0.5)
     # tail
     c.chain([(12, 32), (5, 36), (2, 42), (8, 46)], 4.5, 1.2, sc, tex=0.12)
     c.poly([(7, 44), (12, 48), (3, 48)], horn)
@@ -521,23 +553,38 @@ def dragon(c, P):
     c.ell(23, 35, 9, 3.4, belly, edge=False)
     # neck + head
     c.chain([(29, 28), (33, 20), (35, 14)], 4.6, 3.2, sc, tex=0.12)
+    if P.get('spikes'):
+        spm = c.M(P['spikes'], gloss=0.4)
+        for (x, y, a, ln) in [(8, 29, -2.2, 3.5), (12, 24.5, -1.9, 4.2), (17, 22.5, -1.7, 4.6), (22, 22.5, -1.5, 4.6), (27, 23.5, -1.3, 4.2),
+                              (30.5, 20, -1.1, 3.6), (32.5, 15.5, -1.0, 3.2), (34, 11, -0.9, 2.8)]:
+            tx, ty = x + math.cos(a) * ln, y + math.sin(a) * ln
+            c.poly([(x - 1.3, y + 0.6), (x + 1.3, y + 0.2), (tx, ty)], spm, shade=0.6)
     c.ell(37, 11, 5, 4.2, sc, tex=0.1)
-    c.ell(42.5, 13, 4.6, 2.4, sc)
-    c.ell(42, 15.8, 4, 1.3, c.M(shade_col(P['scale'], 0.8)))
+    if P.get('maw'):
+        mw = c.M(P['maw'])
+        c.poly([(39, 13.5), (47.5, 16.5), (46, 19.5), (40, 17)], mw, shade=0.95, edge=False)
+        c.ell(42.5, 12.2, 4.6, 2.3, sc)
+        c.poly([(38.5, 15), (46.5, 18.5), (46, 20.5), (39.5, 18.5)], c.M(shade_col(P['scale'], 0.8)), shade=0.5)
+        for x in (41, 43, 45):
+            c.poly([(x - 0.5, 14.2), (x + 0.5, 14.4), (x + 0.1, 15.8)], c.M('#f0ecd8'), shade=0.9, edge=False)
+    else:
+        c.ell(42.5, 13, 4.6, 2.4, sc)
+        c.ell(42, 15.8, 4, 1.3, c.M(shade_col(P['scale'], 0.8)))
     c.chain([(35, 8), (31, 4), (28, 4.5)], 1.6, 0.6, horn)
     c.chain([(37.5, 7.5), (35, 2), (33, 0.5)], 1.6, 0.6, horn)
     c.px(39.5, 10, P.get('eye', '#ffe040'))
     c.px(40.5, 10, P.get('eye', '#ffe040'))
     c.px(46.5, 12.5, '#1a1010')
-    for x in (41, 43, 45):
-        c.px(x, 14.8, '#f0ecd8')
+    if not P.get('maw'):
+        for x in (41, 43, 45):
+            c.px(x, 14.8, '#f0ecd8')
     # near legs
     c.cap(27, 35, 30, 44, 3.2, 2.7, sc, tex=0.1)
     c.cap(16, 35, 17, 44, 3.4, 2.8, sc, tex=0.1)
     for x in (31.5, 18.5):
         c.ell(x, 44.5, 3.4, 1.4, horn, edge=False)
     # near wing
-    c.poly([(23, 25), (18, 3), (30, -1), (38, 2), (34, 6), (35, 11), (30, 10), (30, 16), (26, 15), (27, 22)], wing, shade=0.68, grad=0.45, tex=0.05, gdir=(1, 1))
+    c.poly([(23, 25), (18, 4), (30, 1), (38, 3), (34, 7), (35, 11), (30, 10), (30, 16), (26, 15), (27, 22)], wing, shade=0.68, grad=0.45, tex=0.05, gdir=(1, 1))
     bone = shade_col(P['wing'], 0.45)
     c.line(24, 24, 20, 3, bone)
     c.line(21, 4, 34, -1, bone)
@@ -574,8 +621,8 @@ def treant(c, P):
 
 
 def golem(c, P):
-    st = c.M(P['stone'])
-    far = c.M(shade_col(P['stone'], 0.68))
+    st = c.M(P['stone'], gloss=0.08)
+    far = c.M(shade_col(P['stone'], 0.68), gloss=0.05)
     # far arm
     c.chain([(16, 16), (11, 25), (10, 33)], 4, 3.4, far, tex=0.35)
     c.ell(10, 35, 4.4, 4, far, tex=0.35)
@@ -589,7 +636,7 @@ def golem(c, P):
     c.pxs([(27, 7), (28.5, 7)], P.get('eye', P['core']))
     # shoulder crystals
     if P.get('crystal'):
-        cr = c.M(P['crystal'])
+        cr = c.M(P['crystal'], gloss=0.9)
         c.poly([(13, 12), (12, 0), (18, 9)], cr, shade=0.8)
         c.poly([(33, 10), (38, -1), (37, 11)], cr, shade=0.8)
         c.poly([(30, 33), (32, 26), (35, 33)], cr, shade=0.8)
@@ -621,7 +668,7 @@ def eyebeast(c, P):
             c.ell(x, y, 2.4, 2.4, c.M('#f0e8e0'), flat=0.9)
             c.px(x + 0.6, y, P.get('iris', '#e03030'))
     c.ell(24, 22, 14, 13, fl, tex=0.18)
-    c.ell(27, 19, 7.6, 6.4, c.M('#f2ece4', contrast=0.5))
+    c.ell(27, 19, 7.6, 6.4, c.M('#f2ece4', contrast=0.5, gloss=0.9))
     c.ell(29, 19, 4.4, 4.4, c.M(P.get('iris', '#e03030')), amb=0.5)
     c.ell(30, 19, 1.4, 2.6, c.M('#0a0606'), flat=0.1, edge=False)
     c.px(27, 17, '#ffffff')
@@ -637,8 +684,8 @@ def eyebeast(c, P):
 # effects
 # ---------------------------------------------------------------------------------------------
 def fx_bolt(w, h, core, outer, kind):
-    c = Canvas(w, h)
-    o = c.M(outer)
+    c = Paint(w * SC, h * SC, design=w, ss=3)
+    o = c.M(outer, gloss=0.4)
     k = c.M(core)
     if kind == 'fire':
         c.poly([(0, h / 2), (w * 0.55, 1), (w * 0.62, h - 1)], o, shade=0.8)
@@ -652,76 +699,82 @@ def fx_bolt(w, h, core, outer, kind):
         c.ell(w / 2, h / 2, w * 0.22, h * 0.22, k, flat=1.0, edge=False)
     elif kind == 'arrow':
         c.cap(1, h / 2, w - 4, h / 2, 0.6, 0.6, c.M('#8a6440'), flat=0.7)
-        c.poly([(w - 5, 0.5), (w, h / 2), (w - 5, h - 0.5)], c.M('#c0c8d0'), shade=0.8)
+        c.poly([(w - 5, 0.5), (w, h / 2), (w - 5, h - 0.5)], c.M('#c0c8d0', gloss=0.8), shade=0.8)
         c.poly([(0, 0.5), (4, h / 2), (0, h - 0.5)], c.M('#e8e0d0'), shade=0.8)
-        return c.render(outline=None)
-    return c.render(outline=None, glow=outer, glow_r=1.5, glow_a=0.6)
+        return c.render(outline=None, rim_a=0)
+    return c.render(outline=None, glow=outer, glow_r=1.5, glow_a=0.7, rim_a=0)
+
+
+def _blur_soft(img, r):
+    from PIL import ImageFilter
+    return img.filter(ImageFilter.GaussianBlur(r))
 
 
 def fx_slash(size, col):
     from PIL import ImageDraw
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    S = size * SC
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    for i, (a, w) in enumerate([(120, 5), (200, 3), (255, 1)]):
-        d.arc([2 + i, 2 + i, size - 3 - i, size - 3 - i], 200, 330, fill=rgb(col) + (a,), width=w)
-    return img
+    for i, (a, w) in enumerate([(90, 16), (170, 9), (255, 4)]):
+        o = 6 + i * 3
+        d.arc([o, o, S - o, S - o], 200, 330, fill=rgb(col) + (a,), width=w)
+    return _blur_soft(img, 1.2)
 
 
 def fx_ring(size, col):
     from PIL import ImageDraw
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    S = size * SC
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     for i in range(3):
-        r = size / 2 - 1 - i * 4
-        d.ellipse([size / 2 - r, size / 2 - r, size / 2 + r, size / 2 + r], outline=rgb(col) + (230 - i * 60,), width=2)
-    return img
+        r = S / 2 - 3 - i * 12
+        d.ellipse([S / 2 - r, S / 2 - r, S / 2 + r, S / 2 + r], outline=rgb(col) + (230 - i * 60,), width=5)
+    return _blur_soft(img, 1.5)
 
 
 def fx_whirl(size, col):
     from PIL import ImageDraw
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    S = size * SC
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
     for k in range(3):
         st = k * 120
-        d.arc([2, 2, size - 3, size - 3], st, st + 70, fill=rgb(col) + (255,), width=3)
-        d.arc([7, 7, size - 8, size - 8], st + 40, st + 100, fill=rgb('#ffffff') + (200,), width=2)
-    return img
+        d.arc([6, 6, S - 6, S - 6], st, st + 70, fill=rgb(col) + (255,), width=8)
+        d.arc([20, 20, S - 20, S - 20], st + 40, st + 100, fill=rgb('#ffffff') + (200,), width=5)
+    return _blur_soft(img, 1.2)
 
 
 def fx_sparkle(size, col):
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    c = rgb(col)
-    m = size // 2
-    for i in range(size):
-        dd = abs(i - m)
-        a = max(0, 255 - dd * (255 // max(1, m)))
-        img.putpixel((i, m), c + (a,))
-        img.putpixel((m, i), c + (a,))
-    for dx, dy in ((1, 1), (-1, -1), (1, -1), (-1, 1)):
-        img.putpixel((m + dx, m + dy), c + (160,))
-    img.putpixel((m, m), (255, 255, 255, 255))
-    return img
+    from PIL import ImageDraw
+    S = size * SC
+    img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
+    d = ImageDraw.Draw(img)
+    m = S / 2
+    d.polygon([(m, 0), (m + S * 0.12, m), (m, S), (m - S * 0.12, m)], fill=rgb(col) + (230,))
+    d.polygon([(0, m), (m, m - S * 0.12), (S, m), (m, m + S * 0.12)], fill=rgb(col) + (230,))
+    d.ellipse([m - 3, m - 3, m + 3, m + 3], fill=(255, 255, 255, 255))
+    return _blur_soft(img, 0.8)
 
 
 def fx_pillar(w, h, col):
     import numpy as np
-    arr = np.zeros((h, w, 4), np.uint8)
-    c = rgb(col)
-    xs = np.abs(np.arange(w) - (w - 1) / 2) / (w / 2)
-    for y in range(h):
-        fade = (y / h) ** 0.7
-        for x in range(w):
-            a = max(0.0, 1 - xs[x] ** 1.6) * fade
-            a = round(a * 4) / 4
-            arr[y, x, :3] = c if xs[x] > 0.3 else (255, 255, 230)
-            arr[y, x, 3] = int(a * 220)
+    W, H = w * SC, h * SC
+    arr = np.zeros((H, W, 4), np.uint8)
+    c = np.array(rgb(col), float)
+    xs = np.abs(np.arange(W) - (W - 1) / 2) / (W / 2)
+    for y in range(H):
+        fade = (y / H) ** 0.7
+        a = np.clip(1 - xs ** 1.6, 0, 1) * fade
+        core = np.clip(1 - xs * 3, 0, 1)[:, None]
+        arr[y, :, :3] = (c * (1 - core) + 255 * core).astype(np.uint8)
+        arr[y, :, 3] = (a * 220).astype(np.uint8)
     return Image.fromarray(arr, 'RGBA')
 
 
 def fx_bobber():
-    c = Canvas(8, 12)
-    r = c.M('#d02820')
-    w = c.M('#f0ece0')
+    c = Paint(8 * SC, 12 * SC, design=8, ss=3)
+    r = c.M('#d02820', gloss=0.8)
+    w = c.M('#f0ece0', gloss=0.8)
     c.cap(4, 1, 4, 4, 0.6, 0.6, c.M('#604020'), flat=0.6)
     c.ell(4, 6, 3, 2.4, r, clip=lambda x, y: y < 6.5)
     c.ell(4, 7, 3, 2.4, w, clip=lambda x, y: y >= 6.5)
@@ -732,28 +785,30 @@ def fx_bobber():
 # catalogue
 # ---------------------------------------------------------------------------------------------
 def mk(fn, P, size=48, mirror=True, glow=None, seed=3):
-    c = Canvas(size, size, design=48, seed=seed)
+    c = Paint(size * SC, size * SC, design=48, seed=seed, ss=3)
     fn(c, P)
-    img = c.render(glow=glow, glow_r=max(1.5, size / 24))
+    lava = (P['lava'], P.get('lava_cells', 34)) if P.get('lava') else None
+    img = c.render(glow=glow, glow_r=max(1.5, size / 24) * SC / 3 * 3, lava=lava, drama=P.get('drama', 0.3),
+                   rim=P.get('rim', (150, 190, 255)))
     # pad top so tall bits (wings, crowns) are not clipped by the outline
     return flip(img) if mirror else img
 
 
 HERO = dict(
     krieger=dict(skin='#e0a880', cloth='#9aa4b4', pants='#7a8494', boots='#5a5050', metal='#c8d0dc', helm='#b0bac8',
-                 plume='#c02828', tabard='#a02424', shoulders='#b8c2d0', weapon='shield_sword', far_hand=(18, 12),
+                 plume='#c02828', tabard='#a02424', shoulders='#b8c2d0', pad=1.55, trim_sh='#e0b040', spikes_sh='#e8e0d0', weapon='shield_sword', far_hand=(18, 12),
                  near_hand=(31, 25), shield='#8a2420', emblem='#f0c040', belt='#5a3a24', glove='#9aa4b4', w=1.12),
     magier=dict(skin='#e8b894', cloth='#5a3ca8', robe='#4a30a0', trim='#e0b040', hood='#43298a', weapon='staff',
-                near_hand=(32, 26), orb='#60c0ff', glove='#e8b894', belt='#e0b040', shoulders='#6a48c0'),
-    jaeger=dict(skin='#d8a078', cloth='#5a7a3a', pants='#5a4632', boots='#3a2a20', hood='#4a6a2c', cape='#3a5a28',
+                near_hand=(32, 26), orb='#60c0ff', glove='#e8b894', belt='#e0b040', shoulders='#6a48c0', pad=1.35, trim_sh='#e0b040'),
+    jaeger=dict(skin='#d8a078', cloth='#5a7a3a', pants='#5a4632', boots='#3a2a20', hood='#4a6a2c', cape='#3a5a28', shoulders='#6a5034', pad=1.2, trim_sh='#a07a40',
                 weapon='bow', near_hand=(33, 22), far_hand=(27, 22), wood='#8a5a2c', belt='#4a3020', glove='#6a4a30'),
     priester=dict(skin='#f0c8a0', cloth='#e8e4dc', robe='#e4e0d6', trim='#d8a830', hair='#e8d070', weapon='mace',
-                  near_hand=(32, 25), gold='#f0c848', belt='#d8a830', shoulders='#f0ece4'),
+                  near_hand=(32, 25), gold='#f0c848', belt='#d8a830', shoulders='#f0ece4', pad=1.4, trim_sh='#e0b040'),
 )
 
 COMPANION = dict(
     tank=dict(HERO['krieger'], cloth='#5470b0', pants='#3c4c7c', helm='#c0a040', plume='#3050c0', tabard='#2a3c8a',
-              shoulders='#d0b050', shield='#24408a', metal='#d8dce4', glove='#5470b0', beard='#8a5a30'),
+              shoulders='#d0b050', trim_sh='#3050c0', shield='#24408a', metal='#d8dce4', glove='#5470b0', beard='#8a5a30'),
     heiler=dict(HERO['priester'], cloth='#7ab060', robe='#5a9a48', trim='#f0e0a0', hair='#a05a30', shoulders='#8ac070'),
     schuetze=dict(HERO['jaeger'], cloth='#8a3a2a', hood='#6a2a20', cape='#5a2018', pants='#3a2a24'),
     zauberin=dict(HERO['magier'], cloth='#a03030', robe='#7a1e22', hood='#5a1418', orb='#ff8040', trim='#f0c040',
@@ -777,10 +832,10 @@ def catalogue():
     S['graufang'] = mk(Q, dict(fur='#585866', eye='#ff4020', body=13, head=6.8), 56)
     S['hyaene'] = mk(Q, dict(fur='#c09a58', spots='#6a4a28', mane='#7a5a30', eye='#ffe040'))
     S['frostwolf'] = mk(Q, dict(fur='#d0dcea', eye='#40c8ff', ear_in='#90a8d0'))
-    S['lavahund'] = mk(Q, dict(fur='#4a3030', eye='#ffb020', cracks='#ff7020', spikes='#2a1a1a', ear_in='#ff6020'), glow=None)
+    S['lavahund'] = mk(Q, dict(fur='#2e2426', eye='#ffb020', spikes='#1a1214', ear_in='#ff6020', lava='#ff6a18', lava_cells=26), glow='#ff4010')
     S['krokilisk'] = mk(Q, dict(fur='#5e8040', low=True, spikes='#3e5a28', ears=False, eye='#ffe020', snout=7, head=5, belly='#c8c890'))
     S['sternenbestie'] = mk(Q, dict(fur='#5a3a8a', eye='#80ffff', stars='#ffffff', horns='#c0a0ff', ear_in='#a080ff'))
-    S['magmaul'] = mk(Q, dict(fur='#3a2626', eye='#ffd040', cracks='#ff8030', spikes='#1a1010', horns='#2a1a1a', body=13, head=7), 80, glow='#ff6020')
+    S['magmaul'] = mk(Q, dict(fur='#2a2224', eye='#ffd040', spikes='#141010', horns='#1e1616', body=13, head=7, lava='#ff7020', lava_cells=40), 80, glow='#ff6020')
     S['sternenfresser'] = mk(Q, dict(fur='#3a2470', eye='#ff60ff', stars='#e0e0ff', horns='#e0c0ff', body=13, head=7), 80, glow='#9050ff')
     S['krokilisk_alpha'] = mk(Q, dict(fur='#3e6a50', low=True, spikes='#c8b040', ears=False, eye='#ff3020', snout=7.5, head=5.4, belly='#d8d8a0'), 72)
 
@@ -790,7 +845,7 @@ def catalogue():
     S['skarabaeus'] = mk(Sp, dict(body='#2a8a8a', scorp=True, sting='#f0c040', eye='#f0ff60'), 72)
     S['leerenbrut'] = mk(Sp, dict(body='#3a2a5a', pattern='#a050ff', eye='#60ffe0'), 72, glow='#7040c0')
     S['hoehlenspinne'] = mk(Sp, dict(body='#3a3a50', pattern='#60c0ff', eye='#60e0ff'), 72)
-    S['glutweberin'] = mk(Sp, dict(body='#4a2018', pattern='#ff8020', eye='#ffe040'), 80, glow='#ff5010')
+    S['glutweberin'] = mk(Sp, dict(body='#2a1a1a', pattern='#ff8020', eye='#ffe040', lava='#ff6a18', lava_cells=36), 80, glow='#ff5010')
 
     S['moorschleim'] = mk(slime, dict(body='#78b040', inner='#4a7a28'))
     S['schlammbrocken'] = mk(slime, dict(body='#7a6a40', inner='#4a3a20'), 60)
@@ -826,8 +881,8 @@ def catalogue():
     S['malhar'] = mk(H, dict(skin='#d0c8b8', cloth='#6a1818', bones=True, robe='#4a1010', trim='#f0c040', weapon='scythe', metal='#f0c040', crown=True, eye='#ff5030', shoulders='#7a2020'), 72, glow='#e03020')
     S['nebelkoenig'] = mk(H, dict(skin='#d8e0e8', cloth='#1e3050', bones=True, robe='#18263e', trim='#80c0ff', weapon='sword', near_hand=(31, 25), metal='#a0d8ff', crown=True, crown_col='#a0e0ff', eye='#a0f0ff', shoulders='#2a4060', cape='#101c30'), 84, glow='#60b0ff')
     S['wichtel'] = mk(H, dict(skin='#d04a30', cloth='#d04a30', pants='#a03420', bare_arms=True, horns='#3a2020', tail='#a03420', wings='#7a2a20', eye='#ffe040', big_eye=True, scale=0.75, head=6, ears_long=True, boots='#3a1a14'))
-    S['aschenfaust'] = mk(H, dict(skin='#8a2a20', cloth='#3a2a2a', pants='#2a1a1a', bare_arms=True, horns='#1a1010', tail='#6a1a14', wings='#4a1a14', eye='#ffd040', weapon='axe', metal='#ff9040', w=1.4, shoulders='#2a1a1a'), 80, glow='#ff5020')
-    S['ignaroth'] = mk(H, dict(skin='#c03018', cloth='#2a1a1a', pants='#1a1010', bare_arms=True, horns='#1a1010', tail='#8a2010', wings='#5a1a10', eye='#fff060', weapon='sword', near_hand=(31, 25), metal='#ff8030', w=1.5, crown=True, crown_col='#ff9030', shoulders='#3a1a14'), 80, glow='#ff6020')
+    S['aschenfaust'] = mk(H, dict(lava='#ff6a18', lava_cells=30, skin='#4a2420', cloth='#2a2020', pants='#2a1a1a', bare_arms=True, horns='#1a1010', tail='#6a1a14', wings='#4a1a14', eye='#ffd040', weapon='axe', metal='#ff9040', w=1.4, shoulders='#2a1a1a'), 80, glow='#ff5020')
+    S['ignaroth'] = mk(dragon, dict(scale='#24202a', belly='#3a2a2a', wing='#6a1c12', eye='#ffe060', horn='#2a2228', spikes='#18141c', maw='#ffb040', lava='#ff6a18', lava_cells=48, rim=(255, 120, 60)), 88, glow='#ff5010')
 
     E = elemental
     S['staubelementar'] = mk(E, dict(kind='earth', body='#9a7a58', core='#e0c090', eye='#ffe080'))
@@ -841,9 +896,9 @@ def catalogue():
     S['bleiche_dame'] = mk(ghost, dict(body='#e0e8f0', hair='#c0d0e8', eye='#60d0ff', crown=True), 80, glow='#a0d0ff')
 
     D = dragon
-    S['glaciara'] = mk(D, dict(scale='#90c0e8', belly='#e0f0ff', wing='#6aa0d8', eye='#ffffff', horn='#e8f4ff'), 84, glow='#80c8ff')
+    S['glaciara'] = mk(D, dict(scale='#90c0e8', belly='#e0f0ff', wing='#6aa0d8', eye='#ffffff', horn='#e8f4ff', spikes='#d8ecff', maw='#a0e8ff'), 84, glow='#80c8ff')
     S['nivara'] = mk(D, dict(scale='#5a80c8', belly='#c0d8ff', wing='#3a5aa8', eye='#a0ffff', horn='#e0f0ff'), 84, glow='#60a0ff')
-    S['umbrax'] = mk(D, dict(scale='#3a2060', belly='#7a50b0', wing='#2a1450', eye='#ff60ff', horn='#c0a0e0', glow_pts='#e0a0ff'), 84, glow='#8040e0')
+    S['umbrax'] = mk(D, dict(scale='#2a1a48', belly='#5a3a90', wing='#2a1450', eye='#ff60ff', horn='#c0a0e0', spikes='#1a1030', maw='#e080ff', lava='#c060ff', lava_cells=40), 84, glow='#8040e0')
     S['xaroth'] = mk(D, dict(scale='#1a3a4a', belly='#40a0a0', wing='#0e2a38', eye='#60ffe0', horn='#a0e0e0', glow_pts='#60ffe0'), 84, glow='#30c0b0')
     S['azurschwinge'] = mk(D, dict(scale='#3a70d0', belly='#a0c8f0', wing='#2a58b0', eye='#ffe040', horn='#f0e8d0'), 84)
 
@@ -853,7 +908,7 @@ def catalogue():
     G = golem
     S['erzkoloss'] = mk(G, dict(stone='#7a7068', core='#40a0ff', crystal='#60c0ff', eye='#80e0ff'), 72)
     S['steinwaechter'] = mk(G, dict(stone='#c8a878', core='#40ffc0', eye='#40ffc0', cracks='#30e0a0'), 72)
-    S['magmagolem'] = mk(G, dict(stone='#4a3632', core='#ffa030', cracks='#ff7020', eye='#ffe040'), 60, glow='#ff6020')
+    S['magmagolem'] = mk(G, dict(stone='#2e2626', core='#ffa030', eye='#ffe040', lava='#ff7020', lava_cells=30), 60, glow='#ff6020')
     S['augenlose_wache'] = mk(G, dict(stone='#3a3050', core='#c060ff', crystal='#a060ff', eye='#e0a0ff'), 60, glow='#7040c0')
     S['abgrundwaechter'] = mk(G, dict(stone='#2a2440', core='#60ffe0', crystal='#40e0c0', eye='#60ffe0', cracks='#40e0c0'), 80, glow='#30c0a0')
     S['grollhuf'] = mk(G, dict(stone='#6a6a58', core='#e0ff60', crystal='#90c040', eye='#e0ff60'), 84)

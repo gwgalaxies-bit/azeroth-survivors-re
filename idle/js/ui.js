@@ -12,26 +12,28 @@ const UI = (() => {
     confirmReset: false, cls: 'krieger', modal: null };
 
   // --------------------------------------------------------------------------------------- html helpers
+  const CELL = ATLAS.icons.cell || 32, SSC = ATLAS.sprites.scale || 1;
   function ico(name, size = 32, extra = '') {
     const p = ATLAS.icons.map[name];
     if (!p) return '';
-    const s = size / 32, [W, H] = ATLAS.icons.size;
+    const s = size / CELL, [W, H] = ATLAS.icons.size;
     return `<i class="ico ${extra}" style="width:${size}px;height:${size}px;background-size:${W * s}px ${H * s}px;background-position:-${p[0] * s}px -${p[1] * s}px"></i>`;
   }
   function spr(name, scale = 1, style = '') {
     const r = ATLAS.sprites.map[name];
     if (!r) return '';
     const [W, H] = ATLAS.sprites.size;
-    return `<i class="spr" style="width:${r[2] * scale}px;height:${r[3] * scale}px;background-size:${W * scale}px ${H * scale}px;background-position:-${r[0] * scale}px -${r[1] * scale}px;${style}"></i>`;
+    const f = scale / SSC;
+    return `<i class="spr" style="width:${(r[2] * f).toFixed(1)}px;height:${(r[3] * f).toFixed(1)}px;background-size:${(W * f).toFixed(1)}px ${(H * f).toFixed(1)}px;background-position:-${(r[0] * f).toFixed(1)}px -${(r[1] * f).toFixed(1)}px;${style}"></i>`;
   }
   function face(name, box, scale, fx = 0.5, fy = 0.35) {
     const r = ATLAS.sprites.map[name];
     if (!r) return '';
-    if (!scale) scale = Math.round(box / Math.max(r[2], r[3]) * 1.5 * 4) / 4;
-    const w = r[2] * scale, h = r[3] * scale;
+    if (!scale) scale = box / Math.max(r[2], r[3]) * SSC * 1.5;
+    const w = r[2] / SSC * scale, h = r[3] / SSC * scale;
     return spr(name, scale, `left:${Math.round(box / 2 - w * fx)}px;top:${Math.round(box / 2 - h * fy)}px`);
   }
-  function heroFace(box) { return face(CLASSES[S.cls].sprite, box, 2, 0.53, 0.2); }
+  function heroFace(box) { return face(CLASSES[S.cls].sprite, box, box / 23, 0.53, 0.2); }
   function uiImg(name, w, h, extra = '') { return `<i class="ui-img" style="width:${w}px;height:${h}px;background-image:url(assets/ui/${name}.png);${extra}"></i>`; }
   function bar(cls, frac, label = '', thin = false) {
     return `<div class="bar ${cls}${thin ? ' thin' : ''}"><i style="width:${clamp(frac, 0, 1) * 100}%"></i>${label ? `<span>${label}</span>` : ''}</div>`;
@@ -115,10 +117,10 @@ const UI = (() => {
   ];
   function buildShell() {
     $('tabs').innerHTML = TABS.map(([id, label, icon]) => `<button data-act="tab" data-t="${id}" id="tab-${id}">${ico(icon, 32)}<span class="lbl">${label}</span></button>`).join('');
-    $('cGoldI').innerHTML = ico('gold', 18);
-    $('cBadgeI').innerHTML = ico('badge', 18);
-    $('cKeyI').innerHTML = ico('key', 18);
-    $('btnMenu').innerHTML = ico('cog', 30);
+    $('cGoldI').innerHTML = ico('gold', 16);
+    $('cBadgeI').innerHTML = ico('badge', 16);
+    $('cKeyI').innerHTML = ico('key', 16);
+    $('btnMenu').innerHTML = ico('cog', 22);
     if (S) buildActionbar();
   }
   function buildActionbar() {
@@ -148,7 +150,7 @@ const UI = (() => {
     const st = heroStats();
     const b = battle;
     // player frame
-    if (lastHeroFace !== S.cls) { $('pFace').innerHTML = heroFace(46); lastHeroFace = S.cls; $('pResBar').className = 'bar thin ' + CLASSES[S.cls].resBar; }
+    if (lastHeroFace !== S.cls) { $('pFace').innerHTML = heroFace(52); lastHeroFace = S.cls; $('pResBar').className = 'bar thin ' + CLASSES[S.cls].resBar; }
     $('pLvl').textContent = S.level;
     $('pName').textContent = S.name;
     $('pTitle').textContent = S.title || CLASSES[S.cls].name;
@@ -181,6 +183,7 @@ const UI = (() => {
       if (lastTarget !== e) {
         lastTarget = e;
         tf.className = 'unit target ' + (e.kind === 'normal' || e.kind === 'arena' ? '' : e.kind === 'elite' ? 'elite' : 'boss');
+        mmKey = '';
         $('tFace').innerHTML = face(e.sprite, 36);
         $('tName').textContent = e.name;
         $('tName').parentElement.className = 'uname ' + (e.kind === 'elite' ? 'elite' : e.kind === 'normal' || e.kind === 'arena' ? '' : 'boss');
@@ -201,10 +204,8 @@ const UI = (() => {
       $('instTitle').textContent = b.title;
       $('instInfo').innerHTML = lim && e ? `Boss ${Math.min(b.total, done + 1)}/${b.total} · Zeit ${Math.max(0, Math.ceil(lim - b.t))}s` : `Boss ${done}/${b.total}`;
       $('instTime').style.width = lim && e ? (Math.max(0, 1 - b.t / lim) * 100) + '%' : '100%';
-    } else {
-      const z = zoneOf(S.zone);
-      $('zoneTag').innerHTML = `${esc(z.name)}<small>${S.worldTier ? `Weltstufe ${S.worldTier} · Stufe ${mobLevel(S.zone)}` : `Stufe ${z.lvl[0]}–${z.lvl[1]}`}</small>`;
     }
+    minimap(b);
     // skill cooldowns
     for (const id of CLASSES[S.cls].skills) {
       const el = $('sk-' + id);
@@ -225,7 +226,33 @@ const UI = (() => {
     document.body.classList.toggle('compact', tab !== 'kampf');
   }
 
+  let mmKey = '';
+  function minimap(b) {
+    const inst = b && b.mode !== 'adventure';
+    const z = zoneOf(S.zone);
+    const bg = b ? b.bg : z.bg;
+    const q = currentQuest(S.zone), qs = questState(S.zone);
+    const key = bg + (inst ? b.title : z.name) + S.worldTier + (q ? qs.i + ':' + qs.done : 'x');
+    if (key === mmKey) return;
+    mmKey = key;
+    $('mmZone').textContent = inst ? b.title : z.name;
+    $('mmMap').style.backgroundImage = `url(assets/bg/${bg}.webp)`;
+    const r = seeded(bg);
+    let dots = '';
+    for (let i = 0; i < 4; i++) {
+      const a = r() * Math.PI * 2, d = 0.35 + r() * 0.5;
+      dots += `<i class="mm-dot" style="left:${50 + Math.cos(a) * d * 42}%;top:${50 + Math.sin(a) * d * 42}%"></i>`;
+    }
+    if (!inst && q) {
+      const a = r() * Math.PI * 2;
+      dots += `<i class="mm-q" style="left:${50 + Math.cos(a) * 26}%;top:${50 + Math.sin(a) * 26}%;background-image:url(assets/ui/${qs.done ? 'q_turnin' : 'q_bang'}.png)"></i>`;
+    }
+    $('mmDots').innerHTML = dots;
+  }
+
   function secondUpdate() {
+    const d = new Date();
+    $('mmClock').textContent = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     const t = now();
     document.querySelectorAll('[data-tm]').forEach((el) => {
       const left = (+el.dataset.tm - t) / 1000;
@@ -521,7 +548,7 @@ const UI = (() => {
       const locked = S.level < d.lvl - 2;
       const rec = refPower(lvl, lvl + 1, 3, Math.floor(lvl * 0.7));
       const pw = heroStats().power;
-      h += `<div class="inst"><div class="hero-img" style="background-image:url(assets/bg/${d.bg}.png)"><div class="sprs">${d.bosses.map(([s]) => spr(s, 0.75)).join('')}</div>
+      h += `<div class="inst"><div class="hero-img" style="background-image:url(assets/bg/${d.bg}.webp)"><div class="sprs">${d.bosses.map(([s]) => spr(s, 0.75)).join('')}</div>
         <div class="t"><b>${esc(d.name)}</b><small>Stufe ${lvl}${m ? ` · Mythisch +${m}` : ''} · ${ds.clears}× abgeschlossen</small></div></div><div class="body">
         <div class="small">${esc(d.desc)}</div>
         <div class="row wrap">${d.bosses.map(([s, n]) => `<span class="row small" style="gap:4px"><span class="bp" style="width:28px;height:28px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;box-shadow:0 0 0 1px #000,0 0 0 2px #8a6a3a">${face(s, 28)}</span>${esc(n)}</span>`).join('')}</div>
@@ -542,7 +569,7 @@ const UI = (() => {
       const lvl = raidLevel(r, diff);
       const needIl = r.ilvl + diff * 10;
       const ok = S.level >= Math.min(60, r.lvl) && il >= needIl;
-      h += `<div class="inst"><div class="hero-img" style="background-image:url(assets/bg/${r.bg}.png)"><div class="sprs">${spr(r.bosses[3].sprite, 0.85)}</div><div class="t"><b>${esc(r.name)}</b><small>Stufe ${lvl} · ab Gegenstandsstufe ${needIl}</small></div></div><div class="body">
+      h += `<div class="inst"><div class="hero-img" style="background-image:url(assets/bg/${r.bg}.webp)"><div class="sprs">${spr(r.bosses[3].sprite, 0.85)}</div><div class="t"><b>${esc(r.name)}</b><small>Stufe ${lvl} · ab Gegenstandsstufe ${needIl}</small></div></div><div class="body">
         <div class="small">${esc(r.desc)}</div>${ok ? '' : `<div class="small bad">Benötigt Stufe ${Math.min(60, r.lvl)} und Ø Gegenstandsstufe ${needIl} (du: ${il.toFixed(0)}).</div>`}`;
       r.bosses.forEach((b, i) => {
         const dead = raidLocked(r.id, diff, i);
@@ -558,7 +585,7 @@ const UI = (() => {
     const t = now();
     const w = worldBossInfo(t);
     if (S.level < 10) return '<div class="card plain small">Weltbosse erscheinen ab Stufe 10.</div>';
-    let h = `<div class="inst"><div class="hero-img" style="height:170px;background-image:url(assets/bg/${w.boss.bg}.png)"><div class="sprs" style="right:50%;transform:translateX(50%)">${spr(w.boss.sprite, 1.5)}</div><div class="t"><b>${esc(w.boss.name)}</b><small>${w.active ? (w.killed ? 'Von dir besiegt' : 'Jetzt aktiv') : 'Noch nicht erschienen'}</small></div></div>
+    let h = `<div class="inst"><div class="hero-img" style="height:170px;background-image:url(assets/bg/${w.boss.bg}.webp)"><div class="sprs" style="right:50%;transform:translateX(50%)">${spr(w.boss.sprite, 1.5)}</div><div class="t"><b>${esc(w.boss.name)}</b><small>${w.active ? (w.killed ? 'Von dir besiegt' : 'Jetzt aktiv') : 'Noch nicht erschienen'}</small></div></div>
       <div class="body"><div class="small">Alle drei Stunden erscheint ein Weltboss für eine Stunde. Andere Abenteurer kämpfen an deiner Seite (+150% Schaden). Belohnung: zwei epische Gegenstände, Raidmarken und viel Gold.</div>
       <div class="row between"><span class="small">${w.active && !w.killed ? `Verschwindet ${tm(t + w.endsIn * 1000, 'in ')}` : `Nächster Weltboss ${tm(t + w.nextIn * 1000, 'in ')}`}</span>${btn('Angreifen', 'wb', {}, 'gold', !w.active || w.killed)}</div></div></div>`;
     h += '<div class="section-title">Rotation</div><div class="grid g4">';
@@ -575,7 +602,7 @@ const UI = (() => {
     const o = arenaOpponent();
     const pw = heroStats().power;
     let h = `<div class="card"><div class="row">${ico('honor', 40)}<div class="grow"><h3 style="margin:0">${esc(arenaRank(a.rating))}</h3><div class="small">Wertung <b class="goldtxt">${a.rating}</b> · Bestwert ${a.best} · ${a.wins} Siege</div><div class="small muted">Kampfkarten: ${a.tickets}/${ARENA_TICKETS} (täglich neu)</div></div><div style="text-align:right">${ico('honor', 18)} <b>${fmt(S.honor)}</b><div class="small muted">Ehre</div></div></div></div>`;
-    h += `<div class="inst"><div class="hero-img" style="height:120px;background-image:url(assets/bg/bg_arena.png)"><div class="sprs" style="left:20px;right:auto">${spr(CLASSES[S.cls].sprite, 1)}</div><div class="sprs">${spr('rival_' + o.cls, 1)}</div><div class="t" style="text-align:center"><b>${esc(S.name)} gegen ${esc(o.name)}</b><small>${esc(CLASSES[o.cls].name)} · Wertung ${o.rating}</small></div></div>
+    h += `<div class="inst"><div class="hero-img" style="height:120px;background-image:url(assets/bg/bg_arena.webp)"><div class="sprs" style="left:20px;right:auto">${spr(CLASSES[S.cls].sprite, 1)}</div><div class="sprs">${spr('rival_' + o.cls, 1)}</div><div class="t" style="text-align:center"><b>${esc(S.name)} gegen ${esc(o.name)}</b><small>${esc(CLASSES[o.cls].name)} · Wertung ${o.rating}</small></div></div>
       <div class="body"><div class="row between small"><span>Gegnerische Kampfkraft: <b class="${o.power <= pw ? 'good' : 'bad'}">${fmt(o.power)}</b></span><span class="muted">Deine: ${fmt(pw)}</span></div>
       <div class="row between">${btn('Neuer Gegner', 'arenanew', {}, 'sm', S.gold < gpk(L()) * 5)}${btn('Kämpfen', 'arena', {}, 'gold', a.tickets < 1)}</div><div class="small muted">Neuer Gegner kostet ${fmt(gpk(L()) * 5)} Gold. Sieg: Ehre und Wertung. 60 Sekunden Zeitlimit.</div></div></div>`;
     h += vendorHTML('honor');
@@ -665,7 +692,7 @@ const UI = (() => {
   function viewFish() {
     const z = zoneOf(S.zone);
     let h = `<div class="card plain"><div class="row">${ico('rod', 32)}<div class="grow"><b class="goldtxt">Angeln in ${esc(z.name)}</b>${profBar(S.prof.fish, 'Fertigkeit')}</div></div></div>`;
-    h += `<div class="pond" id="pond" data-act="fish" style="background-image:url(assets/bg/${z.bg}.png)"><div class="water"></div><div id="pondInner"></div></div>`;
+    h += `<div class="pond" id="pond" data-act="fish" style="background-image:url(assets/bg/${z.bg}.webp)"><div class="water"></div><div id="pondInner"></div></div>`;
     h += '<div class="section-title">Angeltagebuch</div><div class="grid g4">';
     for (const f of FISH) {
       const c = S.fishLog[f.id] || 0;
@@ -740,7 +767,7 @@ const UI = (() => {
   function viewHome() {
     const cyc = S.login.cycle;
     const todayIdx = S.login.claimed ? (cyc - 1) % 7 : cyc % 7;
-    let h = `<div class="inst"><div class="hero-img" style="height:110px;background-image:url(assets/bg/bg_town.png)"><div class="t"><b>Hohenmark</b><small>Hauptstadt des Königreichs Valdoran</small></div></div></div>`;
+    let h = `<div class="inst"><div class="hero-img" style="height:110px;background-image:url(assets/bg/bg_town.webp)"><div class="t"><b>Hohenmark</b><small>Hauptstadt des Königreichs Valdoran</small></div></div></div>`;
     h += `<div class="card"><div class="row between"><h3 style="margin:0">Tägliche Anmeldung</h3><span class="small muted">Serie: ${S.login.streak} ${S.login.streak === 1 ? 'Tag' : 'Tage'}</span></div><div class="cal" style="margin-top:6px">`;
     LOGIN_REWARDS.forEach((r, i) => {
       const got = i < todayIdx || (i === todayIdx && S.login.claimed);
@@ -834,7 +861,7 @@ const UI = (() => {
     ZONES.forEach((z, i) => {
       const open = i <= S.zoneMax;
       const qs = questState(i);
-      h += `<div class="li ${i === S.zone ? 'claim' : ''}" style="padding:0;overflow:hidden"><div style="width:96px;height:64px;flex:none;background:url(assets/bg/${z.bg}.png) 50% 80%/cover;${open ? '' : 'filter:grayscale(1) brightness(.4)'}"></div>
+      h += `<div class="li ${i === S.zone ? 'claim' : ''}" style="padding:0;overflow:hidden"><div style="width:96px;height:64px;flex:none;background:url(assets/bg/${z.bg}.webp) 50% 80%/cover;${open ? '' : 'filter:grayscale(1) brightness(.4)'}"></div>
         <div class="grow" style="padding:4px 0"><div class="ttl ${open ? 'gold' : ''}">${esc(z.name)}</div><div class="small muted">Stufe ${z.lvl[0]}–${z.lvl[1]} · ${qs.i >= 6 ? 'Kampagne abgeschlossen' : open ? `Quest ${qs.i + 1}/6` : 'Gesperrt'}</div></div>
         <div style="padding-right:8px">${i === S.zone ? '<span class="small goldtxt">Hier</span>' : open ? btn('Reisen', 'travel', { z: i }, 'sm') : ico('lock', 24)}</div></div>`;
     });
@@ -928,7 +955,7 @@ const UI = (() => {
       <div class="row wrap">${btn('Exportieren', 'export', {}, 'sm')}${btn('Importieren', 'import', {}, 'sm')}${btn('Kopieren', 'copysave', {}, 'sm')}</div>
       <div class="sep"></div>
       ${U.confirmReset ? `<div class="small bad">Wirklich alles löschen? Das kann nicht rückgängig gemacht werden.</div><div class="row">${btn('Ja, neu beginnen', 'resetyes', {}, 'sm')}${btn('Abbrechen', 'resetno', {}, 'sm gold')}</div>` : btn('Spiel zurücksetzen', 'reset', {}, 'sm')}
-      <div class="small muted" style="margin-top:6px">Valdoran Idle · ein eigenständiges Fan-Idle-RPG im Stil klassischer Fantasy-MMOs. Alle Grafiken sind prozedural erzeugte Pixel-Art.</div>
+      <div class="small muted" style="margin-top:6px">Valdoran Idle · ein eigenständiges Fan-Idle-RPG im Stil klassischer Fantasy-MMOs. Alle Grafiken sind prozedural gemalte Rastergrafiken.</div>
     </div>`, { id: 'settings' });
   }
 

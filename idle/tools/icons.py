@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 
 import sprites
-from px import Canvas, mix, rgb, shade_col, value_noise
+from px import Canvas, Paint, mix, rgb, shade_col, value_noise
 
 TIERS = [
     dict(metal='#b08a58', leather='#8a5a34', cloth='#7a6a50', gem='#70d050', accent='#6a8a3a', bg='#3a2a1a'),
@@ -17,14 +17,17 @@ TIERS = [
 ]
 
 
+ICON = 64
+
+
 def bg(theme, seed=0):
-    n = 32
+    n = ICON
     col = np.array(rgb(theme), float)
     y, x = np.mgrid[0:n, 0:n] + 0.5
-    d = np.sqrt((x - 13) ** 2 + (y - 12) ** 2) / 22
-    nz = value_noise(n, n, 10, seed, 3)
-    f = np.clip(1.45 - d * 0.95 + (nz - 0.5) * 0.35, 0.35, 1.6)
-    f = np.round(f * 6) / 6
+    d = np.sqrt((x - n * 0.42) ** 2 + (y - n * 0.38) ** 2) / (n * 0.7)
+    nz = value_noise(n, n, 14, seed, 4)
+    nz2 = value_noise(n, n, 4, seed + 3, 2)
+    f = np.clip(1.55 - d * 1.15 + (nz - 0.5) * 0.45 + (nz2 - 0.5) * 0.12, 0.25, 1.9)
     arr = np.zeros((n, n, 4), np.uint8)
     arr[:, :, :3] = np.clip(col[None, None, :] * f[:, :, None], 0, 255)
     arr[:, :, 3] = 255
@@ -32,24 +35,23 @@ def bg(theme, seed=0):
 
 
 def frame(img):
-    arr = np.array(img)
+    arr = np.array(img).astype(float)
     n = arr.shape[0]
-    arr[0, :, :3] = (10, 8, 8)
-    arr[-1, :, :3] = (10, 8, 8)
-    arr[:, 0, :3] = (10, 8, 8)
-    arr[:, -1, :3] = (10, 8, 8)
-    hi = np.clip(arr[1, 1:-1, :3].astype(int) + 70, 0, 255)
-    arr[1, 1:-1, :3] = hi
-    arr[1:-1, 1, :3] = np.clip(arr[1:-1, 1, :3].astype(int) + 55, 0, 255)
-    arr[-2, 1:-1, :3] = (arr[-2, 1:-1, :3] * 0.45).astype(np.uint8)
-    arr[1:-1, -2, :3] = (arr[1:-1, -2, :3] * 0.5).astype(np.uint8)
-    return Image.fromarray(arr, 'RGBA')
+    y, x = np.mgrid[0:n, 0:n]
+    edge = np.minimum(np.minimum(x, y), np.minimum(n - 1 - x, n - 1 - y))
+    # inner bevel: darken toward the border, light top-left lip
+    shade = np.clip(edge / 6.0, 0, 1) * 0.35 + 0.65
+    arr[:, :, :3] *= shade[:, :, None]
+    lip = (edge == 2) & ((x < n / 2) | (y < n / 2)) & (x + y < n)
+    arr[lip, :3] = np.clip(arr[lip, :3] * 1.6 + 30, 0, 255)
+    arr[edge <= 1, :3] = (8, 6, 6)
+    return Image.fromarray(np.clip(arr, 0, 255).astype(np.uint8), 'RGBA')
 
 
-def icon(theme, draw, seed=0, glow=None, outline=(16, 10, 14, 255)):
-    c = Canvas(32, 32, seed=seed)
+def icon(theme, draw, seed=0, glow=None, outline=(14, 8, 10, 230)):
+    c = Paint(ICON, ICON, design=32, seed=seed, ss=3)
     draw(c)
-    fg = c.render(outline=outline, glow=glow, glow_r=1.6, glow_a=0.7)
+    fg = c.render(outline=outline, glow=glow, glow_r=1.4, glow_a=0.7, out_w=0.7)
     b = bg(theme, seed)
     b.alpha_composite(fg)
     return frame(b)
@@ -71,7 +73,7 @@ def bez(p0, p1, p2, n=8):
 # --------------------------------------------------------------------------------------------- items
 def i_sword(T):
     def d(c):
-        diag_blade(c, 12, 20, 27, 5, 2.4, 1.6, c.M(T['metal'], contrast=1.25))
+        diag_blade(c, 12, 20, 27, 5, 2.4, 1.6, c.M(T['metal'], contrast=1.25, gloss=0.8))
         c.line(13, 19, 26, 6, shade_col(T['metal'], 1.25))
         c.cap(6, 18, 14, 26, 1.4, 1.4, c.M(T['metal']))
         c.cap(4, 28, 10, 22, 1.4, 1.4, c.M(T['leather']))
@@ -115,7 +117,7 @@ def i_mace(T):
 
 def i_helm(T):
     def d(c):
-        m = c.M(T['metal'], contrast=1.2)
+        m = c.M(T['metal'], contrast=1.2, gloss=0.75)
         c.ell(16, 16, 10, 10, m, clip=lambda x, y: y < 22)
         c.rect(6, 17, 20, 8, m, shade=0.55)
         c.rect(15, 6, 2.4, 16, c.M(shade_col(T['metal'], 1.15)), shade=0.85, edge=False)
@@ -133,7 +135,7 @@ def i_helm(T):
 
 def i_shoulder(T):
     def d(c):
-        m = c.M(T['metal'], contrast=1.2)
+        m = c.M(T['metal'], contrast=1.2, gloss=0.75)
         if T is TIERS[3] or T is TIERS[4] or T is TIERS[5]:
             for x in (10, 16, 22):
                 c.poly([(x - 2.5, 12), (x, 1), (x + 2.5, 12)], c.M('#e8e0d0'), shade=0.8)
@@ -201,8 +203,8 @@ def i_trinket(T):
         c.line(6, 2, 16, 12, rgb(T['metal']))
         c.line(26, 2, 16, 12, rgb(T['metal']))
         c.line(7, 2, 16, 11, shade_col(T['metal'], 0.6))
-        c.ell(16, 19, 8.5, 9, c.M(T['metal'], contrast=1.2))
-        c.ell(16, 19, 5.4, 6, c.M(T['gem'], contrast=0.9), amb=0.45)
+        c.ell(16, 19, 8.5, 9, c.M(T['metal'], contrast=1.2, gloss=0.8))
+        c.ell(16, 19, 5.4, 6, c.M(T['gem'], contrast=0.9, gloss=1.0), amb=0.45)
         c.px(14, 16, '#ffffff')
         c.px(15, 16, '#ffffff')
         for a in range(6):
@@ -217,7 +219,7 @@ ARMOR = dict(head=i_helm, shoulder=i_shoulder, chest=i_chest, hands=i_hands, leg
 
 # --------------------------------------------------------------------------------------------- misc
 def coins(c):
-    g = c.M('#f0c040', contrast=1.1)
+    g = c.M('#f0c040', contrast=1.1, gloss=0.9)
     for (x, y) in [(10, 24), (21, 25), (15, 19), (12, 14), (22, 17), (17, 10)]:
         c.ell(x, y, 6.4, 4.4, g)
         c.ell(x, y - 0.6, 4.2, 2.6, c.M('#ffe070'), edge=False)
@@ -285,8 +287,8 @@ def chest(col, band, lock='#f0c040'):
 
 def flask(liquid, shape='round'):
     def d(c):
-        glass = c.M('#c8dce8', contrast=0.6)
-        liq = c.M(liquid, contrast=1.0)
+        glass = c.M('#c8dce8', contrast=0.6, gloss=1.0)
+        liq = c.M(liquid, contrast=1.0, gloss=0.8)
         if shape == 'round':
             c.ell(16, 20, 9.5, 9.5, glass)
             c.ell(16, 21.5, 8.3, 7.6, liq, clip=lambda x, y: y > 17, amb=0.45)
@@ -551,9 +553,9 @@ def mount_icon(P, fn=sprites.quadruped):
 
 
 def sub_icon(theme, fn, P, seed=0, glow=None):
-    sub = Canvas(32, 32, design=48, seed=seed)
+    sub = Paint(ICON, ICON, design=48, seed=seed, ss=3)
     fn(sub, P)
-    fg = sub.render(glow=glow, glow_r=1.4)
+    fg = sub.render(glow=glow, glow_r=1.4, out_w=0.7)
     b = bg(theme, seed)
     b.alpha_composite(fg)
     return frame(b)

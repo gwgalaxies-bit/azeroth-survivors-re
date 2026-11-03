@@ -82,7 +82,12 @@ class Canvas:
         self.dith = np.zeros((h, w))
         self.alpha = np.full((h, w), 255, np.int32)
         self.mats = []
+        self.nolava = set()
+        self.gloss = []
         self.edge = []
+        self.nx = np.zeros((h, w))
+        self.ny = np.zeros((h, w))
+        self.nz = np.ones((h, w))
         self.prim = 0
         Y, X = np.mgrid[0:h, 0:w]
         self.X = X + 0.5
@@ -92,18 +97,30 @@ class Canvas:
         self.rng = np.random.default_rng(seed)
 
     # ----- materials -------------------------------------------------------------------
-    def M(self, color, n=5, contrast=1.0, hue=0.10, ramp=None):
+    def M(self, color, n=5, contrast=1.0, hue=0.10, ramp=None, gloss=None):
         self.mats.append(ramp or make_ramp(color, n, contrast, hue))
+        self.gloss.append(gloss)
         return len(self.mats) - 1
 
     # ----- core ---------------------------------------------------------------------------
-    def _put(self, mask, m, sh, tex=0.0, dith=0.4, edge=True, alpha=255):
+    def _noise(self):
+        return (self.rng.random((self.h, self.w)) - 0.5)
+
+    def _put(self, mask, m, sh, tex=0.0, dith=0.4, edge=True, alpha=255, n=None):
         if not mask.any():
             return
         if np.isscalar(sh):
             sh = np.full((self.h, self.w), float(sh))
         if tex:
-            sh = sh + (self.rng.random((self.h, self.w)) - 0.5) * tex
+            sh = sh + self._noise() * tex
+        if n is not None:
+            self.nx[mask] = n[0][mask]
+            self.ny[mask] = n[1][mask]
+            self.nz[mask] = n[2][mask]
+        else:
+            self.nx[mask] = 0
+            self.ny[mask] = 0
+            self.nz[mask] = 1
         self.mat[mask] = m
         self.sh[mask] = np.clip(sh[mask], 0, 1)
         self.ordr[mask] = self.prim
@@ -127,7 +144,7 @@ class Canvas:
         z = np.sqrt(np.clip(1 - d, 0, 1))
         nx, ny = u * c - v * s, u * s + v * c
         sh = lit(nx, ny, z, amb) if flat is None else flat
-        self._put(mask, m, sh, tex, dith, edge, alpha)
+        self._put(mask, m, sh, tex, dith, edge, alpha, (nx, ny, z) if flat is None else None)
 
     def cap(self, x1, y1, x2, y2, r1, r2=None, m=0, tex=0.0, dith=0.4, edge=True, flat=None,
             amb=0.20, alpha=255):
@@ -145,7 +162,7 @@ class Canvas:
         nx, ny = dx / r, dy / r
         nz = np.sqrt(np.clip(1 - nx * nx - ny * ny, 0, 1))
         sh = lit(nx, ny, nz, amb) if flat is None else flat
-        self._put(mask, m, sh, tex, dith, edge, alpha)
+        self._put(mask, m, sh, tex, dith, edge, alpha, (nx, ny, nz) if flat is None else None)
 
     def chain(self, pts, r1, r2, m, **kw):
         """Tapered capsule chain through points."""
@@ -285,3 +302,191 @@ def noise1d(n, scale, seed=0, octaves=4):
 
 def quantize_img(arr_rgb, levels=None):
     return arr_rgb
+
+
+# ---------------------------------------------------------------------------------------------------
+# Painted renderer: the same primitives, supersampled and shaded smoothly (no ramp quantisation),
+# with specular highlights, a cool rim light, soft contact shadows and an anti-aliased outline.
+HALF = LIGHT + np.array([0, 0, 1.0])
+HALF = HALF / np.linalg.norm(HALF)
+
+
+class Paint(Canvas):
+    def __init__(self, w, h=None, design=None, seed=1, ss=3):
+        h = h or w
+        self.out_w, self.out_h, self.ss = w, h, ss
+        super().__init__(w * ss, h * ss, design=(design or w), seed=seed)
+        self.k = w * ss / (design or w)
+        self._nz_cache = None
+
+    def _noise(self):
+        if self._nz_cache is None:
+            a = value_noise(self.w, self.h, max(4, self.ss * 3), int(self.rng.integers(1e6)), 3, wrap=False)
+            b = self.rng.random((self.h, self.w))
+            self._nz_cache = (a - 0.5) * 1.5 + (b - 0.5) * 0.35
+        return self._nz_cache
+
+    def _put(self, mask, m, sh, tex=0.0, dith=0.4, edge=True, alpha=255, n=None):
+        super()._put(mask, m, sh, tex * 1.5 + 0.07, dith, edge, alpha, n)
+
+    def px(self, x, y, col, a=255):
+        self.dot(x, y, 0.48, col, a)
+
+    def line(self, x1, y1, x2, y2, col, w=1, a=255):
+        k = self.k
+        self.ovd.line([(x1 * k, y1 * k), (x2 * k, y2 * k)], fill=rgb(col) + (a,), width=max(1, int(w * k * 0.42)))
+
+    def dot(self, x, y, r, col, a=255):
+        k = self.k
+        self.ovd.ellipse([(x - r) * k, (y - r) * k, (x + r) * k, (y + r) * k], fill=rgb(col) + (a,))
+
+    def render(self, outline=(18, 11, 9, 235), glow=None, glow_r=3, glow_a=0.55, inner=True, ao=0.38, spec=1.0,
+               rim=(150, 190, 255), rim_a=0.32, out_w=0.85, lava=None, drama=0.0):
+        from PIL import ImageFilter as F
+        h, w, ss = self.h, self.w, self.ss
+        filled = self.mat >= 0
+        col = np.zeros((h, w, 3))
+        # contact shadow where a primitive sits behind another
+        occ = np.zeros((h, w))
+        if inner and self.prim:
+            edge_arr = np.array(self.edge + [False], bool)
+            o = self.ordr
+            behind = np.zeros((h, w), bool)
+            for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
+                nb = np.full((h, w), -1, np.int32)
+                ys = slice(max(0, dy), h + min(0, dy))
+                yd = slice(max(0, -dy), h + min(0, -dy))
+                xs = slice(max(0, dx), w + min(0, dx))
+                xd = slice(max(0, -dx), w + min(0, -dx))
+                nb[yd, xd] = o[ys, xs]
+                behind |= filled & (nb > o) & edge_arr[nb]
+            img = Image.fromarray((behind * 255).astype(np.uint8), 'L').filter(F.GaussianBlur(ss * 1.1))
+            occ = np.array(img).astype(float) / 255 * 2.2
+            occ = np.clip(occ, 0, 1)
+        for m, rmp in enumerate(self.mats):
+            sel = self.mat == m
+            if not sel.any():
+                continue
+            pal = np.array(rmp, float)
+            n = len(pal)
+            pos = np.clip(self.sh[sel], 0, 1) * (n - 1)
+            i0 = np.clip(np.floor(pos).astype(int), 0, n - 2)
+            f = (pos - i0)[:, None]
+            c = pal[i0] * (1 - f) + pal[i0 + 1] * f
+            gl = self.gloss[m]
+            if gl is None:
+                gl = 0.12
+            if gl > 0 and spec:
+                d = np.clip(self.nx[sel] * HALF[0] + self.ny[sel] * HALF[1] + self.nz[sel] * HALF[2], 0, 1)
+                sp = d ** (10 + gl * 40) * gl * 1.4 * spec
+                c = c + (255 - c) * np.clip(sp, 0, 1)[:, None]
+            if rim_a:
+                r = np.clip((1 - self.nz[sel]) ** 2.2 * np.clip(self.nx[sel] * 0.9 + 0.35, 0, 1), 0, 1) * rim_a
+                c = c + (np.array(rim, float) - c) * r[:, None]
+            c = c * (1 - ao * occ[sel])[:, None]
+            col[sel] = c
+        if drama:
+            lum = col.mean(axis=2, keepdims=True) / 255
+            col = col * (1 + drama * (lum - 0.45) * 1.4)
+        if lava is not None:
+            lcol, cells = lava
+            v = veins(h, w, int(self.rng.integers(1e6)), cells * 3, 0.06)
+            ok = filled & (self.alpha > 0)
+            if self.nolava:
+                ok &= ~np.isin(self.mat, list(self.nolava))
+            v = v * ok
+            gl = np.array(Image.fromarray((v * 255).astype(np.uint8), 'L').filter(F.GaussianBlur(ss * 2.2))).astype(float) / 255
+            core = np.clip(v * 1.3, 0, 1)[..., None]
+            col = col * (1 - 0.5 * gl[..., None]) + np.array(rgb(lcol), float) * gl[..., None] * 0.9
+            col = col * (1 - core) + (np.array(rgb(lcol), float) * 0.55 + np.array([255, 235, 160]) * 0.45) * core
+        out = np.zeros((h, w, 4), np.uint8)
+        out[:, :, :3] = np.clip(col, 0, 255)
+        out[:, :, 3] = np.where(filled, self.alpha, 0)
+        img = Image.fromarray(out, 'RGBA')
+        img.alpha_composite(self.ov)
+        a = np.array(img)[:, :, 3]
+        if outline is not None:
+            al = Image.fromarray(a, 'L').filter(F.MaxFilter(int(max(3, ss * out_w * 2) // 2 * 2 + 1)))
+            al = al.filter(F.GaussianBlur(ss * 0.35))
+            base = np.zeros((h, w, 4), np.uint8)
+            base[:, :, :3] = outline[:3]
+            base[:, :, 3] = (np.array(al).astype(float) * outline[3] / 255).astype(np.uint8)
+            b = Image.fromarray(base, 'RGBA')
+            b.alpha_composite(img)
+            img = b
+        if glow is not None:
+            al = Image.fromarray((a > 0).astype(np.uint8) * 255, 'L').filter(F.GaussianBlur(glow_r * ss))
+            g = np.zeros((h, w, 4), np.uint8)
+            g[:, :, :3] = rgb(glow)
+            g[:, :, 3] = np.clip(np.array(al).astype(float) * glow_a * 1.6, 0, 255).astype(np.uint8)
+            base = Image.fromarray(g, 'RGBA')
+            base.alpha_composite(img)
+            img = base
+        img = img.convert('RGBa').resize((self.out_w, self.out_h), Image.LANCZOS).convert('RGBA')
+        return img
+
+
+# ---------------------------------------------------------------------------------------------------
+# Painterly post-processing: an oil-paint (Kuwahara) filter, directional brush texture and lava veins.
+def _box(a, r):
+    """Mean over a (2r+1)-square, edges clamped, via an integral image."""
+    h, w = a.shape[:2]
+    p = np.pad(a, ((r + 1, r), (r + 1, r)) + ((0, 0),) * (a.ndim - 2), mode='edge')
+    c = p.cumsum(0).cumsum(1)
+    s = c[2 * r + 1:, 2 * r + 1:] - c[:-2 * r - 1, 2 * r + 1:] - c[2 * r + 1:, :-2 * r - 1] + c[:-2 * r - 1, :-2 * r - 1]
+    return s[:h, :w] / (2 * r + 1) ** 2
+
+
+def kuwahara(arr, r=3):
+    """arr float HxWx3. Picks, per pixel, the mean of the least varied of four quadrants."""
+    h, w = arr.shape[:2]
+    lum = arr.mean(axis=2)
+    q = r // 2 + 1
+    m = _box(arr, q)
+    m2 = _box(lum ** 2, q)
+    ml = _box(lum, q)
+    var = m2 - ml ** 2
+    best = None
+    bestv = None
+    for dy, dx in ((-q, -q), (-q, q), (q, -q), (q, q)):
+        mv = np.roll(np.roll(var, dy, 0), dx, 1)
+        mm = np.roll(np.roll(m, dy, 0), dx, 1)
+        if best is None:
+            best, bestv = mm, mv
+        else:
+            sel = mv < bestv
+            best = np.where(sel[..., None], mm, best)
+            bestv = np.where(sel, mv, bestv)
+    return best
+
+
+def brush(arr, seed=1, angle=-0.35, length=9, amt=0.07):
+    """Directional streak texture multiplied over the image, like visible brush strokes."""
+    from PIL import ImageFilter
+    h, w = arr.shape[:2]
+    rng = np.random.default_rng(seed)
+    n = (rng.random((h, w)) * 255).astype(np.uint8)
+    img = Image.fromarray(n, 'L')
+    big = img.rotate(math.degrees(angle), resample=Image.BILINEAR, expand=False)
+    k = length
+    big = big.filter(ImageFilter.BoxBlur(1)).resize((w // k, h), Image.BILINEAR).resize((w, h), Image.BICUBIC)
+    big = big.rotate(-math.degrees(angle), resample=Image.BILINEAR, expand=False)
+    t = (np.array(big).astype(float) / 255 - 0.5)
+    t = t / (np.abs(t).max() + 1e-6)
+    return arr * (1 + t[..., None] * amt)
+
+
+def veins(h, w, seed, cells=40, width=0.018):
+    """Voronoi crack network in 0..1 (1 on the cracks)."""
+    rng = np.random.default_rng(seed)
+    pts = rng.random((cells, 2)) * [w, h]
+    Y, X = np.mgrid[0:h, 0:w].astype(float)
+    d1 = np.full((h, w), 1e9)
+    d2 = np.full((h, w), 1e9)
+    for px_, py_ in pts:
+        d = np.sqrt((X - px_) ** 2 + (Y - py_) ** 2)
+        nd2 = np.where(d < d1, d1, np.minimum(d2, d))
+        d1 = np.minimum(d1, d)
+        d2 = nd2
+    edge = (d2 - d1) / (math.sqrt(w * h / cells))
+    return np.clip(1 - edge / width, 0, 1)

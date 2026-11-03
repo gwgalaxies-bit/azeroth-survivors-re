@@ -14,22 +14,23 @@
 <div id="app">
   <header id="top">
     <div class="unit player">
-      <div class="portrait-wrap"><div class="portrait" id="pFace"></div><div class="lvl" id="pLvl">1</div></div>
+      <div class="portrait-wrap big"><div class="portrait" id="pFace"></div><div class="lvl" id="pLvl">1</div></div>
       <div class="ubody">
         <div class="uname"><span id="pName"></span><small id="pTitle"></small></div>
         <div class="bar hp"><i id="pHp"></i><span id="pHpT"></span></div>
-        <div class="bar blue thin" id="pResBar"><i id="pRes"></i><span id="pResT" style="font-size:8px"></span></div>
+        <div class="bar blue thin" id="pResBar"><i id="pRes"></i><span id="pResT"></span></div>
+        <div class="wallet">
+          <div class="cur"><b id="cGoldI"></b><span id="cGold">0</span></div>
+          <div class="cur"><b id="cBadgeI"></b><span id="cBadge">0</span></div>
+          <div class="cur"><b id="cKeyI"></b><span id="cKey">0</span></div>
+        </div>
       </div>
     </div>
-    <div class="wallet">
-      <div class="row">
-        <div class="cur"><b id="cGoldI"></b><span id="cGold">0</span></div>
-        <button id="btnMenu" class="iconbtn" data-act="settings" aria-label="Einstellungen"></button>
-      </div>
-      <div class="row">
-        <div class="cur"><b id="cBadgeI"></b><span id="cBadge">0</span></div>
-        <div class="cur"><b id="cKeyI"></b><span id="cKey">0</span></div>
-      </div>
+    <div class="mm-wrap">
+      <div class="mm-zone" id="mmZone"></div>
+      <button class="minimap" id="minimap" data-act="zones" aria-label="Weltkarte öffnen"><span class="mm-map" id="mmMap"></span><span id="mmDots"></span><span class="mm-player"></span></button>
+      <button id="btnMenu" class="mm-btn" data-act="settings" aria-label="Einstellungen"></button>
+      <div class="mm-clock" id="mmClock"></div>
     </div>
   </header>
 

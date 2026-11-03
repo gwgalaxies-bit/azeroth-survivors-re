@@ -26,7 +26,7 @@ const Scene = (() => {
   async function init(c) {
     canvas = c;
     ctx = canvas.getContext('2d');
-    const [s, i] = await Promise.all([loadImage('assets/sprites.png'), loadImage('assets/icons.png')]);
+    const [s, i] = await Promise.all([loadImage('assets/sprites.webp'), loadImage('assets/icons.webp')]);
     IMG.sprites = s;
     IMG.icons = i;
     resize();
@@ -35,18 +35,19 @@ const Scene = (() => {
   }
 
   function bg(name) {
-    if (!IMG.bg[name]) { IMG.bg[name] = new Image(); IMG.bg[name].src = `assets/bg/${name}.png`; }
+    if (!IMG.bg[name]) { IMG.bg[name] = new Image(); IMG.bg[name].src = `assets/bg/${name}.webp`; }
     return IMG.bg[name];
   }
 
   function resize() {
-    const dpr = window.devicePixelRatio || 1;
+    const dpr = Math.min(3, window.devicePixelRatio || 1);
     const cw = canvas.clientWidth || 360;
-    k = Math.max(1, Math.round(cw * dpr / W));
-    canvas.width = W * k;
-    canvas.height = H * k;
-    ctx.imageSmoothingEnabled = false;
+    const pw = Math.max(W, Math.round(cw * dpr));
+    canvas.width = pw;
+    canvas.height = Math.round(pw * H / W);
+    k = pw / W;
   }
+  const SC = (ATLAS.sprites.scale || 1), IC = (ATLAS.icons.cell || 32);
 
   function spr(name) { return ATLAS.sprites.map[name]; }
 
@@ -69,8 +70,8 @@ const Scene = (() => {
   function drawSprite(name, x, y, o = {}) {
     const r = spr(name);
     if (!r || !IMG.sprites) return;
-    const w = r[2] * (o.scale || 1), h = r[3] * (o.scale || 1);
-    const dx = Math.round(x - w / 2), dy = Math.round(y - h);
+    const w = r[2] / SC * (o.scale || 1), h = r[3] / SC * (o.scale || 1);
+    const dx = x - w / 2, dy = y - h;
     ctx.save();
     ctx.globalAlpha = o.alpha === undefined ? 1 : o.alpha;
     if (o.rot) {
@@ -102,17 +103,17 @@ const Scene = (() => {
   function drawIcon(name, x, y, size) {
     const p = ATLAS.icons.map[name];
     if (!p || !IMG.icons) return;
-    ctx.drawImage(IMG.icons, p[0], p[1], 32, 32, Math.round(x - size / 2), Math.round(y - size / 2), size, size);
+    ctx.drawImage(IMG.icons, p[0], p[1], IC, IC, x - size / 2, y - size / 2, size, size);
   }
 
   function shadow(x, y, w) {
     ctx.fillStyle = 'rgba(0,0,0,0.28)';
     ctx.beginPath();
-    ctx.ellipse(Math.round(x), Math.round(y - 1), w / 2, 2.5, 0, 0, Math.PI * 2);
+    ctx.ellipse(x, y - 1, w / 2, 2.6, 0, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  function spriteHeight(name) { const r = spr(name); return r ? r[3] : 48; }
+  function spriteHeight(name) { const r = spr(name); return r ? r[3] / SC : 48; }
 
   // ------------------------------------------------------------------------------- text & fx
   function text(str, x, y, o = {}) {
@@ -268,7 +269,8 @@ const Scene = (() => {
     const sx = shake > 0 ? Math.round(rnd(-2, 2)) : 0, sy = shake > 0 ? Math.round(rnd(-1, 1)) : 0;
     shake = Math.max(0, shake - dt);
     ctx.setTransform(k, 0, 0, k, sx * k, sy * k);
-    ctx.imageSmoothingEnabled = false;
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
     const bgi = bg(bgName);
     if (bgi.complete && bgi.naturalWidth) ctx.drawImage(bgi, 0, 0, W, H);
     else { ctx.fillStyle = '#101018'; ctx.fillRect(0, 0, W, H); }
@@ -280,21 +282,21 @@ const Scene = (() => {
     hero.flash = Math.max(0, hero.flash - dt);
     const heroDead = b && b.h.dead > 0;
     if (S) {
-      const bob = heroDead ? 0 : Math.round(Math.sin(t * 2.4) * 1);
+      const bob = heroDead ? 0 : Math.sin(t * 2.4) * 1.1;
       const lx = hero.lunge > 0 ? Math.sin(Math.PI * (1 - hero.lunge / 0.2)) * 7 : 0;
       draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(CLASSES[S.cls].sprite, hero.x + lx, hero.y + bob, { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : 0, grey: heroDead }); } });
       if (S.cls === 'jaeger') {
         const pet = A.pet;
         pet.lunge = Math.max(0, pet.lunge - dt);
         const px2 = (S.comp.thorga ? 88 : 100) + (pet.lunge > 0 ? Math.sin(Math.PI * (1 - pet.lunge / 0.25)) * 18 : 0);
-        draws.push({ y: pet.y, fn: () => { shadow(px2, pet.y, 22); drawSprite('waldwolf', px2, pet.y + Math.round(Math.sin(t * 3) * 0.6), { flip: true, scale: 0.8 }); } });
+        draws.push({ y: pet.y, fn: () => { shadow(px2, pet.y, 22); drawSprite('waldwolf', px2, pet.y + Math.sin(t * 3) * 0.6, { flip: true, scale: 0.8 }); } });
       }
       for (const c of COMPANIONS) {
         if (!S.comp[c.id]) continue;
         const p = A.comps[c.id] || (A.comps[c.id] = { x: COMP_POS[c.id][0], y: COMP_POS[c.id][1], lunge: 0 });
         p.lunge = Math.max(0, p.lunge - dt);
         const lx2 = p.lunge > 0 ? Math.sin(Math.PI * (1 - p.lunge / 0.2)) * 6 : 0;
-        const bob2 = Math.round(Math.sin(t * 2.1 + p.x) * 1);
+        const bob2 = Math.sin(t * 2.1 + p.x) * 1;
         draws.push({ y: p.y, fn: () => { shadow(p.x, p.y, 20); drawSprite(COMP_SPRITE[c.id], p.x + lx2, p.y + bob2, {}); } });
       }
     }
@@ -306,7 +308,7 @@ const Scene = (() => {
       else if (en.dying > 0) { en.dying -= dt; en.alpha = Math.max(0, en.dying / 0.6); }
       else if (!b.enemy.dead) en.alpha = 1;
       const big = spriteHeight(en.sprite) > 60;
-      const bob = Math.round(Math.sin(t * 2 + 1) * (big ? 1.5 : 1));
+      const bob = Math.sin(t * 2 + 1) * (big ? 1.6 : 1.1);
       const lx = en.lunge > 0 ? -Math.sin(Math.PI * (1 - en.lunge / 0.2)) * 7 : 0;
       const sink = en.dying > 0 ? (1 - en.dying / 0.6) * 6 : 0;
       const drop = en.spawn > 0 ? -en.spawn * 20 : 0;
@@ -337,9 +339,9 @@ const Scene = (() => {
       const r = spr(p.sprite);
       if (r) {
         ctx.save();
-        ctx.translate(Math.round(x), Math.round(y));
+        ctx.translate(x, y);
         ctx.rotate(Math.atan2(p.y1 - p.y0, p.x1 - p.x0));
-        ctx.drawImage(IMG.sprites, r[0], r[1], r[2], r[3], -r[2] / 2, -r[3] / 2, r[2], r[3]);
+        ctx.drawImage(IMG.sprites, r[0], r[1], r[2], r[3], -r[2] / SC / 2, -r[3] / SC / 2, r[2] / SC, r[3] / SC);
         ctx.restore();
       }
       if (q >= 1) { if (p.onArrive) p.onArrive(); return false; }
@@ -376,7 +378,9 @@ const Scene = (() => {
         ctx.fillStyle = col;
         for (let i = 0; i < 8; i++) {
           const a = i / 8 * Math.PI * 2;
-          ctx.fillRect(Math.round(e.x + Math.cos(a) * q * 16), Math.round(e.y + Math.sin(a) * q * 12), 2, 2);
+          ctx.beginPath();
+          ctx.arc(e.x + Math.cos(a) * q * 16, e.y + Math.sin(a) * q * 12, 1.3 * (1 - q * 0.5), 0, Math.PI * 2);
+          ctx.fill();
         }
       } else if (e.kind === 'pillar') {
         const r = spr('fx_pillar');
@@ -391,8 +395,11 @@ const Scene = (() => {
           ctx.fillRect(e.x - 5, 0, 10, e.y);
           ctx.globalAlpha = q > 0.75 ? (1 - q) / 0.25 : 1;
         }
+        ctx.shadowColor = e.col;
+        ctx.shadowBlur = 8;
         ctx.fillStyle = e.col;
-        ctx.fillRect(Math.round(e.x - 10), Math.round(y - 10), 20, 20);
+        ctx.fillRect(e.x - 10, y - 10, 20, 20);
+        ctx.shadowBlur = 0;
         drawIcon(e.icon, e.x, y, 18);
       }
       ctx.restore();
@@ -411,7 +418,11 @@ const Scene = (() => {
         ctx.beginPath();
         ctx.ellipse(p.x, p.y, p.size, p.size * 0.3, 0, 0, Math.PI * 2);
         ctx.fill();
-      } else ctx.fillRect(Math.round(p.x), Math.round(p.y), p.size, p.size);
+      } else {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
       return true;
     });
 
@@ -428,7 +439,7 @@ const Scene = (() => {
       const pop = age < 0.12 ? 1 + (0.12 - age) * 4 : 1;
       ctx.globalAlpha = Math.min(1, tx.life / 0.35);
       ctx.font = `${tx.bold ? '800' : '600'} ${Math.round(tx.size * pop)}px "Alegreya Sans", "Trebuchet MS", sans-serif`;
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = Math.max(1.6, tx.size * 0.22);
       ctx.strokeStyle = 'rgba(10,6,4,0.95)';
       ctx.lineJoin = 'round';
       ctx.strokeText(tx.str, tx.x, tx.y);
@@ -490,12 +501,12 @@ const Scene = (() => {
     const r = spr(name);
     if (!r) return false;
     const x = c.getContext('2d');
-    x.imageSmoothingEnabled = false;
+    x.imageSmoothingEnabled = true;
     x.clearRect(0, 0, c.width, c.height);
     if (o.bg) { x.fillStyle = o.bg; x.fillRect(0, 0, c.width, c.height); }
     const crop = o.crop || 1;
     const sh = Math.round(r[3] * crop);
-    const scale = o.scale || Math.max(1, Math.floor(Math.min(c.width / r[2], c.height / sh)));
+    const scale = o.scale || Math.min(c.width / r[2], c.height / sh);
     const w = r[2] * scale, h = sh * scale;
     x.drawImage(IMG.sprites, r[0], r[1] + (o.top || 0), r[2], sh, Math.round((c.width - w) / 2 + (o.dx || 0)), Math.round(c.height - h + (o.dy || 0)), w, h);
     return true;
