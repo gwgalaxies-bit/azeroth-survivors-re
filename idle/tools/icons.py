@@ -17,7 +17,7 @@ TIERS = [
 ]
 
 
-ICON = 64
+ICON = 96
 
 
 def bg(theme, seed=0):

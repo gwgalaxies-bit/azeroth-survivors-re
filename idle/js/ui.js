@@ -26,9 +26,12 @@ const UI = (() => {
     const f = scale / SSC;
     return `<i class="spr" style="width:${(r[2] * f).toFixed(1)}px;height:${(r[3] * f).toFixed(1)}px;background-size:${(W * f).toFixed(1)}px ${(H * f).toFixed(1)}px;background-position:-${(r[0] * f).toFixed(1)}px -${(r[1] * f).toFixed(1)}px;${style}"></i>`;
   }
+  const FACES = ATLAS.sprites.faces || {};
   function face(name, box, scale, fx = 0.5, fy = 0.35) {
     const r = ATLAS.sprites.map[name];
     if (!r) return '';
+    const f = FACES[name];
+    if (f) { fx = f[0]; fy = f[1]; scale = box / Math.max(r[2], r[3]) * SSC * f[2]; }
     if (!scale) scale = box / Math.max(r[2], r[3]) * SSC * 1.5;
     const w = r[2] / SSC * scale, h = r[3] / SSC * scale;
     return spr(name, scale, `left:${Math.round(box / 2 - w * fx)}px;top:${Math.round(box / 2 - h * fy)}px`);

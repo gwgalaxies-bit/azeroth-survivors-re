@@ -48,7 +48,20 @@ Versorgungskiste, Weltboss-Fenster, Tagesquests und die tägliche Anmeldeserie.
 | `js/atlas.js` | Generierter Index der Sprite- und Icon-Atlanten |
 | `tools/` | Python-Generator für alle Grafiken (`numpy`, `Pillow` mit WebP); `px.py` enthält den Pixel- und den gemalten Renderer |
 
-Grafiken neu erzeugen (dauert gut eine Minute):
+### Eigene gemalte Bilder
+
+Liegt in `art/` ein Bild mit passendem Namen, ersetzt es die erzeugte Grafik:
+
+| Datei | Wird zu |
+|---|---|
+| `art/bg_<zone>.jpg` | Hintergrund der Zone (wird auf 3:2 zugeschnitten, 960×640) |
+| `art/hero_<klasse>.jpg`, `art/<boss>.jpg` | Figur; Schachbrett- oder einfarbiger Hintergrund wird freigestellt, Leuchteffekte bleiben weich |
+| `art/icons/<slot>.jpg` | Item-Icon; daraus entstehen sechs Stufen (Bronze, Eisen, Original, Gold, Leere, Legendär) |
+
+Gefährten und Arena-Gegner entstehen als umgefärbte Heldenbilder. Welche Figur wie groß gezeichnet wird
+und in welche Richtung sie schaut, steht in `tools/custom_art.py`.
+
+Grafiken neu erzeugen (dauert knapp zwei Minuten):
 
 ```bash
 make idle-assets   # python3 idle/tools/gen_assets.py

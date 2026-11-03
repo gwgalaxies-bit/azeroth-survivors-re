@@ -16,6 +16,7 @@ sys.path.insert(0, HERE)
 from PIL import Image  # noqa: E402
 
 import backgrounds  # noqa: E402
+import custom_art  # noqa: E402
 import icons  # noqa: E402
 import sprites  # noqa: E402
 import ui  # noqa: E402
@@ -68,14 +69,18 @@ def main():
                 os.remove(os.path.join(ASSETS, d, f))
 
     spr = sprites.catalogue()
+    c_spr, c_bg, faces = custom_art.catalogue(sprites.SC)
+    spr.update(c_spr)
     satlas, spos = pack(spr, max_w=2048, pad=2)
     satlas.save(os.path.join(ASSETS, 'sprites.webp'), quality=90, method=6)
 
     ico = icons.catalogue()
+    ico.update({k: icons.frame(v) for k, v in custom_art.icons(icons.ICON).items()})
     iatlas, ipos = grid(ico, cell=icons.ICON)
     iatlas.save(os.path.join(ASSETS, 'icons.webp'), quality=92, method=6)
 
     bgs = backgrounds.catalogue()
+    bgs.update(c_bg)
     for n, im in bgs.items():
         im.save(os.path.join(ASSETS, 'bg', n + '.webp'), quality=86, method=6)
 
@@ -87,7 +92,7 @@ def main():
             im.save(os.path.join(ASSETS, 'ui', n + '.png'), optimize=True)
 
     index = dict(
-        sprites=dict(size=list(satlas.size), scale=sprites.SC, map=spos),
+        sprites=dict(size=list(satlas.size), scale=sprites.SC, map=spos, faces=faces, painted=sorted(c_spr)),
         icons=dict(size=list(iatlas.size), cell=icons.ICON, map=ipos),
         backgrounds=sorted(bgs),
     )
@@ -95,7 +100,7 @@ def main():
     with open(os.path.join(ROOT, 'js', 'atlas.js'), 'w') as f:
         f.write(js)
     total = sum(os.path.getsize(os.path.join(dp, f)) for dp, _, fs in os.walk(ASSETS) for f in fs)
-    print(f'{len(spr)} sprites, {len(ico)} icons, {len(bgs)} backgrounds, {len(uis)} ui textures; {total // 1024} KiB')
+    print(f'{len(spr)} sprites ({len(c_spr)} painted), {len(ico)} icons, {len(bgs)} backgrounds ({len(c_bg)} painted), {len(uis)} ui textures; {total // 1024} KiB')
 
 
 if __name__ == '__main__':
