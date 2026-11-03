@@ -5,7 +5,7 @@ DATA_DIR := wow-data
 DATA     := $(DATA_DIR)/Data
 WASM     := web/dist/wenilla_bg.wasm
 
-.PHONY: help build start native fetch-data toolchain wasm clean
+.PHONY: help build start native fetch-data toolchain wasm clean idle idle-assets
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -30,3 +30,9 @@ native: fetch-data ## Build + run the native desktop version
 
 clean: ## Remove the fetched game data and wasm build output
 	rm -rf web/dist $(DATA_DIR)
+
+idle: ## Serve Valdoran Idle (the portrait idle RPG in idle/) at http://127.0.0.1:8091
+	cd idle && python3 -m http.server 8091 --bind 127.0.0.1
+
+idle-assets: ## Regenerate Valdoran Idle's pixel art (needs Python 3 with numpy and Pillow)
+	python3 idle/tools/gen_assets.py

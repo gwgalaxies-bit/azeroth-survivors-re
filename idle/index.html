@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16141a">
+<title>Valdoran Idle</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@500;700;800&family=Cinzel:wght@700;900&display=swap">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="unit player">
+      <div class="portrait-wrap"><div class="portrait" id="pFace"></div><div class="lvl" id="pLvl">1</div></div>
+      <div class="ubody">
+        <div class="uname"><span id="pName"></span><small id="pTitle"></small></div>
+        <div class="bar hp"><i id="pHp"></i><span id="pHpT"></span></div>
+        <div class="bar blue thin" id="pResBar"><i id="pRes"></i><span id="pResT" style="font-size:8px"></span></div>
+      </div>
+    </div>
+    <div class="wallet">
+      <div class="row">
+        <div class="cur"><b id="cGoldI"></b><span id="cGold">0</span></div>
+        <button id="btnMenu" class="iconbtn" data-act="settings" aria-label="Einstellungen"></button>
+      </div>
+      <div class="row">
+        <div class="cur"><b id="cBadgeI"></b><span id="cBadge">0</span></div>
+        <div class="cur"><b id="cKeyI"></b><span id="cKey">0</span></div>
+      </div>
+    </div>
+  </header>
+
+  <section id="stage">
+    <canvas id="scene" width="480" height="320" aria-label="Kampfszene. Tippen für Extraschaden."></canvas>
+    <div id="zoneTag"></div>
+    <div id="instBar" hidden><b id="instTitle"></b><span id="instInfo"></span><div class="bar orange thin"><i id="instTime"></i></div></div>
+    <div class="unit target" id="targetFrame" hidden>
+      <div class="portrait-wrap"><div class="portrait" id="tFace"></div><div class="lvl" id="tLvl">1</div></div>
+      <div class="ubody">
+        <div class="uname"><span id="tName"></span><small id="tKind"></small></div>
+        <div class="bar red"><i id="tHp"></i><span id="tHpT"></span></div>
+      </div>
+    </div>
+    <button id="leaveBtn" class="btn sm" data-act="leave" hidden>Verlassen</button>
+  </section>
+
+  <section id="actionbar"></section>
+  <main id="panel"></main>
+  <div id="xpbar"><i id="xpRested"></i><i id="xpFill"></i><span id="xpText"></span></div>
+  <nav id="tabs"></nav>
+</div>
+<div id="modal" hidden></div>
+<div id="toasts" aria-live="polite"></div>
+
+<script src="js/atlas.js"></script>
+<script src="js/data.js"></script>
+<script src="js/game.js"></script>
+<script src="js/scene.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
