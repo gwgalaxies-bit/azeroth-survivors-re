@@ -16,10 +16,10 @@ BACKDROPS = dict(bg_goldhain=0.4, bg_nebelmoor=0.5, bg_rotfels=0.5, bg_sonnenglu
 
 # name: (file, logical box w x h, face the right?, source x-range to keep, face focus (fx, fy, zoom))
 CHARACTERS = {
-    'hero_krieger': ('hero_krieger', (66, 68), True, None, (0.55, 0.16, 3.2)),
-    'hero_magier': ('hero_magier', (70, 68), True, None, (0.5, 0.15, 3.2)),
-    'hero_jaeger': ('hero_jaeger', (80, 68), True, None, (0.35, 0.13, 3.2)),
-    'hero_priester': ('hero_priester', (66, 68), True, None, (0.55, 0.12, 3.2)),
+    'hero_krieger': ('hero_krieger', (160, 77), True, None, (0.55, 0.16, 3.2)),
+    'hero_magier': ('hero_magier', (160, 71), True, None, (0.5, 0.15, 3.2)),
+    'hero_jaeger': ('hero_jaeger', (160, 72), True, None, (0.35, 0.13, 3.2)),
+    'hero_priester': ('hero_priester', (160, 71), True, None, (0.55, 0.12, 3.2)),
     'ignaroth': ('ignaroth', (138, 94), False, None, (0.18, 0.2, 1.6)),
     'kragg': ('kragg', (112, 82), False, None, (0.32, 0.25, 2.0)),
     'morva': ('morva', (66, 82), False, (0.0, 0.48), (0.6, 0.2, 2.4)),
@@ -34,10 +34,10 @@ HALO = {'hero_magier': 16, 'hero_priester': 22, 'ignaroth': 16, 'kragg': 22, 'mo
 
 # companions and arena rivals are recoloured heroes: (source, hue range to move, target hue, scale)
 DERIVED = {
-    'comp_tank': ('hero_krieger', (0.94, 0.04), 0.62, 0.86),
-    'comp_heiler': ('hero_priester', (0.09, 0.17), 0.30, 0.86),
-    'comp_schuetze': ('hero_jaeger', (0.18, 0.45), 0.99, 0.86),
-    'comp_zauberin': ('hero_magier', (0.68, 0.86), 0.99, 0.86),
+    'comp_tank': ('hero_krieger', (0.94, 0.04), 0.62, 0.9, (0.78, 0.9, 1.22)),
+    'comp_heiler': ('hero_priester', (0.09, 0.17), 0.30, 0.9, (0.92, 1.08, 0.9)),
+    'comp_schuetze': ('hero_jaeger', (0.18, 0.45), 0.99, 0.9, (1.08, 0.92, 0.9)),
+    'comp_zauberin': ('hero_magier', (0.68, 0.86), 0.99, 0.9, (1.1, 0.9, 0.9)),
 }
 
 
@@ -242,7 +242,7 @@ def recolour(img, hue_range, target, darken=1.0):
 
 
 # which way each source image faces (heroes must face right, monsters left)
-SOURCE_FACES_RIGHT = dict(hero_krieger=False, hero_magier=True, hero_jaeger=True, hero_priester=True, ignaroth=False,
+SOURCE_FACES_RIGHT = dict(hero_krieger=True, hero_magier=True, hero_jaeger=True, hero_priester=True, ignaroth=False,
                           kragg=True, morva=True, gromm=False, khet=False, glaciara=False, mordrek=False, umbrax=False)
 
 
@@ -263,10 +263,12 @@ def catalogue(sc):
         if SOURCE_FACES_RIGHT.get(src) != right:
             fx = 1 - fx
         faces[name] = [round(fx, 3), round(fy, 3), z]
-    for name, (src, hr, target, scale) in DERIVED.items():
+    for name, (src, hr, target, scale, tint) in DERIVED.items():
         if src in S:
             base = S[src]
             img = recolour(base, hr, target)
+            t = np.asarray(img).astype(float) * [tint[0], tint[1], tint[2], 1]
+            img = Image.fromarray(np.clip(t, 0, 255).astype(np.uint8), 'RGBA')
             S[name] = img.resize((int(img.width * scale), int(img.height * scale)), Image.LANCZOS)
             faces[name] = faces[src]
     for cls in ('krieger', 'magier', 'jaeger', 'priester'):

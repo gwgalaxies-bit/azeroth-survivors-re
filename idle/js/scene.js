@@ -15,7 +15,7 @@ const Scene = (() => {
     comps: {},
     pet: { x: 100, y: 158, lunge: 0 },
   };
-  const COMP_POS = { thorga: [106, 154], elyra: [40, 139], varrik: [18, 147], mirra: [48, 156] };
+  const COMP_POS = { thorga: [108, 143], elyra: [42, 140], varrik: [16, 145], mirra: [30, 152] };
   const COMP_SPRITE = { thorga: 'comp_tank', elyra: 'comp_heiler', varrik: 'comp_schuetze', mirra: 'comp_zauberin' };
   const RAR_COL = RARITY.map((r) => r.color);
 
