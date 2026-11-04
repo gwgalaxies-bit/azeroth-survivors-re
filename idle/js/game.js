@@ -66,6 +66,7 @@ const MAX_LEVEL = 60;
 const BAG_SIZE = 40;
 const KEY_MAX = 5, KEY_REGEN = 20 * MIN;
 const ARENA_TICKETS = 5;
+const POTION_CAP = 20;
 
 // Fights last a while: a normal monster takes about 7 s at your level, an elite half a minute,
 // a boss one to two minutes. Monsters hit softer in exchange, so a fight costs about as much health as before.
@@ -148,6 +149,12 @@ function migrate(s) {
     S = saved;
   }
   if (!s.loc) s.loc = { z: s.zone, p: 'hub' };
+  if ((s.cons.potion_heal || 0) > POTION_CAP) {
+    const extra = s.cons.potion_heal - POTION_CAP;
+    s.cons.potion_heal = POTION_CAP;
+    s.gold += Math.ceil(3 * Math.pow(1.1, Math.min(s.level, 60) - 1) * 3 * extra);
+    s.potionNote = extra;
+  }
   return s;
 }
 
@@ -954,8 +961,8 @@ function tickBattle(b, dt) {
   // potion
   if (h.hp > 0 && h.hp < st.hp * 0.35 && h.potionCd <= 0 && (S.cons.potion_heal || 0) > 0) {
     S.cons.potion_heal--;
-    h.potionCd = 12;
-    const amt = st.hp * 0.4 * (1 + st.potion / 100);
+    h.potionCd = 30;
+    const amt = st.hp * 0.35 * (1 + st.potion / 100);
     h.hp = Math.min(st.hp, h.hp + amt);
     if (b.fx && Hooks.fx) Hooks.fx.heal(amt, 'potion');
     Hooks.log('Du trinkst einen <span class="q1">[Heiltrank]</span>.');
@@ -978,7 +985,7 @@ function castSkill(b, st, id, sk) {
     if (sk.slow) e.slow = sk.slow;
   } else if (sk.kind === 'dot') {
     const total = st.atk * sk.mult * (1 + st.skillP / 100) * (e.kind !== 'normal' ? 1 + st.bossP / 100 : 1) * b.dmgMul * (h.buffT > 0 ? 1 + h.buffMul : 1);
-    e.dots.push({ t: sk.dur, dps: total / sk.dur, acc: 0, tick: total / sk.dur });
+    e.dots.push({ id, t: sk.dur, dps: total / sk.dur, acc: 0, tick: total / sk.dur });
   } else if (sk.kind === 'heal') {
     const amt = st.hp * sk.mult;
     h.hp = Math.min(st.hp, h.hp + amt);
@@ -987,6 +994,41 @@ function castSkill(b, st, id, sk) {
     h.buffT = sk.dur;
     h.buffMul = sk.mult;
   }
+}
+
+// Buffs and debuffs on the hero and the current enemy, for the aura rows.
+// Each: { key, icon, name, desc, left (seconds or null), debuff }.
+function auras() {
+  const t = now(), b = battle;
+  const hero = [], enemy = [];
+  if (b && b.h.buffT > 0) {
+    const sk = SKILLS.kampfschrei;
+    hero.push({ key: 'kampfschrei', icon: sk.icon, name: sk.name, desc: `+${Math.round(b.h.buffMul * 100)}% Angriff`, left: b.h.buffT });
+  }
+  const map = { atk: 'elixir_atk', xp: 'elixir_xp', luck: 'elixir_luck', titan: 'flask_titan' };
+  for (const k in map) if (S.buffs[k] > t) hero.push({ key: k, icon: map[k], name: CONSUMABLES[map[k]].name, desc: CONSUMABLES[map[k]].desc, left: (S.buffs[k] - t) / 1000 });
+  if (S.buffs.food > t && S.buffs.foodId) hero.push({ key: 'food', icon: S.buffs.foodId, name: CONSUMABLES[S.buffs.foodId].name, desc: CONSUMABLES[S.buffs.foodId].desc, left: (S.buffs.food - t) / 1000 });
+  if (S.rested > 0 && S.level < MAX_LEVEL) hero.push({ key: 'rested', icon: 'star', name: 'Erholt', desc: `Siege geben doppelte Erfahrung, noch ${fmt(S.rested)} EP.`, left: null });
+  if (!S.walk && S.loc && here().kind === 'hub') hero.push({ key: 'inn', icon: 'castle', name: 'Rast', desc: 'Im Dorf sammelst du schneller Erholungsbonus.', left: null });
+  if (b && b.h.potionCd > 0) hero.push({ key: 'potion', icon: 'potion_heal', name: 'Trank getrunken', desc: 'Der nächste Heiltrank wirkt erst nach Ablauf der Zeit.', left: b.h.potionCd, debuff: true });
+  if (b && b.h.dead > 0) hero.push({ key: 'ghost', icon: 'skull', name: 'Geist', desc: 'Du wirst gleich wiederbelebt.', left: b.h.dead, debuff: true });
+  const e = b && b.enemy;
+  if (e && !e.dead) {
+    const seen = {};
+    for (const d of e.dots) {
+      const sk = SKILLS[d.id];
+      if (!sk) continue;
+      seen[d.id] = (seen[d.id] || 0) + 1;
+      if (seen[d.id] > 1) continue;
+      enemy.push({ key: d.id, icon: sk.icon, name: sk.name, desc: 'Erleidet Schaden über Zeit.', left: d.t, debuff: true, stacks: e.dots.filter((x) => x.id === d.id).length });
+    }
+    if (e.slow > 0) enemy.push({ key: 'slow', icon: SKILLS.eislanze.icon, name: 'Unterkühlt', desc: 'Greift 40% langsamer an.', left: e.slow, debuff: true });
+    const kd = KIND[e.kind];
+    if (kd.special && e.spT <= 3) enemy.push({ key: 'cast', icon: 'st_crit', name: e.special || 'Mächtiger Angriff', desc: 'Wirkt gleich einen schweren Angriff.', left: Math.max(0, e.spT) });
+    const lim = b.mode === 'arena' ? KIND.arena.limit : kd.limit;
+    if (lim && lim - b.t < 30) enemy.push({ key: 'enrage', icon: 'raid', name: 'Raserei naht', desc: 'Läuft die Zeit ab, ist der Kampf verloren.', left: Math.max(0, lim - b.t) });
+  }
+  return { hero, enemy };
 }
 
 // What a skill button can do right now: locked | cd | res | target | ready
@@ -1278,7 +1320,16 @@ function grantReward(rw) {
   if (rw.raidmarks) { S.raidmarks += rw.raidmarks; out.push(['raidmark', rw.raidmarks]); }
   if (rw.honor) { S.honor += rw.honor; out.push(['honor', rw.honor]); }
   if (rw.keys) { S.keys += rw.keys; out.push(['key', rw.keys]); }
-  if (rw.cons) for (const k in rw.cons) { S.cons[k] = (S.cons[k] || 0) + rw.cons[k]; out.push([k, rw.cons[k]]); }
+  if (rw.cons) for (const k in rw.cons) {
+    let n = rw.cons[k];
+    if (k === 'potion_heal') {
+      const room = Math.max(0, POTION_CAP - (S.cons.potion_heal || 0));
+      if (n > room) { gainGold(gpk(Math.min(S.level, 60)) * 3 * (n - room)); n = room; }
+      if (!n) continue;
+    }
+    S.cons[k] = (S.cons[k] || 0) + n;
+    out.push([k, n]);
+  }
   if (rw.chest) {
     const it = makeItem(L + 1, rollRarity(rw.chest === 5 ? [0, 0, 0, 0, 85, 15] : DROP_TABLE.chest.map((v, i) => (i >= 4 ? v * 2 : v))));
     giveItem(it);
@@ -1317,7 +1368,7 @@ function claimChest() {
   if (!chestReady()) return null;
   S.chestT = now() + 4 * HOUR;
   const L = Math.min(S.level, 60) + S.worldTier * 8;
-  const rw = { gold: Math.ceil(gpk(L) * 60), cons: { potion_heal: 2 } };
+  const rw = { gold: Math.ceil(gpk(L) * 60), cons: { potion_heal: 1 } };
   const got = grantReward(rw);
   const tier = clamp(Math.floor((S.worldTier > 0 ? 7 : S.zoneMax) / 1.6), 0, 4);
   addMat(ORES[tier], 3); addMat(HERBS[tier], 3);
@@ -1374,11 +1425,16 @@ function craftSmith(tier, slot) {
   Hooks.sound('anvil');
   return it;
 }
+function alchGold(rc) { return rc.gold ? Math.ceil(gpk(Math.min(S.level, 60) + S.worldTier * 8) * rc.gold) : 0; }
 function craftAlchemy(id) {
   const rc = ALCHEMY.find((x) => x.id === id);
   if (!rc || S.prof.alch.skill < rc.skill) return false;
   for (const k in rc.cost) if ((S.mats[k] || 0) < rc.cost[k]) return false;
+  const gold = alchGold(rc);
+  if (S.gold < gold) return false;
+  if (id === 'potion_heal' && (S.cons.potion_heal || 0) >= POTION_CAP) return false;
   for (const k in rc.cost) S.mats[k] -= rc.cost[k];
+  S.gold -= gold;
   S.cons[id] = (S.cons[id] || 0) + rc.out;
   const sk = S.prof.alch.skill;
   if (sk < 300 && sk < rc.skill + 90) S.prof.alch.skill = Math.min(300, sk + 3);
@@ -1468,7 +1524,7 @@ function offerReward(o) {
     case 'item': return { item: { ilvl: L + 1, r: o.dur >= 240 ? 4 : 3 } };
     case 'keys': return { keys: Math.max(1, Math.floor(Math.pow(m, 0.5))) };
     case 'badges': return { badges: Math.ceil(4 * Math.pow(m, 0.75)) };
-    default: return { cons: { potion_heal: Math.ceil(m), [o.dur >= 120 ? 'elixir_xp' : 'elixir_atk']: o.dur >= 60 ? 1 : 0 } };
+    default: return { cons: { potion_heal: Math.min(3, Math.ceil(m / 4)), [o.dur >= 120 ? 'elixir_xp' : 'elixir_atk']: o.dur >= 60 ? 1 : 0 } };
   }
 }
 function expSlots() { return 2 + (S.level >= 30 ? 1 : 0); }

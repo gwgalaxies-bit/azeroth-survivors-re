@@ -109,6 +109,17 @@ body.compact #scene { aspect-ratio: 3 / 1.2; }
   background: rgba(8, 6, 10, 0.72); border: 1px solid #000; box-shadow: inset 0 0 0 1px #5a4a2a; border-radius: 4px; font-size: 11px; }
 #instBar b { display: block; font: 700 11px var(--f-display); color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #instBar .bar { margin-top: 3px; }
+.auras { display: flex; flex-wrap: wrap; gap: 3px; min-height: 0; }
+.auras:empty { display: none; }
+.auras.player { position: absolute; z-index: 2; left: max(8px, env(safe-area-inset-left, 0px)); top: 8px; max-width: 38%; }
+.auras.player.low { top: 58px; }
+.target .auras { margin-top: 3px; justify-content: flex-end; pointer-events: auto; }
+.aura { position: relative; display: flex; flex-direction: column; align-items: center; width: 26px; padding: 0; border: 0; background: none; cursor: pointer; }
+.aura .ico { width: 24px; height: 24px; border-radius: 3px; box-shadow: 0 0 0 1px #000, 0 0 0 2px #c8a050; }
+.aura.debuff .ico { box-shadow: 0 0 0 1px #000, 0 0 0 2px #d8302a; }
+.aura b { font: 800 9px/11px var(--f-body); color: #ffe9a8; text-shadow: 0 1px 0 #000, 0 0 2px #000; white-space: nowrap; }
+.aura i.st { position: absolute; right: -2px; top: 12px; font: 800 9px var(--f-body); font-style: normal; color: #fff; text-shadow: 0 1px 0 #000, 0 0 2px #000; }
+.aura.low b { color: #ff7a5a; }
 #zoneTag { display: none !important; position: absolute; left: max(8px, env(safe-area-inset-left, 0px)); top: 6px; padding: 3px 8px; pointer-events: none;
   font: 700 12px var(--f-display); color: var(--gold); text-shadow: 0 1px 0 #000, 0 0 4px #000; background: rgba(8, 6, 10, 0.55); border-radius: 3px; }
 #zoneTag small { display: block; font: 600 10px var(--f-body); color: var(--ink); }

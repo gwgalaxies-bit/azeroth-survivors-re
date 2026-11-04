@@ -27,16 +27,17 @@ const UI = (() => {
     return `<i class="spr" style="width:${(r[2] * f).toFixed(1)}px;height:${(r[3] * f).toFixed(1)}px;background-size:${(W * f).toFixed(1)}px ${(H * f).toFixed(1)}px;background-position:-${(r[0] * f).toFixed(1)}px -${(r[1] * f).toFixed(1)}px;${style}"></i>`;
   }
   const FACES = ATLAS.sprites.faces || {};
-  function face(name, box, scale, fx = 0.5, fy = 0.35) {
+  // A round portrait: the sprite placed so its face sits in the middle and fills ~55% of the circle.
+  // faces[name] = [x, y, size] of the head as fractions of the sprite (see tools/faces.py).
+  function face(name, box) {
     const r = ATLAS.sprites.map[name];
     if (!r) return '';
-    const f = FACES[name];
-    if (f) { fx = f[0]; fy = f[1]; scale = box / Math.max(r[2], r[3]) * SSC * f[2]; }
-    if (!scale) scale = box / Math.max(r[2], r[3]) * SSC * 1.5;
+    const [fx, fy, fs] = FACES[name] || [0.5, 0.25, 0.3];
+    const scale = 0.55 * box * SSC / (fs * r[3]);
     const w = r[2] / SSC * scale, h = r[3] / SSC * scale;
-    return spr(name, scale, `left:${Math.round(box / 2 - w * fx)}px;top:${Math.round(box / 2 - h * fy)}px`);
+    return spr(name, scale, `left:${(box / 2 - w * fx).toFixed(1)}px;top:${(box / 2 - h * fy).toFixed(1)}px`);
   }
-  function heroFace(box) { return face(CLASSES[S.cls].sprite, box, box / 23, 0.53, 0.2); }
+  function heroFace(box) { return face(CLASSES[S.cls].sprite, box); }
   function uiImg(name, w, h, extra = '') { return `<i class="ui-img" style="width:${w}px;height:${h}px;background-image:url(assets/ui/${name}.png);${extra}"></i>`; }
   function bar(cls, frac, label = '', thin = false) {
     return `<div class="bar ${cls}${thin ? ' thin' : ''}"><i style="width:${clamp(frac, 0, 1) * 100}%"></i>${label ? `<span>${label}</span>` : ''}</div>`;
@@ -133,7 +134,7 @@ const UI = (() => {
       const sk = SKILLS[id];
       h += `<button class="abtn" id="sk-${id}" data-act="cast" data-id="${id}" aria-label="${esc(sk.name)} wirken">${ico(sk.icon, 44)}<span class="cd"></span><span class="cdt"></span><span class="key">${i + 1}</span></button>`;
     });
-    h += `<button class="abtn" id="ab-potion" data-act="potioninfo" aria-label="Heiltrank">${ico('potion_heal', 44)}<span class="cnt" id="potCnt"></span></button>`;
+    h += `<button class="abtn" id="ab-potion" data-act="potioninfo" aria-label="Heiltrank">${ico('potion_heal', 44)}<span class="cd"></span><span class="cnt" id="potCnt"></span></button>`;
     h += '<span class="spacer"></span>';
     h += '<span id="abExtra"></span>';
     $('actionbar').innerHTML = h;
@@ -216,6 +217,7 @@ const UI = (() => {
       $('instTime').style.width = lim && e ? (Math.max(0, 1 - b.t / lim) * 100) + '%' : '100%';
     }
     minimap(b);
+    renderAuras(inst || walking);
     // skill cooldowns
     for (const id of CLASSES[S.cls].skills) {
       const el = $('sk-' + id);
@@ -232,6 +234,8 @@ const UI = (() => {
       el.children[2].textContent = locked ? sk.lvl : cd > 0.05 ? Math.ceil(cd) : '';
     }
     $('potCnt').textContent = S.cons.potion_heal || 0;
+    const pcd = b ? Math.max(0, b.h.potionCd) : 0;
+    $('ab-potion').querySelector('.cd').style.setProperty('--p', pcd / 30);
     // extra action button (boss / leave)
     let ex = '';
     if (!inst && bossAvailable(S.zone)) ex = btn(`${ico('skull', 18)} Boss`, 'boss', { z: S.zone }, 'sm');
@@ -239,6 +243,21 @@ const UI = (() => {
     document.body.classList.toggle('compact', tab !== 'kampf');
   }
 
+  let auraKey = '';
+  function auraLeft(s) { return s === null ? '' : s >= 3600 ? Math.ceil(s / 3600) + 'h' : s >= 60 ? Math.ceil(s / 60) + 'm' : Math.ceil(s) + 's'; }
+  function auraHTML(a) {
+    return `<button class="aura ${a.debuff ? 'debuff' : ''} ${a.left !== null && a.left < 5 ? 'low' : ''}" data-act="aura" data-n="${esc(a.name)}" data-d="${esc(a.desc)}" data-i="${a.icon}">${ico(a.icon, 24)}${a.stacks > 1 ? `<i class="st">${a.stacks}</i>` : ''}<b>${auraLeft(a.left)}</b></button>`;
+  }
+  function renderAuras(low) {
+    const a = auras();
+    const ph = a.hero.map(auraHTML).join(''), eh = a.enemy.map(auraHTML).join('');
+    const key = ph + '|' + eh + low;
+    if (key === auraKey) return;
+    auraKey = key;
+    $('pAuras').innerHTML = ph;
+    $('pAuras').classList.toggle('low', !!low);
+    $('tAuras').innerHTML = eh;
+  }
   let mmKey = '';
   function minimap(b) {
     const inst = b && b.mode !== 'adventure';
@@ -666,7 +685,7 @@ const UI = (() => {
     if (kind === 'badges') return [
       { n: `Heldenausrüstung (${SLOT_NAME[U.vslot]})`, icon: U.vslot === 'weapon' ? `w_${S.cls}_3` : `a_${U.vslot}_3`, cost: U.vslot === 'weapon' ? 140 : 90, give: { item: { ilvl: lv + 2, r: 4, slot: U.vslot } }, d: `Episch, Gegenstandsstufe ${lv + 2}` },
       { n: 'Dungeonschlüssel', icon: 'key', cost: 20, give: { keys: 1 } },
-      { n: '5 Heiltränke', icon: 'potion_heal', cost: 12, give: { cons: { potion_heal: 5 } } },
+      { n: '2 Heiltränke', icon: 'potion_heal', cost: 18, give: { cons: { potion_heal: 2 } } },
       { n: 'Glückselixier', icon: 'elixir_luck', cost: 30, give: { cons: { elixir_luck: 1 } } },
     ];
     if (kind === 'honor') return [
@@ -726,8 +745,11 @@ const UI = (() => {
     h += `<div class="card"><div class="row">${ico('cauldron', 40)}<div class="grow"><h3 style="margin:0">Alchemie</h3>${profBar(S.prof.alch, 'Fertigkeit')}</div></div><div class="stack" style="margin-top:6px">`;
     for (const r of ALCHEMY) {
       const c = CONSUMABLES[r.id];
-      const can = S.prof.alch.skill >= r.skill && Object.entries(r.cost).every(([k, v]) => (S.mats[k] || 0) >= v);
-      h += `<div class="li">${ico(r.id, 36)}<div class="grow"><div class="ttl">${esc(c.name)}${r.out > 1 ? ` ×${r.out}` : ''} <span class="small muted">(${S.cons[r.id] || 0})</span></div><div class="small muted">${esc(c.desc)}</div><div class="rewards small">${S.prof.alch.skill >= r.skill ? costHTML(r.cost) : `<span class="bad">Benötigt Fertigkeit ${r.skill}</span>`}</div></div>${btn('Brauen', 'alch', { id: r.id }, 'sm', !can)}</div>`;
+      const gold = alchGold(r);
+      const full = r.id === 'potion_heal' && (S.cons.potion_heal || 0) >= POTION_CAP;
+      const can = !full && S.gold >= gold && S.prof.alch.skill >= r.skill && Object.entries(r.cost).every(([k, v]) => (S.mats[k] || 0) >= v);
+      const have = r.id === 'potion_heal' ? `${S.cons[r.id] || 0}/${POTION_CAP}` : S.cons[r.id] || 0;
+      h += `<div class="li">${ico(r.id, 36)}<div class="grow"><div class="ttl">${esc(c.name)}${r.out > 1 ? ` ×${r.out}` : ''} <span class="small muted">(${have})</span></div><div class="small muted">${esc(c.desc)}</div><div class="rewards small">${S.prof.alch.skill >= r.skill ? costHTML(r.cost) + (gold ? ` <span class="${S.gold >= gold ? '' : 'bad'}">${ico('gold', 18)}${fmt(gold)}</span>` : '') : `<span class="bad">Benötigt Fertigkeit ${r.skill}</span>`}</div></div>${btn(full ? 'Voll' : 'Brauen', 'alch', { id: r.id }, 'sm', !can)}</div>`;
     }
     h += '</div></div>';
     const fc = fishCounts();
@@ -1073,6 +1095,7 @@ const UI = (() => {
   // --------------------------------------------------------------------------------------- actions
   const ACT = {
     noop() {},
+    aura(d) { toast(`${d.n}: ${d.d}`, d.i, '#c8a050'); },
     tab(d) { tab = d.t; forceRender(); Snd.play('click'); $('panel').scrollTop = 0; },
     sub(d) { sub[d.g] = d.s; forceRender(); Snd.play('click'); },
     goto(d) { closeModal(); tab = d.t; if (d.s) sub[d.t] = d.s; forceRender(); },
@@ -1122,7 +1145,7 @@ const UI = (() => {
       if (r === 'res') toast(`Nicht genug ${CLASSES[S.cls].res}`, SKILLS[d.id].icon, '#3a7ad8');
       else if (r === 'cd') Snd.play('click');
     },
-    potioninfo() { modal(`<div class="row">${ico('potion_heal', 48)}<div class="grow"><h2 style="text-align:left;margin:0">Heiltrank ×${S.cons.potion_heal || 0}</h2></div></div><div class="tip" style="margin-top:8px">${esc(CONSUMABLES.potion_heal.desc)}<div class="d" style="margin-top:4px">Braue Nachschub mit Alchemie oder kaufe ihn beim Händler.</div></div><div class="mfoot">${btn('Zur Alchemie', 'goto', { t: 'berufe', s: 'craft' })}</div>`); },
+    potioninfo() { modal(`<div class="row">${ico('potion_heal', 48)}<div class="grow"><h2 style="text-align:left;margin:0">Heiltrank ${S.cons.potion_heal || 0}/${POTION_CAP}</h2></div></div><div class="tip" style="margin-top:8px">${esc(CONSUMABLES.potion_heal.desc)}<div class="d" style="margin-top:4px">Braue Nachschub mit Alchemie oder kaufe ihn beim Händler.</div></div><div class="mfoot">${btn('Zur Alchemie', 'goto', { t: 'berufe', s: 'craft' })}</div>`); },
     item(d) { const it = findItem(d.id); if (it) showItem(it); },
     equip(d) { const it = findItem(d.id); if (it) { equipItem(it); Snd.play('equip'); closeModal(); forceRender(); } },
     sell(d) { const it = findItem(d.id); if (it) { const v = sellItem(it); toast(`Verkauft für ${fmt(v)} Gold`, 'gold'); closeModal(); forceRender(); } },

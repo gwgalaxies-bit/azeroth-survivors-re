@@ -149,6 +149,10 @@ const Game = (() => {
     } else catchUpProfessions();
     S.lastSeen = now();
     UI.rebuild();
+    if (S.potionNote) {
+      UI.toast(`Du trägst höchstens ${POTION_CAP} Heiltränke. ${S.potionNote} überzählige wurden verkauft.`, 'potion_heal', '#e02838');
+      delete S.potionNote;
+    }
   }
 
   function create(cls, name) {

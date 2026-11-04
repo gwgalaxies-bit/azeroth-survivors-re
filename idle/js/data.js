@@ -357,7 +357,7 @@ const FISH = [
 ];
 
 const CONSUMABLES = {
-  potion_heal: { name: 'Heiltrank', desc: 'Wird im Kampf automatisch getrunken, wenn dein Leben unter 35% fällt. Heilt 40%.', auto: true },
+  potion_heal: { name: 'Heiltrank', desc: 'Wird im Kampf automatisch getrunken, wenn dein Leben unter 35% fällt. Heilt 35%, danach 30 Sek. Abklingzeit. Du trägst höchstens 20 bei dir.', auto: true },
   elixir_atk: { name: 'Elixier der Macht', desc: '+25% Angriff für 30 Min.', buff: 'atk', dur: 1800 },
   elixir_xp: { name: 'Elixier des Wissens', desc: '+50% Erfahrung für 30 Min.', buff: 'xp', dur: 1800 },
   elixir_luck: { name: 'Glückselixier', desc: '+40% Gold und +30% Beutechance für 30 Min.', buff: 'luck', dur: 1800 },
@@ -368,7 +368,7 @@ const CONSUMABLES = {
 };
 
 const ALCHEMY = [
-  { id: 'potion_heal', skill: 0, out: 3, cost: { kraut_wiesenklee: 2 } },
+  { id: 'potion_heal', skill: 0, out: 1, cost: { kraut_wiesenklee: 5 }, gold: 14 },
   { id: 'elixir_atk', skill: 50, out: 1, cost: { kraut_blutdorn: 3 } },
   { id: 'elixir_xp', skill: 110, out: 1, cost: { kraut_nebelmoos: 3, kraut_wiesenklee: 2 } },
   { id: 'elixir_luck', skill: 170, out: 1, cost: { kraut_sonnenbluete: 3, kraut_blutdorn: 2 } },

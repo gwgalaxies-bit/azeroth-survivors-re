@@ -23,7 +23,7 @@ auch direkt im Browser öffnen. Der Spielstand liegt im `localStorage` des Brows
 
 | Bereich | Inhalt |
 |---|---|
-| **Kampf** | Der Waffenangriff läuft von allein (auch offline); die drei Klassenfähigkeiten wirkst du selbst über die Aktionsleiste (Taste 1–3, gedrückt halten zeigt die Beschreibung). Tippen für Extraschaden, Heiltränke, Zonenbosse mit Zeitlimit, Elitegegner |
+| **Kampf** | Der Waffenangriff läuft von allein (auch offline); die drei Klassenfähigkeiten wirkst du selbst über die Aktionsleiste (Taste 1–3, gedrückt halten zeigt die Beschreibung). Tippen für Extraschaden, Heiltränke, Zonenbosse mit Zeitlimit, Elitegegner. Buffs (Elixiere, Essen, Kampfschrei, Erholt, Rast) stehen oben links in der Kampfszene, Debuffs des Gegners (Schattenpein, Unterkühlt, nahender Spezialangriff, Raserei) unter seinem Lebensbalken, jeweils mit Restzeit; antippen zeigt die Wirkung. Heiltränke: höchstens 20, 30 Sek. Abklingzeit |
 | **Aufträge** | 8 Gebiete (Stufe 1–60) mit je 6 Aufträgen von zwei Auftraggebern. Du läufst zum Auftraggeber (gelbes **!**), nimmst an, läufst zu Jagdgebiet, Elite-Versteck oder Boss-Hort, kämpfst und läufst zum Abgeben zurück (**?**). Jedes Gebiet hat Dorf, Außenposten, drei Jagdgebiete, ein Elite-Versteck und einen Boss-Hort; Reittiere verkürzen die Wege, in Dörfern sammelt der Held Erholungsbonus. Danach endlose Weltstufen |
 | **Held** | 8 Ausrüstungsplätze, 6 Seltenheitsstufen bis Legendär, Aufwerten bis +10, Entzaubern, 15 Talente pro Klasse |
 | **Instanzen** | 6 Dungeons mit je 3 Bossen und Mythisch+ ohne Obergrenze, 3 Raids mit 4 Bossen und wöchentlicher Sperre (Reset Mittwoch 5 Uhr), Weltboss alle 3 Stunden, Arena mit Wertung und Rängen |
@@ -46,6 +46,7 @@ Versorgungskiste, Weltboss-Fenster, Tagesquests und die tägliche Anmeldeserie.
 | `js/ui.js` | Tabs, Ansichten, Modale, Toasts, Angel-Minispiel |
 | `js/main.js` | Start, Hauptschleife, Speichern, synthetisierte Soundeffekte |
 | `js/atlas.js` | Generierter Index der Sprite- und Icon-Atlanten |
+| `tools/faces.py` | Kopfposition und -größe jeder Figur für die runden Portraits; `tools/faces_sheet.py` zeigt alle Portraits zur Kontrolle |
 | `tools/` | Python-Generator für alle Grafiken (`numpy`, `Pillow` mit WebP); `px.py` enthält den Pixel- und den gemalten Renderer |
 
 ### Eigene gemalte Bilder

@@ -17,6 +17,7 @@ from PIL import Image  # noqa: E402
 
 import backgrounds  # noqa: E402
 import custom_art  # noqa: E402
+import faces as facemod  # noqa: E402
 import icons  # noqa: E402
 import sprites  # noqa: E402
 import ui  # noqa: E402
@@ -92,7 +93,7 @@ def main():
             im.save(os.path.join(ASSETS, 'ui', n + '.png'), optimize=True)
 
     index = dict(
-        sprites=dict(size=list(satlas.size), scale=sprites.SC, map=spos, faces=faces, painted=sorted(c_spr)),
+        sprites=dict(size=list(satlas.size), scale=sprites.SC, map=spos, faces=facemod.table(spos, {k: v[0] for k, v in custom_art.DERIVED.items()}), painted=sorted(c_spr)),
         icons=dict(size=list(iatlas.size), cell=icons.ICON, map=ipos),
         backgrounds=sorted(bgs),
     )
