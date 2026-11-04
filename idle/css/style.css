@@ -291,7 +291,8 @@ body.compact #scene { aspect-ratio: 3 / 1.2; }
 .boss-row { display: flex; align-items: center; gap: 8px; padding: 5px 6px; border-radius: 3px; background: rgba(255, 255, 255, 0.04); }
 .boss-row .bp { width: 40px; height: 40px; flex: none; border-radius: 50%; overflow: hidden; position: relative; background: radial-gradient(#3a2a2a, #100c0e);
   box-shadow: 0 0 0 1px #000, 0 0 0 2px #8a6a3a; }
-.boss-row .bp .spr { position: absolute; }
+.bp .spr, .boss-row .bp .spr { position: absolute; }
+.bp { position: relative; overflow: hidden; }
 .boss-row.dead { opacity: 0.55; }
 .stepper { display: inline-flex; align-items: center; gap: 6px; }
 .stepper b { min-width: 74px; text-align: center; font: 700 13px var(--f-display); color: var(--gold); }

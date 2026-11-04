@@ -67,14 +67,17 @@ const BAG_SIZE = 40;
 const KEY_MAX = 5, KEY_REGEN = 20 * MIN;
 const ARENA_TICKETS = 5;
 
+// Fights last a while: a normal monster takes about 7 s at your level, an elite half a minute,
+// a boss one to two minutes. Monsters hit softer in exchange, so a fight costs about as much health as before.
+const KILL_REWARD = 1.6;
 const KIND = {
   normal: { hp: 1, atk: 1, iv: 2.0, xp: 1, gold: 1, limit: 0 },
-  elite: { hp: 5, atk: 1.5, iv: 2.0, xp: 6, gold: 6, limit: 0 },
-  boss: { hp: 13, atk: 1.3, iv: 2.4, xp: 25, gold: 30, limit: 60, special: 13, spMul: 0.15 },
-  dboss: { hp: 10, atk: 1.25, iv: 2.2, xp: 14, gold: 18, limit: 75, special: 15, spMul: 0.15 },
-  rboss: { hp: 60, atk: 2.0, iv: 2.4, xp: 30, gold: 45, limit: 120, special: 14, spMul: 0.3 },
-  wboss: { hp: 26, atk: 1.4, iv: 2.4, xp: 30, gold: 45, limit: 120, special: 16, spMul: 0.22 },
-  arena: { hp: 1, atk: 1, iv: 1.7, xp: 0, gold: 0, limit: 60 },
+  elite: { hp: 4.5, atk: 1.5, iv: 2.0, xp: 6, gold: 6, limit: 0 },
+  boss: { hp: 10, atk: 0.8, iv: 2.4, xp: 25, gold: 30, limit: 120, special: 22, spMul: 0.12 },
+  dboss: { hp: 8, atk: 0.85, iv: 2.2, xp: 14, gold: 18, limit: 120, special: 24, spMul: 0.12 },
+  rboss: { hp: 45, atk: 2.0, iv: 2.4, xp: 30, gold: 45, limit: 240, special: 24, spMul: 0.3 },
+  wboss: { hp: 20, atk: 1.4, iv: 2.4, xp: 30, gold: 45, limit: 240, special: 26, spMul: 0.22 },
+  arena: { hp: 1, atk: 1, iv: 1.7, xp: 0, gold: 0, limit: 90 },
 };
 const DROP_TABLE = {
   normal: [30, 38, 24, 6.5, 1.48, 0.02], elite: [0, 8, 60, 26, 5.9, 0.1], boss: [0, 0, 28, 52, 19.5, 0.5],
@@ -87,7 +90,8 @@ function mobBase(L) {
   const e = expHero(L);
   const dr = e.def / (e.def + 22 * g(L));
   const s = Math.min(1, 0.22 + L * 0.04);
-  return { hp: e.atk * 2.1 * s, atk: e.hp * 0.05 / (1 - dr) * s };
+  const sh = Math.min(1, 0.55 + L * 0.03);
+  return { hp: e.atk * 2.1 * 3.0 * sh, atk: e.hp * 0.05 / (1 - dr) * s * 0.6 };
 }
 
 // ------------------------------------------------------------------------------------------ state
@@ -771,9 +775,9 @@ function enemyDies(b) {
   if (b.fx && Hooks.fx) Hooks.fx.death('enemy');
   if (b.mode === 'adventure' || b.mode === 'boss') {
     const st = heroStats();
-    let xp = killXP(e.level) * kd.xp * (1 + st.xpP / 100);
+    let xp = killXP(e.level) * kd.xp * KILL_REWARD * (1 + st.xpP / 100);
     xp *= xpPenalty(S.level, e.level);
-    const gold = gpk(e.level) * kd.gold * rnd(0.8, 1.2) * (1 + st.goldP / 100);
+    const gold = gpk(e.level) * kd.gold * KILL_REWARD * rnd(0.8, 1.2) * (1 + st.goldP / 100);
     const gx = gainXP(xp);
     gainGold(gold);
     if (b.fx && Hooks.fx) Hooks.fx.reward(gx, gold);
@@ -781,7 +785,7 @@ function enemyDies(b) {
     if (e.kind === 'normal' || e.kind === 'elite') questProgress('kill', e.key, S.zone);
     if (e.kind === 'elite') { questProgress('elite', e.key, S.zone); }
     if (e.kind === 'boss') questProgress('boss', e.key, b.meta.zone !== undefined ? b.meta.zone : S.zone);
-    if (zoneQuests(S.zone).some((x) => x.s === 'active' && x.q.kind === 'collect' && x.q.target === e.key) && chance(0.6)) questProgress('collect', e.key, S.zone);
+    if (zoneQuests(S.zone).some((x) => x.s === 'active' && x.q.kind === 'collect' && x.q.target === e.key) && chance(0.45)) questProgress('collect', e.key, S.zone);
     // loot
     const dropIlvl = e.level;
     if (e.kind === 'normal') { if (chance(0.07 * (1 + st.lootP / 100))) giveItem(dropItem(dropIlvl, 'normal')); }
@@ -1193,7 +1197,7 @@ function startArena() {
   const o = arenaOpponent();
   a.tickets--;
   const st = heroStats();
-  const stats = { maxHp: st.hp * o.f * 1.5, atk: st.hp * 0.075 * o.f, iv: 1.7, crit: 15 };
+  const stats = { maxHp: st.hp * o.f * 3.2, atk: st.hp * 0.045 * o.f, iv: 1.7, crit: 15 };
   startInstance('arena', {
     bg: 'bg_arena', title: 'Arena',
     queue: [{ key: 'rival_' + o.cls, sprite: 'rival_' + o.cls, name: `${o.name} (${CLASSES[o.cls].name})`, level: S.level, kind: 'arena', stats }],
@@ -1589,13 +1593,13 @@ function offlineProgress(sec, eff) {
     const kills = Math.floor(rate * per * eff / (elite ? KIND.elite.hp : 1));
     if (kills <= 0) continue;
     const pen = xpPenalty(S.level, L);
-    const kx = elite ? KIND.elite.xp : 1;
+    const kx = (elite ? KIND.elite.xp : 1) * KILL_REWARD;
     out.kills += kills;
     out.xp += gainXP(killXP(L) * (1 + st.xpP / 100) * pen * kills * kx);
     out.gold += gainGold(gpk(L) * kills * (1 + st.goldP / 100) * kx);
     S.stats.kills += kills;
     questProgress('kill', pl.kind === 'hunt' || elite ? pl.mob : null, S.zone, kills);
-    if (pl.mob) questProgress('collect', pl.mob, S.zone, Math.floor(kills * 0.6));
+    if (pl.mob) questProgress('collect', pl.mob, S.zone, Math.floor(kills * 0.45));
     if (elite) questProgress('elite', pl.mob, S.zone, kills);
     const drops = Math.floor(kills * 0.07 * (1 + st.lootP / 100) + Math.random());
     for (let d = 0; d < drops; d++) {

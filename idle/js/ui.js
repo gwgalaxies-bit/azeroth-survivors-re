@@ -392,7 +392,7 @@ const UI = (() => {
       case 'collect': return `${esc(q.item)}: ${x.p}/${x.need} <span class="muted">(von ${esc(MOBS[q.target])})</span>`;
       case 'elite': return `${esc(MOBS[q.target])} besiegt: ${x.p}/1 <span class="muted">(Elite)</span>`;
       case 'any': return `Kreaturen in ${esc(zoneOf(x.zi).name)} besiegt: ${x.p}/${x.need}`;
-      case 'boss': return `${esc(MOBS[q.target])} besiegt: ${x.p}/1 <span class="muted">(Boss, 60 Sek.)</span>`;
+      case 'boss': return `${esc(MOBS[q.target])} besiegt: ${x.p}/1 <span class="muted">(Boss, 2 Min. Zeit)</span>`;
     }
     return '';
   }
@@ -655,7 +655,7 @@ const UI = (() => {
     let h = `<div class="card"><div class="row">${ico('honor', 40)}<div class="grow"><h3 style="margin:0">${esc(arenaRank(a.rating))}</h3><div class="small">Wertung <b class="goldtxt">${a.rating}</b> · Bestwert ${a.best} · ${a.wins} Siege</div><div class="small muted">Kampfkarten: ${a.tickets}/${ARENA_TICKETS} (täglich neu)</div></div><div style="text-align:right">${ico('honor', 18)} <b>${fmt(S.honor)}</b><div class="small muted">Ehre</div></div></div></div>`;
     h += `<div class="inst"><div class="hero-img" style="height:120px;background-image:url(assets/bg/bg_arena.webp)"><div class="sprs" style="left:20px;right:auto">${spr(CLASSES[S.cls].sprite, 1)}</div><div class="sprs">${spr('rival_' + o.cls, 1)}</div><div class="t" style="text-align:center"><b>${esc(S.name)} gegen ${esc(o.name)}</b><small>${esc(CLASSES[o.cls].name)} · Wertung ${o.rating}</small></div></div>
       <div class="body"><div class="row between small"><span>Gegnerische Kampfkraft: <b class="${o.power <= pw ? 'good' : 'bad'}">${fmt(o.power)}</b></span><span class="muted">Deine: ${fmt(pw)}</span></div>
-      <div class="row between">${btn('Neuer Gegner', 'arenanew', {}, 'sm', S.gold < gpk(L()) * 5)}${btn('Kämpfen', 'arena', {}, 'gold', a.tickets < 1)}</div><div class="small muted">Neuer Gegner kostet ${fmt(gpk(L()) * 5)} Gold. Sieg: Ehre und Wertung. 60 Sekunden Zeitlimit.</div></div></div>`;
+      <div class="row between">${btn('Neuer Gegner', 'arenanew', {}, 'sm', S.gold < gpk(L()) * 5)}${btn('Kämpfen', 'arena', {}, 'gold', a.tickets < 1)}</div><div class="small muted">Neuer Gegner kostet ${fmt(gpk(L()) * 5)} Gold. Sieg: Ehre und Wertung. 90 Sekunden Zeitlimit.</div></div></div>`;
     h += vendorHTML('honor');
     return h;
   }

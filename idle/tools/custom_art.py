@@ -16,10 +16,10 @@ BACKDROPS = dict(bg_goldhain=0.4, bg_nebelmoor=0.5, bg_rotfels=0.5, bg_sonnenglu
 
 # name: (file, logical box w x h, face the right?, source x-range to keep, face focus (fx, fy, zoom))
 CHARACTERS = {
-    'hero_krieger': ('hero_krieger', (160, 77), True, None, (0.55, 0.16, 3.2)),
-    'hero_magier': ('hero_magier', (160, 71), True, None, (0.5, 0.15, 3.2)),
-    'hero_jaeger': ('hero_jaeger', (160, 72), True, None, (0.5, 0.1, 3.2)),
-    'hero_priester': ('hero_priester', (160, 71), True, None, (0.55, 0.12, 3.2)),
+    'hero_krieger': ('hero_krieger', (160, 77), True, None, (0.57, 0.09, 3.2)),
+    'hero_magier': ('hero_magier', (160, 71), True, None, (0.67, 0.11, 3.2)),
+    'hero_jaeger': ('hero_jaeger', (160, 72), True, None, (0.42, 0.08, 3.2)),
+    'hero_priester': ('hero_priester', (160, 71), True, None, (0.49, 0.065, 3.2)),
     'ignaroth': ('ignaroth', (138, 94), False, None, (0.18, 0.2, 1.6)),
     'kragg': ('kragg', (112, 82), False, None, (0.32, 0.25, 2.0)),
     'morva': ('morva', (66, 82), False, (0.0, 0.48), (0.6, 0.2, 2.4)),
