@@ -711,6 +711,7 @@ function tickBattle(b, dt) {
   const h = b.h;
   const isRage = CLASSES[S.cls].res === 'Wut';
   h.potionCd -= dt;
+  for (const id of CLASSES[S.cls].skills) if (b.cd[id] > 0) b.cd[id] -= dt;
   // dead (adventure only)
   if (h.dead > 0) {
     h.dead -= dt;
@@ -748,17 +749,17 @@ function tickBattle(b, dt) {
     if (isRage) h.res = Math.min(100, h.res + 14);
     if (b.fx && Hooks.fx) Hooks.fx.attack('hero');
   }
-  // skills
-  for (const id of CLASSES[S.cls].skills) {
-    const sk = SKILLS[id];
-    if (S.level < sk.lvl) continue;
-    b.cd[id] = (b.cd[id] || 0) - dt;
-    if (b.cd[id] > 0 || h.res < sk.cost) continue;
-    if (sk.kind === 'heal' && h.hp > st.hp * 0.6) continue;
-    castSkill(b, st, id, sk);
-    b.cd[id] = sk.cd * (1 - st.cdr / 100);
-    h.res -= sk.cost;
-    if (e.hp <= 0) break;
+  // skills: the player casts them from the action bar; only a headless quick fight casts them by itself
+  if (b.auto) {
+    for (const id of CLASSES[S.cls].skills) {
+      const sk = SKILLS[id];
+      if (S.level < sk.lvl || (b.cd[id] || 0) > 0 || h.res < sk.cost) continue;
+      if (sk.kind === 'heal' && h.hp > st.hp * 0.6) continue;
+      castSkill(b, st, id, sk);
+      b.cd[id] = sk.cd * (1 - st.cdr / 100);
+      h.res -= sk.cost;
+      if (e.hp <= 0) break;
+    }
   }
   // dots
   for (const d of e.dots) {
@@ -861,6 +862,29 @@ function castSkill(b, st, id, sk) {
   }
 }
 
+// What a skill button can do right now: locked | cd | res | target | ready
+function skillState(id) {
+  const b = battle, sk = SKILLS[id];
+  if (S.level < sk.lvl) return 'locked';
+  if (!b || b.result || b.h.dead > 0) return 'target';
+  if ((b.cd[id] || 0) > 0) return 'cd';
+  if (b.h.res < sk.cost) return 'res';
+  if (sk.kind !== 'heal' && sk.kind !== 'buff' && (!b.enemy || b.enemy.dead)) return 'target';
+  return 'ready';
+}
+
+function castManual(id) {
+  const state = skillState(id);
+  if (state !== 'ready') return state;
+  const b = battle, sk = SKILLS[id], st = heroStats();
+  castSkill(b, st, id, sk);
+  b.cd[id] = sk.cd * (1 - st.cdr / 100);
+  b.h.res -= sk.cost;
+  S.stats.casts = (S.stats.casts || 0) + 1;
+  if (b.enemy && !b.enemy.dead && b.enemy.hp <= 0) enemyDies(b);
+  return 'ok';
+}
+
 let lastTap = 0;
 function tapAttack() {
   const b = battle;
@@ -879,6 +903,7 @@ function tapAttack() {
 function simulateInstance(mode, opts) {
   const saved = battle;
   const sim = newBattle(mode, Object.assign({}, opts, { headless: true }));
+  sim.auto = true;
   sim.h.hp = heroStats().hp;
   battle = sim;
   let steps = 0;
@@ -1411,7 +1436,7 @@ function estimateKillRate() {
   const hp = mobBase(L).hp, atk = mobBase(L).atk;
   let compDps = 0;
   for (const c of COMPANIONS) if (S.comp[c.id]) compDps += compPower(c.id) * (c.type === 'dps' ? 1.6 : c.type === 'tank' ? 0.6 : 0.3);
-  const dps = st.atk / st.interval * (1 + st.crit / 100 * st.critDmg / 100) * 1.45 + compDps;
+  const dps = st.atk / st.interval * (1 + st.crit / 100 * st.critDmg / 100) + compDps;
   const ttk = hp / dps;
   const dr = Math.min(0.75, st.def / (st.def + 22 * g(L)));
   const taken = atk / 2 * (1 - dr) * ttk;

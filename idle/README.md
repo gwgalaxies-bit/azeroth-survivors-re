@@ -1,7 +1,7 @@
 # Valdoran Idle
 
-Ein Idle-RPG im Hochformat im Stil klassischer Fantasy-MMOs: Dein Held kämpft von allein,
-auch während du offline bist, und du kommst zurück, um Quests abzugeben, Beute anzulegen,
+Ein Idle-RPG im Hochformat im Stil klassischer Fantasy-MMOs: Dein Held führt seine Waffenangriffe von allein,
+auch während du offline bist; seine Fähigkeiten setzt du selbst ein, und du kommst zurück, um Quests abzugeben, Beute anzulegen,
 Dungeons und Raids zu bestreiten und deine Berufe zu leveln.
 
 Alles läuft im Browser, ohne Server und ohne Build-Schritt. Alle Grafiken sind Rastergrafiken
@@ -23,7 +23,7 @@ auch direkt im Browser öffnen. Der Spielstand liegt im `localStorage` des Brows
 
 | Bereich | Inhalt |
 |---|---|
-| **Kampf** | Automatischer Kampf mit drei Klassenfähigkeiten, Tippen für Extraschaden, Heiltränke, Zonenbosse mit Zeitlimit, Elitegegner |
+| **Kampf** | Der Waffenangriff läuft von allein (auch offline); die drei Klassenfähigkeiten wirkst du selbst über die Aktionsleiste (Taste 1–3, gedrückt halten zeigt die Beschreibung). Tippen für Extraschaden, Heiltränke, Zonenbosse mit Zeitlimit, Elitegegner |
 | **Kampagne** | 8 Zonen (Stufe 1–60) mit je 6 Quests, Questgebern und Story; danach endlose Weltstufen |
 | **Held** | 8 Ausrüstungsplätze, 6 Seltenheitsstufen bis Legendär, Aufwerten bis +10, Entzaubern, 15 Talente pro Klasse |
 | **Instanzen** | 6 Dungeons mit je 3 Bossen und Mythisch+ ohne Obergrenze, 3 Raids mit 4 Bossen und wöchentlicher Sperre (Reset Mittwoch 5 Uhr), Weltboss alle 3 Stunden, Arena mit Wertung und Rängen |

@@ -131,7 +131,7 @@ const UI = (() => {
     let h = '';
     cls.skills.forEach((id, i) => {
       const sk = SKILLS[id];
-      h += `<button class="abtn" id="sk-${id}" data-act="skillinfo" data-id="${id}" aria-label="${esc(sk.name)}">${ico(sk.icon, 44)}<span class="cd"></span><span class="cdt"></span><span class="key">${i + 1}</span></button>`;
+      h += `<button class="abtn" id="sk-${id}" data-act="cast" data-id="${id}" aria-label="${esc(sk.name)} wirken">${ico(sk.icon, 44)}<span class="cd"></span><span class="cdt"></span><span class="key">${i + 1}</span></button>`;
     });
     h += `<button class="abtn" id="ab-potion" data-act="potioninfo" aria-label="Heiltrank">${ico('potion_heal', 44)}<span class="cnt" id="potCnt"></span></button>`;
     h += '<span class="spacer"></span>';
@@ -216,6 +216,9 @@ const UI = (() => {
       const sk = SKILLS[id];
       const locked = S.level < sk.lvl;
       el.classList.toggle('locked', locked);
+      const state = locked ? 'locked' : skillState(id);
+      el.classList.toggle('ready', state === 'ready');
+      el.classList.toggle('nores', state === 'res');
       const cd = b ? Math.max(0, b.cd[id] || 0) : 0;
       const full = sk.cd * (1 - st.cdr / 100);
       el.children[1].style.setProperty('--p', locked ? 1 : cd / full);
@@ -320,7 +323,7 @@ const UI = (() => {
     const q = currentQuest(S.zone);
     const qs = questState(S.zone);
     let h = '';
-    if (!S.tut.tap) h += `<div class="card plain"><div class="row">${ico('st_atk', 32)}<div class="grow small"><b class="goldtxt">Tipp:</b> Dein Held kämpft von allein. Tippe auf die Kampfszene für Extraschaden. Fortschritt läuft auch weiter, wenn du offline bist.</div>${btn('OK', 'tut', { k: 'tap' }, 'sm')}</div></div>`;
+    if (!S.tut.skills) h += `<div class="card plain"><div class="row">${ico(SKILLS[CLASSES[S.cls].skills[0]].icon, 32)}<div class="grow small"><b class="goldtxt">Tipp:</b> Deine Fähigkeiten wirkst du selbst: Tippe auf einen leuchtenden Knopf in der Aktionsleiste (am Computer auch 1, 2, 3). Gedrückt halten zeigt, was er tut. Den Waffenangriff macht dein Held von allein, auch offline. Ein Tipp auf die Kampfszene gibt Extraschaden.</div>${btn('OK', 'tut', { k: 'skills' }, 'sm')}</div></div>`;
     // quest tracker
     if (q) {
       const need = questN(S.zone, q);
@@ -1000,7 +1003,13 @@ const UI = (() => {
       showGot('Quest abgeschlossen', got, q.t);
       forceRender();
     },
-    skillinfo(d) { const sk = SKILLS[d.id]; modal(`<div class="row">${ico(sk.icon, 48)}<div class="grow"><h2 style="text-align:left;margin:0">${esc(sk.name)}</h2><div class="small muted">Ab Stufe ${sk.lvl} · Abklingzeit ${sk.cd} Sek. · Kosten ${sk.cost} ${CLASSES[S.cls].res}</div></div></div><div class="tip" style="margin-top:8px">${esc(sk.desc)}<div class="d" style="margin-top:4px">Wird automatisch gewirkt, sobald sie bereit ist.</div></div>`); },
+    skillinfo(d) { const sk = SKILLS[d.id]; modal(`<div class="row">${ico(sk.icon, 48)}<div class="grow"><h2 style="text-align:left;margin:0">${esc(sk.name)}</h2><div class="small muted">Ab Stufe ${sk.lvl} · Abklingzeit ${sk.cd} Sek. · Kosten ${sk.cost} ${CLASSES[S.cls].res}</div></div></div><div class="tip" style="margin-top:8px">${esc(sk.desc)}<div class="d" style="margin-top:4px">Tippe den Knopf in der Aktionsleiste, um sie zu wirken. Leuchtet er, ist sie bereit.</div></div>`); },
+    cast(d) {
+      const r = castManual(d.id);
+      if (r === 'locked') { ACT.skillinfo(d); return; }
+      if (r === 'res') toast(`Nicht genug ${CLASSES[S.cls].res}`, SKILLS[d.id].icon, '#3a7ad8');
+      else if (r === 'cd') Snd.play('click');
+    },
     potioninfo() { modal(`<div class="row">${ico('potion_heal', 48)}<div class="grow"><h2 style="text-align:left;margin:0">Heiltrank ×${S.cons.potion_heal || 0}</h2></div></div><div class="tip" style="margin-top:8px">${esc(CONSUMABLES.potion_heal.desc)}<div class="d" style="margin-top:4px">Braue Nachschub mit Alchemie oder kaufe ihn beim Händler.</div></div><div class="mfoot">${btn('Zur Alchemie', 'goto', { t: 'berufe', s: 'craft' })}</div>`); },
     item(d) { const it = findItem(d.id); if (it) showItem(it); },
     equip(d) { const it = findItem(d.id); if (it) { equipItem(it); Snd.play('equip'); closeModal(); forceRender(); } },
@@ -1163,10 +1172,22 @@ const UI = (() => {
     document.addEventListener('pointerup', () => { setTimeout(() => { holding = false; }, 60); }, true);
     document.addEventListener('pointercancel', () => { holding = false; }, true);
     $('modal').addEventListener('click', (e) => { if (e.target.id === 'modal' && U.modal !== 'create') closeModal(); });
+    let pressT = null, pressed = null;
+    $('actionbar').addEventListener('pointerdown', (e) => {
+      const el = e.target.closest('[data-act=cast]');
+      if (!el) return;
+      pressed = null;
+      clearTimeout(pressT);
+      pressT = setTimeout(() => { pressed = el; ACT.skillinfo(el.dataset); }, 550);
+    });
+    for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) $('actionbar').addEventListener(ev, () => clearTimeout(pressT));
+    $('actionbar').addEventListener('contextmenu', (e) => { const el = e.target.closest('[data-act=cast]'); if (el) { e.preventDefault(); clearTimeout(pressT); ACT.skillinfo(el.dataset); } });
+    $('actionbar').addEventListener('click', (e) => { if (pressed && e.target.closest('[data-act=cast]') === pressed) { e.stopPropagation(); pressed = null; } }, true);
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && U.modal && U.modal !== 'create') closeModal();
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === ' ' && S) { e.preventDefault(); tapAttack(); }
+      if (S && /^[1-3]$/.test(e.key)) { const id = CLASSES[S.cls].skills[+e.key - 1]; if (id) ACT.cast({ id }); }
     });
     Hooks.toast = toast;
     Hooks.log = log;
