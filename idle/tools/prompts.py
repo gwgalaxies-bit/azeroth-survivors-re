@@ -12,6 +12,8 @@ ALLY = (', full body, side view facing right, standing idle pose, stylized hand-
         'proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text')
 HALL = (', interior, wide 2D game battle backdrop, side view, flat open floor in the lower quarter, no characters, no text, '
         'stylized hand-painted fantasy MMO art, painterly brush strokes, saturated colors, dramatic lighting')
+NPC = (', full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic '
+       'proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text')
 ICON = ('Square fantasy RPG icon: {}, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled '
         'border, bold saturated colors, no text')
 MOUNT = ('Square fantasy RPG icon: head and shoulders portrait of {} wearing a riding bridle, centered, hand-painted, glossy '
@@ -98,6 +100,24 @@ SECTIONS = [
         ('Schwester Elyra', 'comp_heiler', 'Healer priestess in green and white robes with a glowing nature staff'),
         ('Varrik Falkenauge', 'comp_schuetze', 'Ranger in dark red leather armor with a longbow and a hood'),
         ('Mirra Sturmruf', 'comp_zauberin', 'Fire sorceress in red and black robes with a flaming staff'),
+    ]),
+    ('Auftraggeber', 'Stehen in Dörfern und Außenposten und vergeben die Aufträge. Blick nach links.', NPC, [
+        ('Hauptmann Aldric (Goldhain, Stadttor)', 'npc_aldric', 'Middle-aged human city guard captain in blue and silver plate armor with a short beard and a halberd'),
+        ('Förster Jorik (Goldhain, Försterhütte)', 'npc_jorik', 'Burly human forester in green and brown leather with a woodcutter axe and a fur collar'),
+        ('Kräuterkundige Wilma (Nebelmoor, Dorf)', 'npc_wilma', 'Elderly human herbalist woman in a patched green shawl with a basket of herbs and a walking stick'),
+        ('Sumpfläufer Edgar (Nebelmoor, Pfahlbau)', 'npc_edgar', 'Lanky human swamp scout in muddy boots and an oilskin coat with a lantern and a spear'),
+        ('Späherin Kaya (Rotfels, Karawanenlager)', 'npc_kaya', 'Young desert scout woman with a red scarf, leather armor and a shortbow, sun-tanned'),
+        ('Oberst Rothmann (Rotfels, Fort)', 'npc_rothmann', 'Stern old human colonel in red and gold officer armor with a cape and a saber'),
+        ('Archäologe Bertram (Sonnenglut, Ausgrabung)', 'npc_bertram', 'Plump human archaeologist with round glasses, a pith helmet, a satchel and a scroll'),
+        ('Wüstenführerin Samira (Sonnenglut, Oase)', 'npc_samira', 'Desert guide woman in flowing sand-colored robes and a turquoise veil with a curved dagger'),
+        ('Bergführer Halvdan (Frostgipfel, Dorf)', 'npc_halvdan', 'Bearded mountain guide in thick furs with a climbing pick and a rope over his shoulder'),
+        ('Jägerin Sigrun (Frostgipfel, Passwacht)', 'npc_sigrun', 'Nordic huntress with braided blond hair in white fur armor with a spear'),
+        ('Priesterin Elinor (Schattenhain, Kapelle)', 'npc_elinor', 'Serene priestess in white and gold robes holding a glowing lantern'),
+        ('Totengräber Morten (Schattenhain, Friedhof)', 'npc_morten', 'Gaunt old gravedigger in a dark coat and wide hat leaning on a shovel'),
+        ('Feuerwächter Brandt (Glutschlund, Feste)', 'npc_brandt', 'Dwarf-sized stocky fire warden in soot-stained bronze plate armor with a heavy shield'),
+        ('Schmied Thorvald (Glutschlund, Schmiede)', 'npc_thorvald', 'Muscular blacksmith with a leather apron, braided beard and a glowing hammer'),
+        ('Erzmagierin Selwyn (Leerenriss, Sternwacht)', 'npc_selwyn', 'Elegant elder archmage woman in midnight blue robes with silver stars and a crystal staff'),
+        ('Leerenjäger Varos (Leerenriss, Vorposten)', 'npc_varos', 'Hooded void hunter in dark violet leather armor with twin glowing daggers'),
     ]),
     ('Dungeon- und Raid-Hintergründe', 'Querformat 3:2 oder 16:9.', HALL, [
         ('Die Kobaltminen', 'bg_mine', 'Abandoned underground mine tunnel, wooden support beams, lanterns, glowing blue ore veins in the rock walls, rail tracks'),

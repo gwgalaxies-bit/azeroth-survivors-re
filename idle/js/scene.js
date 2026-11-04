@@ -29,6 +29,9 @@ const Scene = (() => {
     const [s, i] = await Promise.all([loadImage('assets/sprites.webp'), loadImage('assets/icons.webp')]);
     IMG.sprites = s;
     IMG.icons = i;
+    const [qb, qt] = await Promise.all([loadImage('assets/ui/q_bang.png'), loadImage('assets/ui/q_turnin.png')]);
+    IMG.qBang = qb;
+    IMG.qTurn = qt;
     resize();
     window.addEventListener('resize', resize);
     canvas.addEventListener('pointerdown', onTap);
@@ -77,6 +80,7 @@ const Scene = (() => {
     if (o.rot) {
       ctx.translate(dx + w / 2, dy + h);
       ctx.rotate(o.rot);
+      if (o.flip) ctx.scale(-1, 1);
       ctx.drawImage(IMG.sprites, r[0], r[1], r[2], r[3], -w / 2, -h, w, h);
     } else if (o.flip) {
       ctx.translate(dx + w, dy);
@@ -98,6 +102,47 @@ const Scene = (() => {
       ctx.fillRect(o.rot ? -w / 2 : dx, o.rot ? -h : dy, w, h);
     }
     ctx.restore();
+  }
+
+  // which part of the zone picture a place shows; walking pans from the start view to the goal's
+  const VIEW_OX = { hub: 0.15, h0: 0.0, h1: 0.5, post: 0.65, h2: 1.0, elite: 0.35, boss: 0.85 };
+  function placeView(pid) {
+    if (pid === 'hub') return { zoom: 1.0, ox: 0.5 };
+    return { zoom: pid === 'boss' || pid === 'elite' ? 1.3 : 1.18, ox: VIEW_OX[pid] === undefined ? 0.5 : VIEW_OX[pid] };
+  }
+  function viewFor(b) {
+    if (!S || !b || b.mode !== 'adventure') return { zoom: 1, ox: 0.5 };
+    if (S.walk) {
+      const q = clamp((now() - S.walk.t0) / (S.walk.t1 - S.walk.t0), 0, 1);
+      const p = q * q * (3 - 2 * q);
+      return { zoom: 1.35, ox: S.walk.dir > 0 ? p : 1 - p };
+    }
+    return placeView(S.loc.p);
+  }
+  function drawNpcs(draws) {
+    const pl = here();
+    const gi = pl.giver;
+    const name = npcSprite(S.zone, gi);
+    const x = 182, y = 147;
+    const mk = giverMarker(S.zone, gi);
+    draws.push({ y, fn: () => {
+      shadow(x, y, 26);
+      const facesRight = !name.startsWith('rival_') && !name.startsWith('npc_');
+      drawSprite(name, x, y + Math.sin(t * 1.8) * 0.8, { flip: facesRight });
+      const img = mk === 'turnin' ? IMG.qTurn : mk === 'avail' ? IMG.qBang : null;
+      if (img) {
+        const top = y - spriteHeight(name) - 4 + Math.sin(t * 3) * 1.5;
+        ctx.drawImage(img, x - 5, top - 16, 10, 16);
+      }
+      ctx.font = '700 7px "Alegreya Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
+      const label = giverOf(S.zone, gi).name;
+      ctx.strokeText(label, x, y + 8);
+      ctx.fillStyle = '#ffe680';
+      ctx.fillText(label, x, y + 8);
+    } });
   }
 
   function drawIcon(name, x, y, size) {
@@ -212,6 +257,12 @@ const Scene = (() => {
   function onTap(ev) {
     if (!S || !battle) return;
     if (typeof Snd !== 'undefined') Snd.unlock();
+    if (battle.mode === 'adventure' && !S.walk && here().kind === 'hub') {
+      const rect = canvas.getBoundingClientRect();
+      const lx = (ev.clientX - rect.left) / rect.width * W;
+      if (lx > 120 && Hooks.npc) Hooks.npc(here().giver);
+      return;
+    }
     const d = tapAttack();
     if (d > 0) {
       const rect = canvas.getBoundingClientRect();
@@ -272,8 +323,11 @@ const Scene = (() => {
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     const bgi = bg(bgName);
-    if (bgi.complete && bgi.naturalWidth) ctx.drawImage(bgi, 0, 0, W, H);
-    else { ctx.fillStyle = '#101018'; ctx.fillRect(0, 0, W, H); }
+    if (bgi.complete && bgi.naturalWidth) {
+      const v = viewFor(b);
+      const zw = W * v.zoom, zh = H * v.zoom;
+      ctx.drawImage(bgi, -(zw - W) * v.ox, -(zh - H) * 0.85, zw, zh);
+    } else { ctx.fillStyle = '#101018'; ctx.fillRect(0, 0, W, H); }
 
     // actors (sorted by feet y)
     const draws = [];
@@ -281,10 +335,14 @@ const Scene = (() => {
     hero.lunge = Math.max(0, hero.lunge - dt);
     hero.flash = Math.max(0, hero.flash - dt);
     const heroDead = b && b.h.dead > 0;
+    const walking = S && S.walk && (!b || b.mode === 'adventure');
+    if (walking && Math.random() < dt * 9) parts.push({ x: hero.x - 8 * S.walk.dir + rnd(-4, 4), y: hero.y - 1, vx: -S.walk.dir * rnd(6, 14), vy: -rnd(2, 6), life: rnd(0.4, 0.8), col: 'rgba(210,190,150,0.55)', size: 2 });
     if (S) {
-      const bob = heroDead ? 0 : Math.sin(t * 2.4) * 1.1;
+      const bob = heroDead ? 0 : walking ? -Math.abs(Math.sin(t * 9)) * 2.4 : Math.sin(t * 2.4) * 1.1;
       const lx = hero.lunge > 0 ? Math.sin(Math.PI * (1 - hero.lunge / 0.2)) * 7 : 0;
-      draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(CLASSES[S.cls].sprite, hero.x + lx, hero.y + bob, { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : 0, grey: heroDead }); } });
+      const tilt = walking ? 0.05 * S.walk.dir : 0;
+      draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(CLASSES[S.cls].sprite, hero.x + lx, hero.y + bob, { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : tilt, grey: heroDead, flip: walking && S.walk.dir < 0 }); } });
+      if (!walking && b && b.mode === 'adventure' && here().kind === 'hub') drawNpcs(draws);
       if (S.cls === 'jaeger' && !(ATLAS.sprites.painted || []).includes('hero_jaeger')) {
         const pet = A.pet;
         pet.lunge = Math.max(0, pet.lunge - dt);

@@ -449,3 +449,56 @@ const ARENA_NAMES = ['Thrandor', 'Kaelith', 'Mirabel', 'Gorrim', 'Sylvara', 'Bra
 
 const NAME_PARTS = [['Ael', 'Bran', 'Cael', 'Dor', 'Eld', 'Fen', 'Gar', 'Hal', 'Isen', 'Jor', 'Kael', 'Lor', 'Mor', 'Nym', 'Os', 'Ryn', 'Syl', 'Thal', 'Val', 'Wyn'],
   ['dric', 'wen', 'ion', 'gar', 'ara', 'ith', 'mund', 'ric', 'ora', 'eth', 'wyn', 'dor', 'iel', 'as', 'rin']];
+
+// Places and quest givers per zone. A walks to and from these: the first giver waits in the village,
+// the second at an outpost nearer the danger. Positions are along the zone's path and set walking times.
+const WORLD = {
+  goldhain: {
+    hub: 'Hohenmark, Stadttor', post: 'Försterhütte',
+    givers: [{ id: 'aldric', name: 'Hauptmann Aldric', role: 'Stadtwache' }, { id: 'jorik', name: 'Förster Jorik', role: 'Förster' }],
+    hunts: { waldwolf: 'Wolfslichtung', kobold: 'Koboldstollen', waldspinne: 'Spinnenhain' }, elite: 'Graufangs Bau', boss: 'Kraggs Grube',
+  },
+  nebelmoor: {
+    hub: 'Dorf Moorbrück', post: 'Pfahlbau-Wacht',
+    givers: [{ id: 'wilma', name: 'Kräuterkundige Wilma', role: 'Heilerin' }, { id: 'edgar', name: 'Sumpfläufer Edgar', role: 'Kundschafter' }],
+    hunts: { moorschleim: 'Schleimtümpel', sumpfkriecher: 'Kriecherufer', krokilisk: 'Schilfgürtel' }, elite: 'Schlammgrube', boss: 'Morvas Hütte',
+  },
+  rotfels: {
+    hub: 'Karawanenlager', post: 'Fort Rotfels',
+    givers: [{ id: 'kaya', name: 'Späherin Kaya', role: 'Späherin' }, { id: 'rothmann', name: 'Oberst Rothmann', role: 'Festungskommandant' }],
+    hunts: { hyaene: 'Hyänenkuhle', oger: 'Ogerlager', staubelementar: 'Staubsenke' }, elite: 'Schamanenfelsen', boss: 'Gromms Thronhügel',
+  },
+  sonnenglut: {
+    hub: 'Ausgrabungslager', post: 'Oase Al-Mirah',
+    givers: [{ id: 'bertram', name: 'Archäologe Bertram', role: 'Gelehrter' }, { id: 'samira', name: 'Wüstenführerin Samira', role: 'Führerin' }],
+    hunts: { skorpid: 'Skorpidnest', mumie: 'Grabfeld', sandwurm: 'Wurmdünen' }, elite: 'Grabeingang', boss: 'Pyramide von Khet',
+  },
+  frostgipfel: {
+    hub: 'Holzfällerdorf Kaltbach', post: 'Passwacht',
+    givers: [{ id: 'halvdan', name: 'Bergführer Halvdan', role: 'Bergführer' }, { id: 'sigrun', name: 'Jägerin Sigrun', role: 'Jägerin' }],
+    hunts: { yeti: 'Yetihöhlen', frostwolf: 'Frostwolfpass', eiselementar: 'Eisfeld' }, elite: 'Eisklauenhöhle', boss: 'Glaciaras Horst',
+  },
+  schattenhain: {
+    hub: 'Kapelle des Lichts', post: 'Friedhofswacht',
+    givers: [{ id: 'elinor', name: 'Priesterin Elinor', role: 'Priesterin' }, { id: 'morten', name: 'Totengräber Morten', role: 'Totengräber' }],
+    hunts: { ghul: 'Leichenacker', skelett: 'Knochengrund', banshee: 'Klagende Ruinen' }, elite: 'Vergessene Krypta', boss: 'Mordreks Gruft',
+  },
+  glutschlund: {
+    hub: 'Feste Aschwall', post: 'Schmiede am Krater',
+    givers: [{ id: 'brandt', name: 'Feuerwächter Brandt', role: 'Feuerwächter' }, { id: 'thorvald', name: 'Schmied Thorvald', role: 'Waffenschmied' }],
+    hunts: { feuerelementar: 'Flammenspalten', lavahund: 'Lavabett', wichtel: 'Wichtelkessel' }, elite: 'Magmakammer', boss: 'Krater des Flammenfürsten',
+  },
+  leerenriss: {
+    hub: 'Sternwacht', post: 'Vorposten am Riss',
+    givers: [{ id: 'selwyn', name: 'Erzmagierin Selwyn', role: 'Erzmagierin' }, { id: 'varos', name: 'Leerenjäger Varos', role: 'Leerenjäger' }],
+    hunts: { leerwandler: 'Leerenrand', tentakelgrauen: 'Tentakelsenke', sternenbestie: 'Sternenklippe' }, elite: 'Kern des Risses', boss: 'Thron der Sterne',
+  },
+};
+// quest index -> giver index and the quests that must be turned in first
+const QUEST_FLOW = [{ g: 0, req: [] }, { g: 0, req: [] }, { g: 0, req: [0, 1] }, { g: 1, req: [2] }, { g: 1, req: [2] }, { g: 1, req: [3, 4] }];
+// painted stand-ins for quest givers until art/npc_<id>.jpg exists
+const NPC_SPRITES = ['comp_tank', 'comp_heiler', 'comp_schuetze', 'comp_zauberin', 'rival_krieger', 'rival_priester', 'rival_jaeger', 'rival_magier'];
+const TURNIN_LINES = [
+  'Ausgezeichnete Arbeit. Valdoran steht in deiner Schuld.', 'Ich wusste, dass ich mich auf dich verlassen kann.',
+  'Schneller als gedacht! Hier ist deine Belohnung.', 'Das wird die Leute hier ruhiger schlafen lassen. Danke dir.',
+];

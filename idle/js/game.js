@@ -100,7 +100,7 @@ function newState(cls, name) {
     level: 1, xp: 0, rested: 0, paragon: 0, pxp: 0,
     gold: 0, badges: 0, raidmarks: 0, honor: 0, keys: 3, keyT: t,
     gear: {}, bag: [], nextId: 1,
-    zone: 0, zoneMax: 0, worldTier: 0, wtMax: 0,
+    zone: 0, zoneMax: 0, worldTier: 0, wtMax: 0, loc: { z: 0, p: 'hub' }, walk: null, qs: {},
     quests: {}, zonesDone: 0,
     talents: {}, training: {}, comp: {}, mounts: [], mount: null,
     cons: { potion_heal: 3 }, mats: {}, buffs: {},
@@ -133,6 +133,17 @@ function migrate(s) {
   for (const k in base.stats) if (s.stats[k] === undefined) s.stats[k] = 0;
   for (const k in base.prof) if (!s.prof[k]) s.prof[k] = { skill: 1 };
   for (const k in base.settings) if (s.settings[k] === undefined) s.settings[k] = base.settings[k];
+  if (!s.qs || !Object.keys(s.qs).length) {
+    s.qs = null;
+    migrateQuests(s);
+    // an old save was out hunting: put the hero where its open quest sends them
+    const saved = S;
+    S = s;
+    const open = zoneQuests(s.zone).find((x) => x.s === 'active' || x.s === 'done');
+    s.loc = { z: s.zone, p: open ? (open.s === 'done' ? giverPlace(open.g) : open.place) : 'hub' };
+    S = saved;
+  }
+  if (!s.loc) s.loc = { z: s.zone, p: 'hub' };
   return s;
 }
 
@@ -399,15 +410,98 @@ function mobLevel(zi) {
   if (S.worldTier > 0) return wtLevel(S.worldTier, zi);
   return clamp(S.level, z.lvl[0], z.lvl[1]);
 }
-function questState(zi) {
-  if (!S.quests[zi]) S.quests[zi] = { i: 0, p: 0, done: false };
-  return S.quests[zi];
+// ---- places: the hero stands at one of them and walks between them
+const PLACE_X = { hub: 0, h0: 1, h1: 2, post: 2.6, h2: 3.2, elite: 3.8, boss: 4.8 };
+function placesOf(zi) {
+  const z = zoneOf(zi), w = WORLD[z.id];
+  const out = [
+    { id: 'hub', kind: 'hub', name: w.hub, giver: 0 },
+    { id: 'post', kind: 'hub', name: w.post, giver: 1 },
+  ];
+  z.mobs.forEach((m, i) => out.push({ id: 'h' + i, kind: 'hunt', name: w.hunts[m], mob: m }));
+  out.push({ id: 'elite', kind: 'elite', name: w.elite, mob: z.elite });
+  out.push({ id: 'boss', kind: 'boss', name: w.boss, mob: z.boss });
+  return out.sort((a, b) => PLACE_X[a.id] - PLACE_X[b.id]);
 }
-function currentQuest(zi) {
-  const qs = questState(zi);
-  if (qs.i >= 6) return null;
-  return zoneOf(zi).quests[qs.i];
+function placeOf(zi, pid) { return placesOf(zi).find((p) => p.id === pid) || placesOf(zi)[0]; }
+function here() { return placeOf(S.zone, S.loc ? S.loc.p : 'hub'); }
+function giverOf(zi, gi) { return WORLD[zoneOf(zi).id].givers[gi]; }
+function giverPlace(gi) { return gi === 0 ? 'hub' : 'post'; }
+function npcSprite(zi, gi) {
+  const g = giverOf(zi, gi);
+  if (ATLAS.sprites.map['npc_' + g.id]) return 'npc_' + g.id;
+  return NPC_SPRITES[(zi * 2 + gi) % NPC_SPRITES.length];
 }
+function walkSeconds(fromZ, fromP, toZ, toP) {
+  let sec = fromZ !== toZ ? 14 : 3 + Math.abs(PLACE_X[fromP] - PLACE_X[toP]) * 2.5;
+  const m = S.mount && MOUNTS.find((x) => x.id === S.mount);
+  if (m) sec /= 1 + m.bonus / 50;
+  return Math.max(1.5, sec);
+}
+
+// Start walking to a place (another zone's places are reached through its village).
+function goTo(zi, pid) {
+  if (zi > S.zoneMax || (battle && battle.mode !== 'adventure')) return false;
+  const from = S.walk ? { z: S.walk.z, p: S.walk.p } : S.loc;
+  if (!S.walk && from.z === zi && from.p === pid) return false;
+  const sec = walkSeconds(from.z, from.p, zi, pid);
+  const dir = from.z !== zi ? (zi > from.z ? 1 : -1) : (PLACE_X[pid] >= PLACE_X[from.p] ? 1 : -1);
+  S.walk = { z: zi, p: pid, t0: now(), t1: now() + sec * 1000, dir };
+  if (battle && battle.mode === 'adventure') {
+    battle.walking = true;
+    if (battle.enemy && !battle.enemy.dead) { battle.enemy.dead = true; battle.enemy.fled = true; if (battle.fx && Hooks.fx) Hooks.fx.death('enemy'); }
+  }
+  Hooks.dirty('walk');
+  return true;
+}
+function arrive() {
+  const w = S.walk;
+  if (!w) return;
+  S.walk = null;
+  const zoneChanged = S.zone !== w.z;
+  S.zone = w.z;
+  S.loc = { z: w.z, p: w.p };
+  if (battle && battle.mode === 'adventure') startAdventure();
+  const pl = here();
+  Hooks.log(`<span class="sys">Du erreichst: ${pl.name}${zoneChanged ? ` (${zoneOf(w.z).name})` : ''}.</span>`);
+  Hooks.dirty('zone');
+}
+function checkWalk() { if (S.walk && now() >= S.walk.t1) arrive(); }
+
+// ---- quests: each zone has six; a giver offers them once their predecessors are turned in
+function zq(zi) {
+  if (!S.qs) S.qs = {};
+  if (!S.qs[zi]) S.qs[zi] = {};
+  return S.qs[zi];
+}
+function questStatus(zi, qi) {
+  const r = zq(zi)[qi];
+  if (r) return r.s;
+  return QUEST_FLOW[qi].req.every((j) => (zq(zi)[j] || {}).s === 'turned') ? 'avail' : 'locked';
+}
+function questN(zi, q) { return q.kind === 'elite' || q.kind === 'boss' ? q.n : Math.round(q.n * (1 + zi * 0.5)); }
+function questTargetPlace(zi, qi) {
+  const q = zoneOf(zi).quests[qi];
+  if (q.kind === 'elite') return 'elite';
+  if (q.kind === 'boss') return 'boss';
+  if (q.kind === 'any') return 'h0';
+  return 'h' + zoneOf(zi).mobs.indexOf(q.target);
+}
+function questInfo(zi, qi) {
+  const q = zoneOf(zi).quests[qi];
+  const r = zq(zi)[qi];
+  return { zi, qi, q, s: questStatus(zi, qi), p: r ? r.p : 0, need: questN(zi, q), g: QUEST_FLOW[qi].g, giver: giverOf(zi, QUEST_FLOW[qi].g), place: questTargetPlace(zi, qi) };
+}
+function zoneQuests(zi) { return zoneOf(zi).quests.map((_, qi) => questInfo(zi, qi)); }
+function giverQuests(zi, gi) { return zoneQuests(zi).filter((x) => x.g === gi && x.s !== 'locked' && x.s !== 'turned'); }
+function giverMarker(zi, gi) {
+  const qs = giverQuests(zi, gi);
+  if (qs.some((x) => x.s === 'done')) return 'turnin';
+  if (qs.some((x) => x.s === 'avail')) return 'avail';
+  if (qs.some((x) => x.s === 'active')) return 'active';
+  return null;
+}
+function zoneComplete(zi) { return zoneOf(zi).quests.every((_, qi) => questStatus(zi, qi) === 'turned'); }
 function questLevel(zi, qi) { const z = zoneOf(zi); return z.lvl[0] + Math.floor((z.lvl[1] - z.lvl[0]) * qi / 5); }
 function questRewards(zi, qi) {
   const L = questLevel(zi, qi);
@@ -418,35 +512,46 @@ function questRewards(zi, qi) {
   if (qi === 5) r.item = { ilvl: L + 2, r: zi >= 3 ? 4 : 3 };
   return r;
 }
+function atGiver(zi, gi) { return !S.walk && S.loc.z === zi && S.loc.p === giverPlace(gi); }
 
-function questProgress(kind, target, zi, n = 1) {
-  const qs = questState(zi);
-  const q = currentQuest(zi);
-  if (!q || qs.done) return;
-  let hit = false;
-  if (q.kind === 'kill' && kind === 'kill' && q.target === target) hit = true;
-  if (q.kind === 'any' && kind === 'kill') hit = true;
-  if (q.kind === 'elite' && kind === 'elite' && q.target === target) hit = true;
-  if (q.kind === 'boss' && kind === 'boss' && q.target === target) hit = true;
-  if (q.kind === 'collect' && kind === 'collect' && q.target === target) hit = true;
-  if (!hit) return;
-  const need = questN(zi, q);
-  qs.p = Math.min(need, qs.p + n);
-  if (q.kind === 'collect' && n === 1) Hooks.log(`<span class="quest">${q.item}: ${qs.p}/${need}</span>`);
-  if (qs.p >= need) {
-    qs.done = true;
-    Hooks.toast(`Quest abgeschlossen: ${q.t}`, 'scroll', '#ffd200');
-    Hooks.sound('quest');
-    Hooks.log(`<span class="quest">${q.t} abgeschlossen. Kehre zu ${zoneOf(zi).giver} zurück.</span>`);
-  }
+function acceptQuest(zi, qi) {
+  const x = questInfo(zi, qi);
+  if (x.s !== 'avail' || !atGiver(zi, x.g)) return false;
+  zq(zi)[qi] = { s: 'active', p: 0 };
+  Hooks.log(`<span class="quest">Quest angenommen: ${x.q.t}</span>`);
+  Hooks.sound('click');
   Hooks.dirty('quest');
+  return true;
 }
 
-function turnInQuest(zi) {
-  const qs = questState(zi);
-  if (!qs.done) return;
-  const q = currentQuest(zi);
-  const rw = questRewards(zi, qs.i);
+function questProgress(kind, target, zi, n = 1) {
+  for (const x of zoneQuests(zi)) {
+    if (x.s !== 'active') continue;
+    const q = x.q;
+    let hit = false;
+    if (q.kind === 'kill' && kind === 'kill' && q.target === target) hit = true;
+    if (q.kind === 'any' && kind === 'kill') hit = true;
+    if (q.kind === 'elite' && kind === 'elite' && q.target === target) hit = true;
+    if (q.kind === 'boss' && kind === 'boss' && q.target === target) hit = true;
+    if (q.kind === 'collect' && kind === 'collect' && q.target === target) hit = true;
+    if (!hit) continue;
+    const r = zq(zi)[x.qi];
+    r.p = Math.min(x.need, r.p + n);
+    if (q.kind === 'collect' && n === 1) Hooks.log(`<span class="quest">${q.item}: ${r.p}/${x.need}</span>`);
+    if (r.p >= x.need) {
+      r.s = 'done';
+      Hooks.toast(`Quest abgeschlossen: ${q.t}`, 'scroll', '#ffd200');
+      Hooks.sound('quest');
+      Hooks.log(`<span class="quest">${q.t} abgeschlossen. Kehre zu ${x.giver.name} (${placeOf(zi, giverPlace(x.g)).name}) zurück.</span>`);
+    }
+    Hooks.dirty('quest');
+  }
+}
+
+function turnInQuest(zi, qi) {
+  const x = questInfo(zi, qi);
+  if (x.s !== 'done' || !atGiver(zi, x.g)) return null;
+  const rw = questRewards(zi, qi);
   gainXP(rw.xp, true);
   gainGold(rw.gold);
   let itemTxt = '';
@@ -455,18 +560,22 @@ function turnInQuest(zi) {
     giveItem(it);
     itemTxt = it.name;
   }
-  Hooks.log(`<span class="quest">Quest abgegeben: ${q.t}.</span> +${fmt(rw.xp)} EP, +${fmt(rw.gold)} Gold`);
+  zq(zi)[qi] = { s: 'turned', p: x.need };
+  Hooks.log(`<span class="quest">Quest abgegeben: ${x.q.t}.</span> +${fmt(rw.xp)} EP, +${fmt(rw.gold)} Gold`);
   Hooks.sound('turnin');
-  qs.i++;
-  qs.p = 0;
-  qs.done = false;
-  if (qs.i >= 6) {
+  // tell the player where the story continues
+  for (const y of zoneQuests(zi)) {
+    if (y.s === 'avail' && QUEST_FLOW[y.qi].req.includes(qi) && y.g !== x.g) {
+      Hooks.toast(`Neuer Auftrag bei ${y.giver.name} (${placeOf(zi, giverPlace(y.g)).name})`, 'scroll', '#ffd200');
+      break;
+    }
+  }
+  if (zoneComplete(zi)) {
     S.zonesDone = Math.max(S.zonesDone, zi + 1);
     if (zi + 1 < ZONES.length) {
       if (S.zoneMax < zi + 1) {
         S.zoneMax = zi + 1;
-        Hooks.toast(`Neue Zone: ${ZONES[zi + 1].name}`, 'map', '#ffd200');
-        if (S.zone === zi) travel(zi + 1);
+        Hooks.toast(`Neues Gebiet: ${ZONES[zi + 1].name}`, 'map', '#ffd200');
       }
     } else if (S.wtMax < 1) {
       S.wtMax = 1;
@@ -474,15 +583,11 @@ function turnInQuest(zi) {
     }
   }
   Hooks.dirty('quest');
-  return { rw, itemTxt };
+  return { rw, itemTxt, line: pick(TURNIN_LINES) };
 }
 
-function travel(zi) {
-  if (zi > S.zoneMax) return;
-  S.zone = zi;
-  if (battle && battle.mode === 'adventure') startAdventure();
-  Hooks.dirty('zone');
-}
+// travel to another zone: walk to its village
+function travel(zi) { return goTo(zi, 'hub'); }
 
 function setWorldTier(t) {
   if (t > S.wtMax || t < 0) return;
@@ -492,9 +597,27 @@ function setWorldTier(t) {
 }
 
 function bossAvailable(zi) {
-  const q = currentQuest(zi);
-  const qs = questState(zi);
-  return qs.i >= 6 || (q && q.kind === 'boss') || S.worldTier > 0;
+  if (S.walk || S.loc.z !== zi || S.loc.p !== 'boss') return false;
+  const qi = zoneOf(zi).quests.findIndex((q) => q.kind === 'boss');
+  const st = questStatus(zi, qi);
+  return st === 'active' || st === 'turned' || S.worldTier > 0;
+}
+
+// old saves kept one linear chain per zone: {i, p, done}
+function migrateQuests(s) {
+  if (s.qs) return;
+  s.qs = {};
+  for (const zi in s.quests || {}) {
+    const o = s.quests[zi], m = {};
+    for (let qi = 0; qi < Math.min(6, o.i); qi++) m[qi] = { s: 'turned', p: 0 };
+    if (o.i < 6) m[o.i] = { s: o.done ? 'done' : 'active', p: o.p || 0 };
+    s.qs[zi] = m;
+  }
+  // an accepted quest of the second giver needs its predecessors turned in; make sure the chain holds
+  for (const zi in s.qs) {
+    const m = s.qs[zi];
+    for (let qi = 0; qi < 6; qi++) if (m[qi] && m[qi].s !== 'turned') for (const j of QUEST_FLOW[qi].req) if (!m[j]) m[j] = { s: 'turned', p: 0 };
+  }
 }
 
 // ------------------------------------------------------------------------------------------ xp & gold
@@ -563,22 +686,22 @@ function newBattle(mode, opts = {}) {
   return b;
 }
 
+function placeBg(zi, pid) { return zi === 0 && pid === 'hub' ? 'bg_town' : zoneOf(zi).bg; }
 function startAdventure() {
-  battle = newBattle('adventure', { bg: zoneOf(S.zone).bg });
+  const pl = here();
+  battle = newBattle('adventure', { bg: placeBg(S.zone, pl.id) });
+  battle.place = pl.id;
   Hooks.dirty('battle');
 }
+function huntsHere() { const pl = here(); return !S.walk && pl.kind !== 'hub'; }
 
 function adventureSpec() {
   const z = zoneOf(S.zone);
   const L = mobLevel(S.zone);
-  const q = currentQuest(S.zone);
-  const qs = questState(S.zone);
-  if (q && !qs.done && q.kind === 'elite' && battle.eliteCd <= 0) {
-    return { key: z.elite, name: MOBS[z.elite], level: L + 1, kind: 'elite' };
-  }
-  if (S.worldTier > 0 && chance(0.04)) return { key: z.elite, name: MOBS[z.elite], level: L + 1, kind: 'elite' };
-  let key = pick(z.mobs);
-  if (q && !qs.done && (q.kind === 'kill' || q.kind === 'collect') && chance(0.5)) key = q.target;
+  const pl = here();
+  if (pl.kind === 'elite') return { key: z.elite, name: MOBS[z.elite], level: L + 1, kind: 'elite' };
+  if (S.worldTier > 0 && chance(0.03)) return { key: z.elite, name: MOBS[z.elite], level: L + 1, kind: 'elite' };
+  const key = pl.kind === 'hunt' ? pl.mob : pick(z.mobs);
   return { key, name: MOBS[key], level: Math.max(z.lvl[0], L - (chance(0.4) ? 1 : 0)), kind: 'normal' };
 }
 
@@ -658,8 +781,7 @@ function enemyDies(b) {
     if (e.kind === 'normal' || e.kind === 'elite') questProgress('kill', e.key, S.zone);
     if (e.kind === 'elite') { questProgress('elite', e.key, S.zone); }
     if (e.kind === 'boss') questProgress('boss', e.key, b.meta.zone !== undefined ? b.meta.zone : S.zone);
-    const q = currentQuest(S.zone);
-    if (q && q.kind === 'collect' && q.target === e.key && chance(0.6)) questProgress('collect', e.key, S.zone);
+    if (zoneQuests(S.zone).some((x) => x.s === 'active' && x.q.kind === 'collect' && x.q.target === e.key) && chance(0.6)) questProgress('collect', e.key, S.zone);
     // loot
     const dropIlvl = e.level;
     if (e.kind === 'normal') { if (chance(0.07 * (1 + st.lootP / 100))) giveItem(dropItem(dropIlvl, 'normal')); }
@@ -727,9 +849,10 @@ function tickBattle(b, dt) {
     b.respawn -= dt;
     h.hp = Math.min(st.hp, h.hp + st.hp * (b.mode === 'adventure' ? 0.12 : 0.25) * dt);
     if (!isRage) h.res = Math.min(100, h.res + 25 * dt);
+    if (b.mode === 'adventure' && !huntsHere()) { b.respawn = Math.max(b.respawn, 0.8); return; }
     if (b.respawn <= 0) {
       if (e && e.dead && b.mode !== 'adventure' && b.queue.length === 0) { endBattle(true); return; }
-      b.respawn = b.mode === 'adventure' ? 0.75 : 1.6;
+      b.respawn = b.mode === 'adventure' ? (here().kind === 'elite' ? 4 : 0.75) : 1.6;
       spawnNext(b);
     }
     return;
@@ -1453,28 +1576,27 @@ function offlineProgress(sec, eff) {
   const slices = clamp(Math.ceil(capped / 600), 1, 24);
   const per = capped / slices;
   let made = 0;
-  const q0 = currentQuest(S.zone), qs0 = questState(S.zone), p0 = qs0.p;
-  for (let i = 0; i < slices; i++) {
+  checkWalk();
+  const walking = !!S.walk;
+  const pl = here();
+  const elite = pl.kind === 'elite';
+  const before = {};
+  for (const x of zoneQuests(S.zone)) before[x.qi] = x;
+  for (let i = 0; i < slices && pl.kind !== 'hub' && !walking; i++) {
     statsDirty = true;
     const st = heroStats();
     const { rate, L } = estimateKillRate();
-    const kills = Math.floor(rate * per * eff);
+    const kills = Math.floor(rate * per * eff / (elite ? KIND.elite.hp : 1));
     if (kills <= 0) continue;
     const pen = xpPenalty(S.level, L);
+    const kx = elite ? KIND.elite.xp : 1;
     out.kills += kills;
-    out.xp += gainXP(killXP(L) * (1 + st.xpP / 100) * pen * kills);
-    out.gold += gainGold(gpk(L) * kills * (1 + st.goldP / 100));
+    out.xp += gainXP(killXP(L) * (1 + st.xpP / 100) * pen * kills * kx);
+    out.gold += gainGold(gpk(L) * kills * (1 + st.goldP / 100) * kx);
     S.stats.kills += kills;
-    const q = currentQuest(S.zone);
-    const qs = questState(S.zone);
-    if (q && !qs.done) {
-      const z = zoneOf(S.zone);
-      let n = 0;
-      if (q.kind === 'any') n = kills;
-      else if (q.kind === 'kill') n = Math.floor(kills * (0.5 + 0.5 / z.mobs.length));
-      else if (q.kind === 'collect') n = Math.floor(kills * (0.5 + 0.5 / z.mobs.length) * 0.6);
-      if (n > 0) questProgress(q.kind === 'collect' ? 'collect' : 'kill', q.target, S.zone, n);
-    }
+    questProgress('kill', pl.kind === 'hunt' || elite ? pl.mob : null, S.zone, kills);
+    if (pl.mob) questProgress('collect', pl.mob, S.zone, Math.floor(kills * 0.6));
+    if (elite) questProgress('elite', pl.mob, S.zone, kills);
     const drops = Math.floor(kills * 0.07 * (1 + st.lootP / 100) + Math.random());
     for (let d = 0; d < drops; d++) {
       if (made >= 30) { out.gold += gainGold(gpk(L) * 3); out.sold++; continue; }
@@ -1494,13 +1616,15 @@ function offlineProgress(sec, eff) {
     }
   }
   out.levels = S.level - lvl0;
-  if (q0 && currentQuest(S.zone) === q0) {
-    const qs = questState(S.zone);
-    if (qs.p > p0) out.quest = { t: q0.t, gained: qs.p - p0, done: qs.done };
+  for (const x of zoneQuests(S.zone)) {
+    const b0 = before[x.qi];
+    if (b0 && b0.s === 'active' && x.p > b0.p) { out.quest = { t: x.q.t, gained: x.p - b0.p, done: x.s === 'done' }; break; }
   }
+  out.place = pl.name;
+  out.inn = pl.kind === 'hub';
   // rested xp
   if (S.level < MAX_LEVEL && sec > 600) {
-    const add = xpNeed(S.level) * 0.05 * (sec / 3600);
+    const add = xpNeed(S.level) * 0.05 * (sec / 3600) * (pl.kind === 'hub' ? 3 : 1);
     const before = S.rested;
     S.rested = Math.min(xpNeed(S.level) * 1.5, S.rested + add);
     out.rested = S.rested - before;
@@ -1520,6 +1644,8 @@ function catchUpProfessions() {
 let achTimer = 0;
 function periodic(dt) {
   S.stats.playTime += dt;
+  checkWalk();
+  if (!S.walk && here().kind === 'hub' && S.level < MAX_LEVEL) S.rested = Math.min(xpNeed(S.level) * 1.5, S.rested + xpNeed(S.level) * 0.15 / 3600 * dt);
   regenKeys();
   checkDaily();
   checkLogin();
@@ -1534,7 +1660,8 @@ function periodic(dt) {
 function notifications() {
   const n = { kampf: 0, held: 0, quests: 0, inst: 0, berufe: 0, stadt: 0 };
   if (!S) return n;
-  for (let zi = 0; zi <= S.zoneMax; zi++) if (questState(zi).done) n.quests++;
+  for (let zi = 0; zi <= S.zoneMax; zi++) for (const x of zoneQuests(zi)) if (x.s === 'done') n.quests++;
+  for (const x of zoneQuests(S.zone)) if (x.s === 'avail' || x.s === 'done') n.kampf++;
   if (S.daily) for (const e of S.daily.list) if (!e.claimed && dqProgress(e) >= questDef(e.id).n) n.quests++;
   if (S.daily && !S.daily.bonus && S.daily.list.every((e) => e.claimed)) n.quests++;
   if (S.weekly) for (const e of S.weekly.list) if (!e.claimed && dqProgress(e) >= questDef(e.id).n) n.quests++;

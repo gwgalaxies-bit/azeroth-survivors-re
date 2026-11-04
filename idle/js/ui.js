@@ -198,9 +198,16 @@ const UI = (() => {
     } else tf.hidden = true;
     // instance bar / zone tag
     const inst = b && b.mode !== 'adventure';
-    $('instBar').hidden = !inst;
+    const walking = !inst && S.walk;
+    $('instBar').hidden = !inst && !walking;
     $('zoneTag').hidden = inst;
     $('leaveBtn').hidden = !inst || !!b.result;
+    if (walking) {
+      const w = S.walk;
+      $('instTitle').textContent = `Unterwegs: ${placeOf(w.z, w.p).name}`;
+      $('instInfo').textContent = `noch ${Math.max(0, Math.ceil((w.t1 - now()) / 1000))} Sek.`;
+      $('instTime').style.width = clamp((now() - w.t0) / (w.t1 - w.t0), 0, 1) * 100 + '%';
+    }
     if (inst) {
       const lim = e ? (b.mode === 'arena' ? KIND.arena.limit : KIND[e.kind].limit) : 0;
       const done = b.total - b.queue.length - (e && !e.dead ? 1 : 0);
@@ -237,11 +244,12 @@ const UI = (() => {
     const inst = b && b.mode !== 'adventure';
     const z = zoneOf(S.zone);
     const bg = b ? b.bg : z.bg;
-    const q = currentQuest(S.zone), qs = questState(S.zone);
-    const key = bg + (inst ? b.title : z.name) + S.worldTier + (q ? qs.i + ':' + qs.done : 'x');
+    const m0 = giverMarker(S.zone, 0), m1 = giverMarker(S.zone, 1);
+    const label = inst ? b.title : S.walk ? 'Unterwegs' : here().name;
+    const key = bg + label + S.worldTier + m0 + m1;
     if (key === mmKey) return;
     mmKey = key;
-    $('mmZone').textContent = inst ? b.title : z.name;
+    $('mmZone').textContent = label;
     $('mmMap').style.backgroundImage = `url(assets/bg/${bg}.webp)`;
     const r = seeded(bg);
     let dots = '';
@@ -249,9 +257,10 @@ const UI = (() => {
       const a = r() * Math.PI * 2, d = 0.35 + r() * 0.5;
       dots += `<i class="mm-dot" style="left:${50 + Math.cos(a) * d * 42}%;top:${50 + Math.sin(a) * d * 42}%"></i>`;
     }
-    if (!inst && q) {
-      const a = r() * Math.PI * 2;
-      dots += `<i class="mm-q" style="left:${50 + Math.cos(a) * 26}%;top:${50 + Math.sin(a) * 26}%;background-image:url(assets/ui/${qs.done ? 'q_turnin' : 'q_bang'}.png)"></i>`;
+    if (!inst) {
+      [[m0, 22, 38], [m1, 70, 44]].forEach(([mk, x, y]) => {
+        if (mk === 'avail' || mk === 'turnin') dots += `<i class="mm-q" style="left:${x}%;top:${y}%;background-image:url(assets/ui/${mk === 'turnin' ? 'q_turnin' : 'q_bang'}.png)"></i>`;
+      });
     }
     $('mmDots').innerHTML = dots;
   }
@@ -320,18 +329,36 @@ const UI = (() => {
 
   VIEWS.kampf = () => {
     const z = zoneOf(S.zone);
-    const q = currentQuest(S.zone);
-    const qs = questState(S.zone);
+    const pl = here();
     let h = '';
     if (!S.tut.skills) h += `<div class="card plain"><div class="row">${ico(SKILLS[CLASSES[S.cls].skills[0]].icon, 32)}<div class="grow small"><b class="goldtxt">Tipp:</b> Deine Fähigkeiten wirkst du selbst: Tippe auf einen leuchtenden Knopf in der Aktionsleiste (am Computer auch 1, 2, 3). Gedrückt halten zeigt, was er tut. Den Waffenangriff macht dein Held von allein, auch offline. Ein Tipp auf die Kampfszene gibt Extraschaden.</div>${btn('OK', 'tut', { k: 'skills' }, 'sm')}</div></div>`;
+    if (!S.tut.quests) h += `<div class="card plain"><div class="row">${uiImg('q_bang', 20, 32)}<div class="grow small"><b class="goldtxt">So läuft ein Auftrag:</b> Sprich mit Auftraggebern mit gelbem <b>!</b>, nimm ihren Auftrag an und lauf zu den Gegnern. Ist er erledigt, zeigt der Auftraggeber ein <b>?</b>: Lauf zurück und gib ab. In Dörfern ruht dein Held und sammelt Erholungsbonus.</div>${btn('OK', 'tut', { k: 'quests' }, 'sm')}</div></div>`;
+    // where you are
+    const w = battle && battle.mode === 'adventure' ? S.walk : null;
+    const placeIcon = { hub: 'castle', elite: 'skull', boss: 'raid' }[pl.kind];
+    h += `<div class="card"><div class="row">${pl.kind === 'hunt' ? `<span class="bp" style="width:40px;height:40px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px #8a6a3a">${face(pl.mob, 40)}</span>` : ico(placeIcon, 40)}
+      <div class="grow"><h3 style="margin:0">${w ? `Unterwegs nach ${esc(placeOf(w.z, w.p).name)}` : esc(pl.name)}</h3><div class="small muted">${esc(z.name)} · ${w ? 'Dein Held ist auf dem Weg.' : placeDesc(pl)}</div></div>${btn(`${ico('map', 18)} Karte`, 'zones', {}, 'sm')}</div>`;
+    if (!w && pl.kind === 'hub') {
+      const g = giverOf(S.zone, pl.giver), mk = giverMarker(S.zone, pl.giver);
+      h += `<div class="li" style="margin-top:8px"><span class="bp" style="width:44px;height:44px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px #c8a050">${face(npcSprite(S.zone, pl.giver), 44)}</span>
+        <div class="grow"><div class="ttl gold">${esc(g.name)} ${mk === 'turnin' ? uiImg('q_turnin', 9, 14) : mk === 'avail' ? uiImg('q_bang', 9, 14) : ''}</div><div class="small muted">${esc(g.role)}</div></div>${btn('Sprechen', 'npc', { g: pl.giver }, mk === 'avail' || mk === 'turnin' ? 'gold' : '')}</div>`;
+    }
+    if (!w && pl.kind === 'boss' && bossAvailable(S.zone)) h += `<div class="row" style="margin-top:8px">${btn(`${ico('skull', 18)} ${esc(MOBS[pl.mob])} herausfordern`, 'boss', { z: S.zone }, 'gold wide')}</div>`;
+    h += '</div>';
     // quest tracker
-    if (q) {
-      const need = questN(S.zone, q);
-      h += `<div class="card"><div class="row">${uiImg(qs.done ? 'q_turnin' : 'q_bang', 20, 32)}<div class="grow"><h3 style="margin:0">${esc(q.t)}</h3><div class="small muted">${esc(z.giver)} · ${esc(z.name)} (${qs.i + 1}/6)</div></div></div>
-        <div class="small" style="margin:6px 0 4px">${questObjective(q, qs, need)}</div>${bar('yellow', qs.p / need, `${qs.p} / ${need}`, true)}
-        <div class="row wrap" style="margin-top:8px">${qs.done ? btn(`${uiImg('q_turnin', 10, 16)} Quest abgeben`, 'turnin', { z: S.zone }, 'gold') : ''}${q.kind === 'boss' && !qs.done ? btn(`${ico('skull', 18)} ${esc(MOBS[q.target])} herausfordern`, 'boss', { z: S.zone }) : ''}</div></div>`;
-    } else if (S.zone < ZONES.length - 1 && S.zoneMax > S.zone) {
-      h += `<div class="card plain"><div class="row">${ico('map', 32)}<div class="grow small">Die Kampagne in ${esc(z.name)} ist abgeschlossen. Neue Abenteuer warten in <b class="goldtxt">${esc(ZONES[S.zoneMax].name)}</b>.</div>${btn('Reisen', 'travel', { z: S.zoneMax }, 'sm gold')}</div></div>`;
+    const mine = zoneQuests(S.zone).filter((x) => x.s === 'active' || x.s === 'done');
+    const offers = [0, 1].filter((gi) => giverMarker(S.zone, gi) === 'avail');
+    if (mine.length || offers.length) {
+      h += '<div class="section-title">Aufträge</div><div class="stack">';
+      for (const x of mine) h += trackerRow(x);
+      for (const gi of offers) {
+        const g = giverOf(S.zone, gi), gp = giverPlace(gi);
+        const there = !S.walk && S.loc.p === gp;
+        h += `<div class="li">${uiImg('q_bang', 14, 22)}<div class="grow"><div class="ttl">Neuer Auftrag bei ${esc(g.name)}</div><div class="small muted">${esc(placeOf(S.zone, gp).name)}</div></div>${there ? btn('Sprechen', 'npc', { g: gi }, 'sm gold') : btn('Hingehen', 'goto', { z: S.zone, p: gp }, 'sm')}</div>`;
+      }
+      h += '</div>';
+    } else if (zoneComplete(S.zone) && S.zone < S.zoneMax) {
+      h += `<div class="card plain"><div class="row">${ico('map', 32)}<div class="grow small">Alle Aufträge in ${esc(z.name)} sind erledigt. Neue Abenteuer warten in <b class="goldtxt">${esc(ZONES[S.zoneMax].name)}</b>.</div>${btn('Reisen', 'travel', { z: S.zoneMax }, 'sm gold')}</div></div>`;
     } else if (S.wtMax > 0) {
       h += `<div class="card plain"><div class="row">${ico('star', 32)}<div class="grow small">Du hast die Welt gerettet. In den <b class="goldtxt">Weltstufen</b> werden alle Gebiete stärker und die Beute besser.</div></div></div>`;
     }
@@ -352,16 +379,41 @@ const UI = (() => {
     return h;
   };
 
-  function questObjective(q, qs, need) {
+  function placeDesc(pl) {
+    if (pl.kind === 'hub') return 'Hier ruht dein Held und sammelt Erholungsbonus.';
+    if (pl.kind === 'hunt') return `Jagdgebiet: ${esc(MOBS[pl.mob])}`;
+    if (pl.kind === 'elite') return `Versteck von ${esc(MOBS[pl.mob])} (Elite)`;
+    return `Hort von ${esc(MOBS[pl.mob])}`;
+  }
+  function objective(x) {
+    const q = x.q;
     switch (q.kind) {
-      case 'kill': return `${esc(MOBS[q.target])} getötet: ${qs.p}/${need}`;
-      case 'collect': return `${esc(q.item)}: ${qs.p}/${need} <span class="muted">(von ${esc(MOBS[q.target])})</span>`;
-      case 'elite': return `${esc(MOBS[q.target])} besiegt <span class="muted">(Elite, erscheint im Gebiet)</span>`;
-      case 'any': return `Kreaturen in ${esc(zoneOf(S.zone).name)} besiegt: ${qs.p}/${need}`;
-      case 'boss': return `${esc(MOBS[q.target])} besiegt <span class="muted">(Boss, 60 Sek. Zeitlimit)</span>`;
+      case 'kill': return `${esc(MOBS[q.target])} getötet: ${x.p}/${x.need}`;
+      case 'collect': return `${esc(q.item)}: ${x.p}/${x.need} <span class="muted">(von ${esc(MOBS[q.target])})</span>`;
+      case 'elite': return `${esc(MOBS[q.target])} besiegt: ${x.p}/1 <span class="muted">(Elite)</span>`;
+      case 'any': return `Kreaturen in ${esc(zoneOf(x.zi).name)} besiegt: ${x.p}/${x.need}`;
+      case 'boss': return `${esc(MOBS[q.target])} besiegt: ${x.p}/1 <span class="muted">(Boss, 60 Sek.)</span>`;
     }
     return '';
   }
+  // one line of the objective tracker with the next step as its button
+  function trackerRow(x) {
+    const gp = giverPlace(x.g);
+    const walkingTo = S.walk && S.walk.z === x.zi ? S.walk.p : null;
+    const at = (p) => !S.walk && S.loc.z === x.zi && S.loc.p === p;
+    let act;
+    if (x.s === 'done') {
+      act = at(gp) ? btn('Abgeben', 'npc', { g: x.g }, 'sm gold') : walkingTo === gp ? '<span class="small muted">Unterwegs…</span>' : btn(`Zu ${esc(x.giver.name.split(' ').pop())}`, 'goto', { z: x.zi, p: gp }, 'sm gold');
+    } else if (x.q.kind === 'any' ? !S.walk && S.loc.z === x.zi && ['hunt', 'elite', 'boss'].includes(here().kind) : at(x.place)) {
+      act = x.q.kind === 'boss' ? btn('Herausfordern', 'boss', { z: x.zi }, 'sm gold') : '<span class="small goldtxt">Hier</span>';
+    } else {
+      act = walkingTo === x.place ? '<span class="small muted">Unterwegs…</span>' : btn('Hingehen', 'goto', { z: x.zi, p: x.place }, 'sm');
+    }
+    return `<div class="li ${x.s === 'done' ? 'claim' : ''}">${uiImg(x.s === 'done' ? 'q_turnin' : 'q_bang', 14, 22, x.s === 'done' ? '' : 'filter:grayscale(1) brightness(1.4)')}<div class="grow"><div class="ttl">${esc(x.q.t)}</div>
+      <div class="small">${x.s === 'done' ? `Erledigt. Zurück zu ${esc(x.giver.name)} (${esc(placeOf(x.zi, gp).name)})` : `${objective(x)} · <span class="muted">${esc(placeOf(x.zi, x.place).name)}</span>`}</div>
+      ${x.s === 'done' ? '' : bar('yellow', x.p / x.need, '', true)}</div>${act}</div>`;
+  }
+
 
   function activeBuffs() {
     const t = now(), out = [];
@@ -458,7 +510,7 @@ const UI = (() => {
   VIEWS.quests = () => {
     const n = notifications();
     let campReady = false;
-    for (let zi = 0; zi <= S.zoneMax; zi++) if (questState(zi).done) campReady = true;
+    for (let zi = 0; zi <= S.zoneMax; zi++) if (zoneQuests(zi).some((x) => x.s === 'done')) campReady = true;
     const dailyReady = S.daily && (S.daily.list.some((e) => !e.claimed && dqProgress(e) >= questDef(e.id).n) || (!S.daily.bonus && S.daily.list.every((e) => e.claimed)) || S.weekly.list.some((e) => !e.claimed && dqProgress(e) >= questDef(e.id).n));
     const achReady = ACHIEVEMENTS.some((a) => S.ach[a.id] && !S.achClaimed[a.id]);
     void n;
@@ -472,32 +524,25 @@ const UI = (() => {
     let h = '';
     for (let zi = S.zoneMax; zi >= 0; zi--) {
       const z = ZONES[zi];
-      const qs = questState(zi);
-      const q = currentQuest(zi);
-      if (!q) {
-        h += `<div class="li done">${ico('trophy', 28)}<div class="grow"><div class="ttl gold">${esc(z.name)}</div><div class="small muted">Kampagne abgeschlossen · Stufe ${z.lvl[0]}–${z.lvl[1]}</div></div>${zi !== S.zone ? btn('Reisen', 'travel', { z: zi }, 'sm') : '<span class="small muted">Hier</span>'}</div>`;
+      const all = zoneQuests(zi);
+      const turned = all.filter((x) => x.s === 'turned').length;
+      if (turned === 6) {
+        h += `<div class="li done">${ico('trophy', 28)}<div class="grow"><div class="ttl gold">${esc(z.name)}</div><div class="small muted">Alle Aufträge erledigt · Stufe ${z.lvl[0]}–${z.lvl[1]}</div></div>${zi !== S.zone ? btn('Reisen', 'travel', { z: zi }, 'sm') : '<span class="small muted">Hier</span>'}</div>`;
         continue;
       }
-      const need = questN(zi, q);
-      const rw = questRewards(zi, qs.i);
-      h += `<div class="parch"><div class="row">${uiImg(qs.done ? 'q_turnin' : 'q_bang', 20, 32)}<div class="grow"><h3 style="margin:0">${esc(q.t)}</h3><div class="small muted">${esc(z.giver)} · ${esc(z.name)} · Quest ${qs.i + 1}/6</div></div></div>
-        <p>${esc(q.txt)}</p><div class="obj small">${questObjectiveFor(zi, q, qs, need)}</div>
-        <div class="small" style="margin:6px 0 2px"><b>Belohnung:</b></div>${rewardHTML(rwList(rw))}
-        <div class="row wrap" style="margin-top:8px">${qs.done ? btn('Quest abgeben', 'turnin', { z: zi }, 'gold') : ''}${q.kind === 'boss' && !qs.done ? btn('Boss herausfordern', 'boss', { z: zi }) : ''}${zi !== S.zone ? btn('Hinreisen', 'travel', { z: zi }, 'sm') : ''}</div></div>`;
+      h += `<div class="section-title">${esc(z.name)} · ${turned}/6</div><div class="stack">`;
+      for (const x of all.filter((y) => y.s === 'active' || y.s === 'done')) h += trackerRow(x);
+      for (const gi of [0, 1]) {
+        const offer = all.filter((y) => y.g === gi && y.s === 'avail');
+        if (!offer.length) continue;
+        const g = giverOf(zi, gi), gp = giverPlace(gi);
+        const there = !S.walk && S.loc.z === zi && S.loc.p === gp;
+        h += `<div class="li">${uiImg('q_bang', 14, 22)}<div class="grow"><div class="ttl">${offer.length} ${offer.length > 1 ? 'Aufträge' : 'Auftrag'} bei ${esc(g.name)}</div><div class="small muted">${offer.map((y) => esc(y.q.t)).join(' · ')} — ${esc(placeOf(zi, gp).name)}</div></div>${there ? btn('Sprechen', 'npc', { g: gi }, 'sm gold') : btn('Hingehen', 'goto', { z: zi, p: gp }, 'sm')}</div>`;
+      }
+      h += '</div>';
     }
-    if (S.zoneMax < ZONES.length - 1) h += `<div class="li done">${ico('lock', 28)}<div class="grow"><div class="ttl">${esc(ZONES[S.zoneMax + 1].name)}</div><div class="small muted">Schließe die Kampagne in ${esc(ZONES[S.zoneMax].name)} ab.</div></div></div>`;
+    if (S.zoneMax < ZONES.length - 1) h += `<div class="li done">${ico('lock', 28)}<div class="grow"><div class="ttl">${esc(ZONES[S.zoneMax + 1].name)}</div><div class="small muted">Erledige alle Aufträge in ${esc(ZONES[S.zoneMax].name)}.</div></div></div>`;
     return h;
-  }
-  function questObjectiveFor(zi, q, qs, need) {
-    const z = ZONES[zi];
-    switch (q.kind) {
-      case 'kill': return `${esc(MOBS[q.target])} getötet: ${qs.p}/${need}`;
-      case 'collect': return `${esc(q.item)}: ${qs.p}/${need}`;
-      case 'elite': return `${esc(MOBS[q.target])} besiegt: ${qs.p}/1`;
-      case 'any': return `Kreaturen in ${esc(z.name)} besiegt: ${qs.p}/${need}`;
-      case 'boss': return `${esc(MOBS[q.target])} besiegt: ${qs.p}/1`;
-    }
-    return '';
   }
   function dqRow(e, i, weekly) {
     const d = questDef(e.id);
@@ -863,15 +908,65 @@ const UI = (() => {
   }
 
   function showZones() {
-    let h = '<h2>Karte von Valdoran</h2><div class="stack">';
-    ZONES.forEach((z, i) => {
+    const z = zoneOf(S.zone);
+    const cur = S.walk ? null : S.loc.p;
+    let h = `<h2>${esc(z.name)}</h2><div class="small muted" style="text-align:center;margin:-6px 0 8px">Tippe auf einen Ort, um hinzugehen.</div><div class="stack">`;
+    const active = zoneQuests(S.zone).filter((x) => x.s === 'active');
+    for (const pl of placesOf(S.zone)) {
+      let mark = '';
+      if (pl.kind === 'hub') { const mk = giverMarker(S.zone, pl.giver); if (mk === 'avail') mark = uiImg('q_bang', 9, 14); if (mk === 'turnin') mark = uiImg('q_turnin', 9, 14); }
+      if (active.some((x) => x.place === pl.id)) mark += ` ${ico('swords', 16)}`;
+      const icon = pl.kind === 'hunt' || pl.kind === 'elite' || pl.kind === 'boss'
+        ? `<span class="bp" style="width:40px;height:40px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px ${pl.kind === 'hunt' ? '#8a6a3a' : '#ff8a3a'}">${face(pl.mob, 40)}</span>`
+        : ico('castle', 40);
+      const sub2 = pl.kind === 'hub' ? `${esc(giverOf(S.zone, pl.giver).name)}` : pl.kind === 'hunt' ? esc(MOBS[pl.mob]) : `${esc(MOBS[pl.mob])} · ${pl.kind === 'elite' ? 'Elite' : 'Boss'}`;
+      const from = S.walk ? S.walk : S.loc;
+      const secs = Math.round(walkSeconds(from.z, from.p, S.zone, pl.id));
+      h += `<div class="li ${pl.id === cur ? 'claim' : ''}">${icon}<div class="grow"><div class="ttl ${pl.id === cur ? 'gold' : ''}">${esc(pl.name)} ${mark}</div><div class="small muted">${sub2}</div></div>${pl.id === cur ? '<span class="small goldtxt">Hier</span>' : btn(`${secs} Sek.`, 'goto', { z: S.zone, p: pl.id }, 'sm')}</div>`;
+    }
+    h += '</div><div class="section-title" style="margin-top:12px">Andere Gebiete</div><div class="stack">';
+    ZONES.forEach((zz, i) => {
+      if (i === S.zone) return;
       const open = i <= S.zoneMax;
-      const qs = questState(i);
-      h += `<div class="li ${i === S.zone ? 'claim' : ''}" style="padding:0;overflow:hidden"><div style="width:96px;height:64px;flex:none;background:url(assets/bg/${z.bg}.webp) 50% 80%/cover;${open ? '' : 'filter:grayscale(1) brightness(.4)'}"></div>
-        <div class="grow" style="padding:4px 0"><div class="ttl ${open ? 'gold' : ''}">${esc(z.name)}</div><div class="small muted">Stufe ${z.lvl[0]}–${z.lvl[1]} · ${qs.i >= 6 ? 'Kampagne abgeschlossen' : open ? `Quest ${qs.i + 1}/6` : 'Gesperrt'}</div></div>
-        <div style="padding-right:8px">${i === S.zone ? '<span class="small goldtxt">Hier</span>' : open ? btn('Reisen', 'travel', { z: i }, 'sm') : ico('lock', 24)}</div></div>`;
+      const turned = zoneQuests(i).filter((x) => x.s === 'turned').length;
+      h += `<div class="li" style="padding:0;overflow:hidden"><div style="width:84px;height:56px;flex:none;background:url(assets/bg/${zz.bg}.webp) 50% 80%/cover;${open ? '' : 'filter:grayscale(1) brightness(.4)'}"></div>
+        <div class="grow" style="padding:4px 0"><div class="ttl ${open ? 'gold' : ''}">${esc(zz.name)}</div><div class="small muted">Stufe ${zz.lvl[0]}–${zz.lvl[1]} · ${open ? `${turned}/6 Aufträge` : 'Gesperrt'}</div></div>
+        <div style="padding-right:8px">${open ? btn('Reisen', 'travel', { z: i }, 'sm') : ico('lock', 24)}</div></div>`;
     });
     modal(h + '</div>', { id: 'zones' });
+  }
+
+  // a quest giver: their open quests, WoW-style
+  function showGiver(gi, zi = S.zone) {
+    const g = giverOf(zi, gi);
+    const list = giverQuests(zi, gi);
+    const there = atGiver(zi, gi);
+    let h = `<div class="row"><span class="bp" style="width:56px;height:56px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 3px #c8a050">${face(npcSprite(zi, gi), 56)}</span><div class="grow"><h2 style="text-align:left;margin:0">${esc(g.name)}</h2><div class="small muted">${esc(g.role)} · ${esc(placeOf(zi, giverPlace(gi)).name)}</div></div></div>`;
+    h += '<div class="parch" style="margin-top:10px">';
+    if (!list.length) h += `<p>Im Moment habe ich nichts für dich, ${esc(S.name)}. ${zoneComplete(zi) ? 'Du hast hier alles getan, was getan werden musste.' : 'Sieh dich anderswo um.'}</p>`;
+    else h += `<p>Sei gegrüßt, ${esc(S.name)}. ${list.some((x) => x.s === 'done') ? 'Du bringst Neuigkeiten?' : 'Ich könnte Hilfe gebrauchen.'}</p>`;
+    for (const x of list) {
+      const icon = x.s === 'done' ? uiImg('q_turnin', 10, 16) : x.s === 'avail' ? uiImg('q_bang', 10, 16) : uiImg('q_bang', 10, 16, 'filter:grayscale(1) brightness(.8)');
+      h += `<button class="li" style="width:100%;border:0;cursor:pointer;margin-top:6px;text-align:left;background:rgba(80,50,20,.12);color:inherit" data-act="quest" data-z="${zi}" data-q="${x.qi}">${icon}<span class="grow"><b>${esc(x.q.t)}</b><br><span class="small">${x.s === 'done' ? 'Abgeben' : x.s === 'avail' ? 'Neuer Auftrag' : `In Arbeit · ${x.p}/${x.need}`}</span></span></button>`;
+    }
+    h += '</div>';
+    if (!there) h += `<div class="mfoot">${btn('Hingehen', 'goto', { z: zi, p: giverPlace(gi) }, 'gold')}</div>`;
+    modal(h, { id: 'giver' });
+  }
+
+  function showQuest(zi, qi) {
+    const x = questInfo(zi, qi);
+    const there = atGiver(zi, x.g);
+    const rw = questRewards(zi, qi);
+    let h = `<div class="parch"><div class="row">${uiImg(x.s === 'done' ? 'q_turnin' : 'q_bang', 20, 32)}<div class="grow"><h3 style="margin:0">${esc(x.q.t)}</h3><div class="small muted">${esc(x.giver.name)} · ${esc(zoneOf(zi).name)}</div></div></div>`;
+    h += x.s === 'done' ? `<p>${esc(pick(TURNIN_LINES))}</p>` : `<p>${esc(x.q.txt)}</p>`;
+    h += `<div class="obj small"><b>Ziel:</b> ${objective(x)}</div><div class="small muted">Ort: ${esc(placeOf(zi, x.place).name)}</div>`;
+    h += `<div class="small" style="margin:8px 0 2px"><b>Belohnung:</b></div>${rewardHTML(rwList(rw))}</div><div class="mfoot">`;
+    if (x.s === 'avail') h += there ? btn('Annehmen', 'accept', { z: zi, q: qi }, 'gold') : btn('Zum Auftraggeber', 'goto', { z: zi, p: giverPlace(x.g) }, 'gold');
+    else if (x.s === 'done') h += there ? btn('Abschließen', 'turnin', { z: zi, q: qi }, 'gold') : btn('Zurück zum Auftraggeber', 'goto', { z: zi, p: giverPlace(x.g) }, 'gold');
+    else if (x.s === 'active') h += btn('Hingehen', 'goto', { z: zi, p: x.place }, 'gold');
+    h += btn('Zurück', 'npc', { g: x.g, z: zi }, 'sm') + '</div>';
+    modal(h, { id: 'quest' });
   }
 
   function showTalent(i) {
@@ -935,6 +1030,7 @@ const UI = (() => {
     if (o.gathered) for (const k in o.gathered) mats[k] = (mats[k] || 0) + o.gathered[k];
     const matList = Object.keys(mats).filter((k) => mats[k]).map((k) => [k, mats[k]]);
     if (o.quest) lines.push(['scroll', `${o.quest.t}: +${o.quest.gained}${o.quest.done ? ' — abgeschlossen!' : ''}`]);
+    if (o.inn) lines.push(['castle', `Dein Held hat in ${o.place} gerastet und keine Gegner bekämpft`]);
     if (o.rested > 0) lines.push(['star', 'Du bist erholt: doppelte Erfahrung für eine Weile']);
     const exp = S.exp.active.filter((x) => x.end <= now()).length;
     if (exp) lines.push(['flag', `${exp} Expedition${exp > 1 ? 'en' : ''} zurückgekehrt`]);
@@ -984,7 +1080,7 @@ const UI = (() => {
     gotoberufe(d) { tab = 'berufe'; sub.berufe = d.s; forceRender(); },
     tut(d) { S.tut[d.k] = 1; forceRender(); },
     zones() { showZones(); },
-    travel(d) { travel(+d.z); closeModal(); forceRender(); toast(`Reise nach ${zoneOf(+d.z).name}`, 'map'); },
+    travel(d) { if (travel(+d.z)) { closeModal(); tab = 'kampf'; forceRender(); toast(`Reise nach ${zoneOf(+d.z).name}`, 'map'); } },
     wt(d) { setWorldTier(S.worldTier + +d.d); forceRender(); },
     boss(d) {
       if (battle && battle.mode !== 'adventure') return;
@@ -994,14 +1090,30 @@ const UI = (() => {
     },
     leave() { leaveInstance(); toast('Instanz verlassen'); },
     turnin(d) {
-      const zi = +d.z;
-      const q = currentQuest(zi);
-      const res = turnInQuest(zi);
+      const zi = +d.z, qi = +d.q;
+      const q = zoneOf(zi).quests[qi];
+      const res = turnInQuest(zi, qi);
       if (!res) return;
       const got = rwList(res.rw).filter((x) => x[0] !== 'chest' && x[0] !== 'chest_epic');
       if (res.itemTxt) got.push(['bag', res.itemTxt]);
-      showGot('Quest abgeschlossen', got, q.t);
+      showGot('Quest abgeschlossen', got, `${q.t} — „${res.line}“`);
       forceRender();
+    },
+    npc(d) { showGiver(+d.g, d.z !== undefined ? +d.z : S.zone); },
+    quest(d) { showQuest(+d.z, +d.q); },
+    accept(d) {
+      const zi = +d.z, qi = +d.q;
+      if (acceptQuest(zi, qi)) {
+        const x = questInfo(zi, qi);
+        toast(`Angenommen: ${x.q.t}`, 'scroll', '#ffd200');
+        if (giverQuests(zi, x.g).some((y) => y.s === 'avail')) showGiver(x.g, zi); else closeModal();
+        forceRender();
+      }
+    },
+    goto(d) {
+      const zi = +d.z;
+      if (battle && battle.mode !== 'adventure') { toast('Verlasse zuerst den Kampf', 'lock', '#ff4a3a'); return; }
+      if (goTo(zi, d.p)) { closeModal(); tab = 'kampf'; forceRender(); }
     },
     skillinfo(d) { const sk = SKILLS[d.id]; modal(`<div class="row">${ico(sk.icon, 48)}<div class="grow"><h2 style="text-align:left;margin:0">${esc(sk.name)}</h2><div class="small muted">Ab Stufe ${sk.lvl} · Abklingzeit ${sk.cd} Sek. · Kosten ${sk.cost} ${CLASSES[S.cls].res}</div></div></div><div class="tip" style="margin-top:8px">${esc(sk.desc)}<div class="d" style="margin-top:4px">Tippe den Knopf in der Aktionsleiste, um sie zu wirken. Leuchtet er, ist sie bereit.</div></div>`); },
     cast(d) {
@@ -1204,6 +1316,7 @@ const UI = (() => {
     Hooks.battleEnd = (b, win, out) => { showResult(b, win, out); dirty = true; };
     Hooks.sound = (n) => Snd.play(n);
     Hooks.fx = Scene.FX;
+    Hooks.npc = (gi) => showGiver(gi);
     log('<span class="sys">Willkommen in Valdoran!</span>');
   }
 

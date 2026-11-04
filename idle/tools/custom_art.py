@@ -18,7 +18,7 @@ BACKDROPS = dict(bg_goldhain=0.4, bg_nebelmoor=0.5, bg_rotfels=0.5, bg_sonnenglu
 CHARACTERS = {
     'hero_krieger': ('hero_krieger', (160, 77), True, None, (0.55, 0.16, 3.2)),
     'hero_magier': ('hero_magier', (160, 71), True, None, (0.5, 0.15, 3.2)),
-    'hero_jaeger': ('hero_jaeger', (160, 72), True, None, (0.35, 0.13, 3.2)),
+    'hero_jaeger': ('hero_jaeger', (160, 72), True, None, (0.5, 0.1, 3.2)),
     'hero_priester': ('hero_priester', (160, 71), True, None, (0.55, 0.12, 3.2)),
     'ignaroth': ('ignaroth', (138, 94), False, None, (0.18, 0.2, 1.6)),
     'kragg': ('kragg', (112, 82), False, None, (0.32, 0.25, 2.0)),
@@ -356,7 +356,16 @@ def _cutouts(jobs):
     from multiprocessing import Pool
     with Pool(min(4, os.cpu_count() or 1)) as pool:
         done = dict(pool.map(_job, jobs))
-    return {n: Image.open(p).convert('RGBA') for n, p in done.items()}
+    return {n: _trim(Image.open(p).convert('RGBA')) for n, p in done.items()}
+
+
+def _trim(img, thr=0.45, pad=4):
+    """Crop to the solid part of a cut-out: faint leftovers at the edges no longer widen the sprite."""
+    a = np.asarray(img)[..., 3]
+    ys, xs = np.nonzero(a > thr * 255)
+    if not len(xs):
+        return img
+    return img.crop((max(0, xs.min() - pad), max(0, ys.min() - pad), min(img.width, xs.max() + pad + 1), min(img.height, ys.max() + pad + 1)))
 
 
 def catalogue(sc, known=None):
@@ -371,6 +380,9 @@ def catalogue(sc, known=None):
         if name.startswith('bg_') and name not in B:
             B[name] = backdrop(name, 0.5)
     taken = set(CHARACTERS) | {v[0] for v in CHARACTERS.values()}
+    for n in _art_names():
+        if n.startswith('npc_'):
+            known[n] = (0, int(48 * sc))  # quest givers stand about as tall as the hero
     generic = [n for n in _art_names() if not n.startswith('bg_') and n not in taken and n in known]
     jobs = [(src, keep, name in HALO, HALO.get(name, 16), False) for name, (src, box, right, keep, face) in CHARACTERS.items() if _src(src)]
     jobs += [(n, None, True, 14, True) for n in generic]

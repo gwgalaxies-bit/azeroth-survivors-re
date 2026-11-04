@@ -442,6 +442,106 @@ Ranger in dark red leather armor with a longbow and a hood, full body, side view
 Fire sorceress in red and black robes with a flaming staff, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
 ```
 
+## Auftraggeber
+
+Stehen in Dörfern und Außenposten und vergeben die Aufträge. Blick nach links.
+
+**Hauptmann Aldric (Goldhain, Stadttor)** → `npc_aldric.jpg`
+
+```
+Middle-aged human city guard captain in blue and silver plate armor with a short beard and a halberd, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Förster Jorik (Goldhain, Försterhütte)** → `npc_jorik.jpg`
+
+```
+Burly human forester in green and brown leather with a woodcutter axe and a fur collar, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Kräuterkundige Wilma (Nebelmoor, Dorf)** → `npc_wilma.jpg`
+
+```
+Elderly human herbalist woman in a patched green shawl with a basket of herbs and a walking stick, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Sumpfläufer Edgar (Nebelmoor, Pfahlbau)** → `npc_edgar.jpg`
+
+```
+Lanky human swamp scout in muddy boots and an oilskin coat with a lantern and a spear, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Späherin Kaya (Rotfels, Karawanenlager)** → `npc_kaya.jpg`
+
+```
+Young desert scout woman with a red scarf, leather armor and a shortbow, sun-tanned, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Oberst Rothmann (Rotfels, Fort)** → `npc_rothmann.jpg`
+
+```
+Stern old human colonel in red and gold officer armor with a cape and a saber, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Archäologe Bertram (Sonnenglut, Ausgrabung)** → `npc_bertram.jpg`
+
+```
+Plump human archaeologist with round glasses, a pith helmet, a satchel and a scroll, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Wüstenführerin Samira (Sonnenglut, Oase)** → `npc_samira.jpg`
+
+```
+Desert guide woman in flowing sand-colored robes and a turquoise veil with a curved dagger, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Bergführer Halvdan (Frostgipfel, Dorf)** → `npc_halvdan.jpg`
+
+```
+Bearded mountain guide in thick furs with a climbing pick and a rope over his shoulder, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Jägerin Sigrun (Frostgipfel, Passwacht)** → `npc_sigrun.jpg`
+
+```
+Nordic huntress with braided blond hair in white fur armor with a spear, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Priesterin Elinor (Schattenhain, Kapelle)** → `npc_elinor.jpg`
+
+```
+Serene priestess in white and gold robes holding a glowing lantern, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Totengräber Morten (Schattenhain, Friedhof)** → `npc_morten.jpg`
+
+```
+Gaunt old gravedigger in a dark coat and wide hat leaning on a shovel, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Feuerwächter Brandt (Glutschlund, Feste)** → `npc_brandt.jpg`
+
+```
+Dwarf-sized stocky fire warden in soot-stained bronze plate armor with a heavy shield, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Schmied Thorvald (Glutschlund, Schmiede)** → `npc_thorvald.jpg`
+
+```
+Muscular blacksmith with a leather apron, braided beard and a glowing hammer, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Erzmagierin Selwyn (Leerenriss, Sternwacht)** → `npc_selwyn.jpg`
+
+```
+Elegant elder archmage woman in midnight blue robes with silver stars and a crystal staff, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Leerenjäger Varos (Leerenriss, Vorposten)** → `npc_varos.jpg`
+
+```
+Hooded void hunter in dark violet leather armor with twin glowing daggers, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
 ## Dungeon- und Raid-Hintergründe
 
 Querformat 3:2 oder 16:9.
