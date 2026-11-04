@@ -55,7 +55,7 @@ Liegt in `art/` ein Bild mit passendem Namen, ersetzt es die erzeugte Grafik:
 | Datei | Wird zu |
 |---|---|
 | `art/bg_<zone>.jpg` | Hintergrund der Zone (wird auf 3:2 zugeschnitten, 960×640) |
-| `art/hero_<klasse>.jpg`, `art/<boss>.jpg` | Figur; Schachbrett- oder einfarbiger Hintergrund wird freigestellt, Leuchteffekte bleiben weich |
+| `art/hero_<klasse>.jpg`, `art/<monster>.jpg` | Figur; Schachbrett- oder einfarbiger Hintergrund wird freigestellt, auch eingemalte Schatten; Leuchteffekte bleiben weich |
 | `art/icons/<slot>.jpg` | Item-Icon; daraus entstehen sechs Stufen (Bronze, Eisen, Original, Gold, Leere, Legendär) |
 
 Für jede Grafik, die noch fehlt, steht ein fertiger Prompt in `art/PROMPTS.md` (erzeugt von `tools/prompts.py`).
@@ -63,7 +63,8 @@ Auch dort gelistete Monster, Gefährten und Icons werden automatisch übernommen
 Gefährten ohne eigenes Bild und Arena-Gegner entstehen als umgefärbte Heldenbilder. Welche Figur wie groß gezeichnet wird
 und in welche Richtung sie schaut, steht in `tools/custom_art.py`.
 
-Grafiken neu erzeugen (dauert knapp zwei Minuten):
+Grafiken neu erzeugen. Beim ersten Mal dauert das Freistellen der gemalten Figuren einige Minuten;
+die Ergebnisse landen in `.art-cache/` (nicht im Repo), danach geht es deutlich schneller:
 
 ```bash
 make idle-assets   # python3 idle/tools/gen_assets.py

@@ -100,6 +100,80 @@ def _checker_map(a, lo, hi):
     return np.repeat(tone[..., None], 3, axis=2).astype(float)
 
 
+def _cell(lum, lo, hi):
+    """Checker cell size in pixels, from the transitions along the top and left border."""
+    mid = (lo + hi) / 2
+    sizes = []
+    for sig in (np.median(lum[1:5, :], axis=0), np.median(lum[:, 1:5], axis=1), np.median(lum[-5:-1, :], axis=0)):
+        b = sig > mid
+        idx = np.nonzero(b[1:] != b[:-1])[0]
+        if len(idx) >= 4:
+            sizes.append(float(np.median(np.diff(idx))))
+    return int(round(np.median(sizes))) if sizes else 16
+
+
+def _box_mean(x, r):
+    p = np.pad(x, r + 1, mode='edge')
+    c = p.cumsum(0).cumsum(1)
+    k = 2 * r + 1
+    s = c[k:, k:] - c[:-k, k:] - c[k:, :-k] + c[:-k, :-k]
+    return s[:x.shape[0], :x.shape[1]] / (k * k)
+
+
+def _checker_like(lum, lo, hi, cell, strict=True):
+    """Where the image looks like the checkerboard, also when a painted shadow or glow darkens or tints it:
+    the pattern repeats every two cells but flips every cell, and each small window holds two flat tones."""
+    c = max(3, int(cell))
+    d1 = (np.abs(lum - np.roll(lum, c, 1)) + np.abs(lum - np.roll(lum, c, 0))) / 2
+    d2 = (np.abs(lum - np.roll(lum, 2 * c, 1)) + np.abs(lum - np.roll(lum, 2 * c, 0))) / 2
+    b1, b2 = _box_mean(d1, c), _box_mean(d2, c)
+    periodic = ((b1 - b2) / (b1 + 3) > 0.5) & (b1 > max(3.0, (hi - lo) * 0.12))
+    if not strict:
+        return periodic
+    w = max(5, int(cell * 1.5) | 1)
+    L = Image.fromarray(np.clip(lum, 0, 255).astype(np.uint8), 'L')
+    mn = np.array(L.filter(ImageFilter.MinFilter(w))).astype(float)
+    mx = np.array(L.filter(ImageFilter.MaxFilter(w))).astype(float)
+    rng = mx - mn
+    t = (lum - mn) / np.maximum(rng, 1)
+    mid = ((t > 0.3) & (t < 0.7)).astype(float)
+    flat_tones = _box_mean(mid, w // 2) < 0.34
+    ok = periodic & flat_tones
+    if lo > 20:
+        r0 = (hi + 4) / (lo + 4)
+        ratio = (mx + 4) / (mn + 4)
+        ok &= (ratio > 1 + (r0 - 1) * 0.35) & (ratio < 1 + (r0 - 1) * 3.5)
+    return ok
+
+
+def _drop_specks(fg, frac=0.0005):
+    """Remove small detached bits (leftover checker dots, stray particles)."""
+    h, w = fg.shape
+    f = 4
+    small = Image.fromarray((fg * 255).astype(np.uint8), 'L').reduce(f) if hasattr(Image.Image, 'reduce') else None
+    sm = np.array(Image.fromarray((fg * 255).astype(np.uint8), 'L').filter(ImageFilter.MaxFilter(3)).resize((w // f, h // f), Image.NEAREST))
+    m = Image.fromarray(np.where(sm > 0, 255, 0).astype(np.uint8), 'L')
+    thr = max(6, frac * h * w / (f * f))
+    arr = np.array(m)
+    sizes = []
+    ys, xs = np.nonzero(arr == 255)
+    for y, x in zip(ys, xs):
+        if m.getpixel((int(x), int(y))) != 255:
+            continue
+        ImageDraw.floodfill(m, (int(x), int(y)), 100)
+        a2 = np.array(m)
+        n = int((a2 == 100).sum())
+        sizes.append(n)
+        ImageDraw.floodfill(m, (int(x), int(y)), 50 if n >= thr else 10)
+    del small
+    keep = np.array(m) == 50
+    if not keep.any():
+        return fg
+    big = np.array(Image.fromarray((keep * 255).astype(np.uint8), 'L').resize((w, h), Image.NEAREST)) > 0
+    big = np.array(Image.fromarray((big * 255).astype(np.uint8), 'L').filter(ImageFilter.MaxFilter(5))) > 0
+    return fg & big
+
+
 def _background_mask(a):
     """(background mask, backdrop colour per pixel) of the backdrop the character was painted on."""
     h, w = a.shape[:2]
@@ -117,8 +191,12 @@ def _background_mask(a):
         bl = border.mean(axis=1)
         lo, hi = np.percentile(bl, 15), np.percentile(bl, 85)
         tol = max(10, (hi - lo) * 0.28)
+        cell = _cell(lum, lo, hi)
+        chk = _checker_like(lum, lo, hi, cell)
         cand = (sat <= 9) & ((np.abs(lum - lo) < tol) | (np.abs(lum - hi) < tol) | ((lum > lo) & (lum < hi)))
-        tmap = (lo, hi)
+        # shadows painted onto the checkerboard: darker, but still the same two-tone pattern
+        cand |= (sat <= 16) & _checker_like(lum, lo, hi, cell, strict=False)
+        tmap = (lo, hi, cell)
     m = Image.fromarray((cand * 255).astype(np.uint8), 'L').copy()
     seeds = [(x, 0) for x in range(0, w, 3)] + [(x, h - 1) for x in range(0, w, 3)] + [(0, y) for y in range(0, h, 3)] + [(w - 1, y) for y in range(0, h, 3)]
     for sd in seeds:
@@ -144,7 +222,7 @@ def _background_mask(a):
                 ok = True
             else:
                 fl, fh = nearlo[comp].mean(), nearhi[comp].mean()
-                ok = fl > 0.18 and fh > 0.18
+                ok = (fl > 0.18 and fh > 0.18) or chk[comp].mean() > 0.6
         ImageDraw.floodfill(m, sd, 128 if ok else 60)
     bg = np.array(m) == 128
     bgi = Image.fromarray((bg * 255).astype(np.uint8), 'L').filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3))
@@ -160,14 +238,14 @@ def _colour_to_alpha(p, t):
     return al, np.clip(g, 0, 255)
 
 
-def cutout(name, keep=None, halo=False, halo_r=16):
+def cutout(name, keep=None, halo=False, halo_r=16, restrict=True):
     im = Image.open(_src(name)).convert('RGB')
     if keep:
         w = im.width
         im = im.crop((int(w * keep[0]), 0, int(w * keep[1]), im.height))
     a = np.asarray(im).astype(float)
     bg, tmap = _background_mask(a)
-    fg = ~bg
+    fg = _drop_specks(~bg)
     fgi = Image.fromarray((fg * 255).astype(np.uint8), 'L').filter(ImageFilter.MinFilter(3)).filter(ImageFilter.MaxFilter(3))
     alpha = fgi.filter(ImageFilter.MinFilter(3)).filter(ImageFilter.GaussianBlur(1.1))
     al = np.array(alpha).astype(float) / 255
@@ -182,10 +260,12 @@ def cutout(name, keep=None, halo=False, halo_r=16):
             al = np.where(soft, np.minimum(al, np.clip(ca * 1.1, 0, 1)), al)
             rgb = np.where(soft[..., None], g, rgb)
         else:
-            lo, hi = tmap
+            lo, hi, cell = tmap
             lum = a.mean(axis=2)
             chroma = a.max(axis=2) - a.min(axis=2)
-            inband = band & (lum > lo - 18)
+            # only where the checkerboard still shows through: a glow, not a dull grey body part
+            seen = np.array(Image.fromarray((_checker_like(lum, lo, hi, cell, strict=False) * 255).astype(np.uint8), 'L').filter(ImageFilter.MaxFilter(5))) > 0
+            inband = band & (lum > lo - 18) & (seen if restrict else True)
             c0 = max(45.0, float(np.percentile(chroma[inband], 85))) if inband.any() else 60.0
             ca = np.clip((chroma - 8) / (c0 - 8), 0, 1)
             soft = inband & (ca < 0.995)
@@ -250,6 +330,35 @@ def _art_names():
     return sorted({os.path.splitext(f)[0] for f in os.listdir(ART) if f.lower().endswith(('.jpg', '.jpeg', '.png'))})
 
 
+CACHE = os.path.join(os.path.dirname(HERE), '.art-cache')
+
+
+def _job(args):
+    name, keep, halo, halo_r, restrict = args
+    import hashlib
+    src = _src(name)
+    import inspect
+    parts = [_cell, _box_mean, _checker_like, _drop_specks, _background_mask, _colour_to_alpha, cutout]
+    code = hashlib.sha1(''.join(inspect.getsource(f) for f in parts).encode()).hexdigest()[:10]
+    st = os.stat(src)
+    key = hashlib.sha1(repr((name, keep, halo, halo_r, restrict, st.st_size, int(st.st_mtime), code)).encode()).hexdigest()[:16]
+    path = os.path.join(CACHE, f'{name}-{key}.png')
+    if os.path.exists(path):
+        return name, path
+    img = cutout(name, keep, halo=halo, halo_r=halo_r, restrict=restrict)
+    os.makedirs(CACHE, exist_ok=True)
+    img.save(path)
+    return name, path
+
+
+def _cutouts(jobs):
+    """Cut out many images in parallel; results are cached by file, settings and this module's code."""
+    from multiprocessing import Pool
+    with Pool(min(4, os.cpu_count() or 1)) as pool:
+        done = dict(pool.map(_job, jobs))
+    return {n: Image.open(p).convert('RGBA') for n, p in done.items()}
+
+
 def catalogue(sc, known=None):
     """Returns (sprites, backdrops, faces). Sprites are RGBA at `sc` pixels per logical pixel.
     `known` maps procedural sprite names to their (w, h) in pixels; any image in art/ named like one replaces it."""
@@ -261,26 +370,25 @@ def catalogue(sc, known=None):
     for name in _art_names():
         if name.startswith('bg_') and name not in B:
             B[name] = backdrop(name, 0.5)
-    cut = {}
+    taken = set(CHARACTERS) | {v[0] for v in CHARACTERS.values()}
+    generic = [n for n in _art_names() if not n.startswith('bg_') and n not in taken and n in known]
+    jobs = [(src, keep, name in HALO, HALO.get(name, 16), False) for name, (src, box, right, keep, face) in CHARACTERS.items() if _src(src)]
+    jobs += [(n, None, True, 14, True) for n in generic]
+    cuts = _cutouts(jobs)
     for name, (src, box, right, keep, face) in CHARACTERS.items():
-        if not _src(src):
+        if src not in cuts:
             continue
-        img = cutout(src, keep, halo=name in HALO, halo_r=HALO.get(name, 16))
-        cut[name] = img
+        img = cuts[src]
         S[name] = fit(img, box, sc, right, SOURCE_FACES_RIGHT.get(src))
         fx, fy, z = face
         if SOURCE_FACES_RIGHT.get(src) != right:
             fx = 1 - fx
         faces[name] = [round(fx, 3), round(fy, 3), z]
-    taken = set(CHARACTERS) | {v[0] for v in CHARACTERS.values()}
-    for name in _art_names():
-        if name.startswith('bg_') or name in taken or name not in known:
-            continue
-        # a painted replacement for a procedural sprite: about a quarter taller, facing as prompted
+    for name in generic:
+        # a painted replacement for a procedural sprite: a bit taller than the drawn one, facing as prompted
         w, h = known[name]
-        lh = h / sc * 1.25
-        img = cutout(name, None, halo=True, halo_r=14)
-        S[name] = fit(img, (lh * 1.9, lh), sc, True, True)
+        lh = min(100, h / sc * 1.45)
+        S[name] = fit(cuts[name], (lh * 1.9, lh), sc, True, True)
         faces[name] = [0.5, 0.22, 2.0]
     for name, (src, hr, target, scale, tint) in DERIVED.items():
         if src in S and name not in S:
