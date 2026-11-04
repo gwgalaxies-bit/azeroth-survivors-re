@@ -349,29 +349,24 @@ const UI = (() => {
   // --------------------------------------------------------------------------------------- views
   const VIEWS = {};
 
+  // The combat tab shows only what matters right now: where you are and your quests' next steps.
   VIEWS.kampf = () => {
     const z = zoneOf(S.zone);
     const pl = here();
     let h = '';
-    if (!S.tut.skills) h += `<div class="card plain"><div class="row">${ico(SKILLS[CLASSES[S.cls].skills[0]].icon, 32)}<div class="grow small"><b class="goldtxt">Tipp:</b> Deine Fähigkeiten wirkst du selbst: Tippe auf einen leuchtenden Knopf in der Aktionsleiste (am Computer auch 1, 2, 3). Gedrückt halten zeigt, was er tut. Den Waffenangriff macht dein Held von allein, auch offline. Ein Tipp auf die Kampfszene gibt Extraschaden.</div>${btn('OK', 'tut', { k: 'skills' }, 'sm')}</div></div>`;
-    if (!S.tut.quests) h += `<div class="card plain"><div class="row">${uiImg('q_bang', 20, 32)}<div class="grow small"><b class="goldtxt">So läuft ein Auftrag:</b> Sprich mit Auftraggebern mit gelbem <b>!</b>, nimm ihren Auftrag an und lauf zu den Gegnern. Ist er erledigt, zeigt der Auftraggeber ein <b>?</b>: Lauf zurück und gib ab. In Dörfern ruht dein Held und sammelt Erholungsbonus.</div>${btn('OK', 'tut', { k: 'quests' }, 'sm')}</div></div>`;
+    const tip = !S.tut.quests
+      ? ['quests', uiImg('q_bang', 14, 22), 'Gelbes <b>!</b>: Auftrag annehmen. Gelbes <b>?</b>: abgeben. Dazwischen läufst du zu den Gegnern.']
+      : !S.tut.skills ? ['skills', ico(SKILLS[CLASSES[S.cls].skills[0]].icon, 24), 'Fähigkeiten wirkst du selbst: Tippe auf leuchtende Knöpfe (1–3). Gedrückt halten zeigt die Wirkung.'] : null;
+    if (tip) h += `<div class="tipline">${tip[1]}<span class="grow small">${tip[2]}</span>${btn('OK', 'tut', { k: tip[0] }, 'sm')}</div>`;
     // where you are
     const w = battle && battle.mode === 'adventure' ? S.walk : null;
-    const placeIcon = { hub: 'castle', elite: 'skull', boss: 'raid' }[pl.kind];
-    h += `<div class="card"><div class="row">${pl.kind === 'hunt' ? `<span class="bp" style="width:40px;height:40px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px #8a6a3a">${face(pl.mob, 40)}</span>` : ico(placeIcon, 40)}
-      <div class="grow"><h3 style="margin:0">${w ? `Unterwegs nach ${esc(placeOf(w.z, w.p).name)}` : esc(pl.name)}</h3><div class="small muted">${esc(z.name)} · ${w ? 'Dein Held ist auf dem Weg.' : placeDesc(pl)}</div></div>${btn(`${ico('map', 18)} Karte`, 'zones', {}, 'sm')}</div>`;
-    if (!w && pl.kind === 'hub') {
-      const g = giverOf(S.zone, pl.giver), mk = giverMarker(S.zone, pl.giver);
-      h += `<div class="li" style="margin-top:8px"><span class="bp" style="width:44px;height:44px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px #c8a050">${face(npcSprite(S.zone, pl.giver), 44)}</span>
-        <div class="grow"><div class="ttl gold">${esc(g.name)} ${mk === 'turnin' ? uiImg('q_turnin', 9, 14) : mk === 'avail' ? uiImg('q_bang', 9, 14) : ''}</div><div class="small muted">${esc(g.role)}</div></div>${btn('Sprechen', 'npc', { g: pl.giver }, mk === 'avail' || mk === 'turnin' ? 'gold' : '')}</div>`;
-    }
-    if (!w && pl.kind === 'boss' && bossAvailable(S.zone)) h += `<div class="row" style="margin-top:8px">${btn(`${ico('skull', 18)} ${esc(MOBS[pl.mob])} herausfordern`, 'boss', { z: S.zone }, 'gold wide')}</div>`;
-    h += '</div>';
-    // quest tracker
+    const placeIcon = pl.kind === 'hunt' ? `<span class="bp" style="width:32px;height:32px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px #8a6a3a">${face(pl.mob, 32)}</span>` : ico({ hub: 'castle', elite: 'skull', boss: 'raid' }[pl.kind], 32);
+    h += `<div class="placeline">${w ? ico('map', 32) : placeIcon}<div class="grow"><div class="ttl gold">${w ? `Unterwegs nach ${esc(placeOf(w.z, w.p).name)}` : esc(pl.name)}</div><div class="small muted">${esc(z.name)}${w ? '' : ` · ${placeDesc(pl)}`}</div></div>${btn(`${ico('map', 18)} Karte`, 'zones', {}, 'sm')}</div>`;
+    // quests in this zone, each with its next step
     const mine = zoneQuests(S.zone).filter((x) => x.s === 'active' || x.s === 'done');
     const offers = [0, 1].filter((gi) => giverMarker(S.zone, gi) === 'avail');
     if (mine.length || offers.length) {
-      h += '<div class="section-title">Aufträge</div><div class="stack">';
+      h += '<div class="stack">';
       for (const x of mine) h += trackerRow(x);
       for (const gi of offers) {
         const g = giverOf(S.zone, gi), gp = giverPlace(gi);
@@ -380,24 +375,10 @@ const UI = (() => {
       }
       h += '</div>';
     } else if (zoneComplete(S.zone) && S.zone < S.zoneMax) {
-      h += `<div class="card plain"><div class="row">${ico('map', 32)}<div class="grow small">Alle Aufträge in ${esc(z.name)} sind erledigt. Neue Abenteuer warten in <b class="goldtxt">${esc(ZONES[S.zoneMax].name)}</b>.</div>${btn('Reisen', 'travel', { z: S.zoneMax }, 'sm gold')}</div></div>`;
+      h += `<div class="li">${ico('map', 28)}<div class="grow small">Alle Aufträge in ${esc(z.name)} erledigt. Weiter geht es in <b class="goldtxt">${esc(ZONES[S.zoneMax].name)}</b>.</div>${btn('Reisen', 'travel', { z: S.zoneMax }, 'sm gold')}</div>`;
     } else if (S.wtMax > 0) {
-      h += `<div class="card plain"><div class="row">${ico('star', 32)}<div class="grow small">Du hast die Welt gerettet. In den <b class="goldtxt">Weltstufen</b> werden alle Gebiete stärker und die Beute besser.</div></div></div>`;
+      h += `<div class="li">${ico('star', 28)}<div class="grow small">Alle Aufträge erledigt. Auf der Karte stellst du die <b class="goldtxt">Weltstufe</b> höher.</div></div>`;
     }
-    // zone + world tier
-    h += `<div class="row">${btn(`${ico('map', 18)} Karte`, 'zones', {}, 'sm')}${S.wtMax > 0 ? `<span class="stepper">${btn('−', 'wt', { d: -1 }, 'sm', S.worldTier <= 0)}<b>Weltstufe ${S.worldTier}</b>${btn('+', 'wt', { d: 1 }, 'sm', S.worldTier >= S.wtMax)}</span>` : ''}<span class="grow"></span><span class="small muted">${fmt(estimateKillRate().rate * 3600)} Siege/Std</span></div>`;
-    // events
-    h += `<div class="section-title">Ereignisse</div><div class="events">${eventTiles()}</div>`;
-    // buffs & consumables
-    const cons = Object.keys(CONSUMABLES).filter((k) => k !== 'potion_heal' && (S.cons[k] || 0) > 0);
-    const buffs = activeBuffs();
-    if (cons.length || buffs.length) {
-      h += `<div class="section-title">Stärkungen</div><div class="stack">`;
-      for (const bf of buffs) h += `<div class="li">${ico(bf.icon, 28)}<div class="grow"><div class="ttl">${esc(bf.name)}</div><div class="small muted">${esc(bf.desc)}</div></div><span class="small goldtxt">${tm(bf.end)}</span></div>`;
-      if (cons.length) h += `<div class="row wrap">${cons.map((k) => `<button class="ev" style="flex:1 1 140px" data-act="usecons" data-id="${k}">${ico(k, 28)}<div><b>${esc(CONSUMABLES[k].name)} ×${S.cons[k]}</b><small>Benutzen</small></div></button>`).join('')}</div>`;
-      h += '</div>';
-    }
-    h += `<div class="section-title">Chronik</div><div class="chat" id="chat"></div>`;
     return h;
   };
 
@@ -437,20 +418,11 @@ const UI = (() => {
   }
 
 
-  function activeBuffs() {
-    const t = now(), out = [];
-    const b = S.buffs;
-    const map = { atk: 'elixir_atk', xp: 'elixir_xp', luck: 'elixir_luck', titan: 'flask_titan' };
-    for (const k in map) if (b[k] > t) out.push({ icon: map[k], name: CONSUMABLES[map[k]].name, desc: CONSUMABLES[map[k]].desc, end: b[k] });
-    if (b.food > t && b.foodId) out.push({ icon: b.foodId, name: CONSUMABLES[b.foodId].name, desc: CONSUMABLES[b.foodId].desc, end: b.food });
-    return out;
-  }
-
-  function eventTiles() {
+  function eventTiles(inTown) {
     const t = now();
     const tiles = [];
-    if (!S.login.claimed) tiles.push(`<button class="ev hot" data-act="login">${ico('gift', 32)}<div><b>Tagesbelohnung</b><small>Tag ${S.login.cycle % 7 + 1} abholen</small></div></button>`);
-    tiles.push(chestReady() ? `<button class="ev hot" data-act="chest">${ico('chest', 32)}<div><b>Versorgungskiste</b><small>Jetzt öffnen!</small></div></button>`
+    if (!inTown && !S.login.claimed) tiles.push(`<button class="ev hot" data-act="login">${ico('gift', 32)}<div><b>Tagesbelohnung</b><small>Tag ${S.login.cycle % 7 + 1} abholen</small></div></button>`);
+    if (!inTown) tiles.push(chestReady() ? `<button class="ev hot" data-act="chest">${ico('chest', 32)}<div><b>Versorgungskiste</b><small>Jetzt öffnen!</small></div></button>`
       : `<button class="ev" data-act="noop">${ico('chest', 32)}<div><b>Versorgungskiste</b><small>${tm(S.chestT, 'in ')}</small></div></button>`);
     if (S.level >= 10) {
       const w = worldBossInfo(t);
@@ -844,6 +816,7 @@ const UI = (() => {
     const cyc = S.login.cycle;
     const todayIdx = S.login.claimed ? (cyc - 1) % 7 : cyc % 7;
     let h = `<div class="inst"><div class="hero-img" style="height:110px;background-image:url(assets/bg/bg_town.webp)"><div class="t"><b>Hohenmark</b><small>Hauptstadt des Königreichs Valdoran</small></div></div></div>`;
+    h += `<div class="section-title">Heute</div><div class="events">${eventTiles(true)}</div>`;
     h += `<div class="card"><div class="row between"><h3 style="margin:0">Tägliche Anmeldung</h3><span class="small muted">Serie: ${S.login.streak} ${S.login.streak === 1 ? 'Tag' : 'Tage'}</span></div><div class="cal" style="margin-top:6px">`;
     LOGIN_REWARDS.forEach((r, i) => {
       const got = i < todayIdx || (i === todayIdx && S.login.claimed);
@@ -860,6 +833,7 @@ const UI = (() => {
       <div><span>Gold verdient</span><b>${fmt(s.goldEarned)}</b></div><div><span>Epische Beute</span><b>${fmt(s.epics)}</b></div>
       <div><span>Legendäre Beute</span><b>${fmt(s.legendaries)}</b></div><div><span>Fische</span><b>${fmt(s.fish)}</b></div>
     </div></div>`;
+    h += `<div class="section-title">Chronik</div><div class="chat" id="chat"></div>`;
     h += btn(`${ico('cog', 18)} Einstellungen & Spielstand`, 'settings', {}, 'wide');
     return h;
   }
@@ -935,7 +909,9 @@ const UI = (() => {
   function showZones() {
     const z = zoneOf(S.zone);
     const cur = S.walk ? null : S.loc.p;
-    let h = `<h2>${esc(z.name)}</h2><div class="small muted" style="text-align:center;margin:-6px 0 8px">Tippe auf einen Ort, um hinzugehen.</div><div class="stack">`;
+    let h = `<h2>${esc(z.name)}</h2><div class="small muted" style="text-align:center;margin:-6px 0 8px">Tippe auf einen Ort, um hinzugehen.</div>`;
+    if (S.wtMax > 0) h += `<div class="row" style="justify-content:center;margin-bottom:8px"><span class="stepper">${btn('−', 'wt', { d: -1 }, 'sm', S.worldTier <= 0)}<b>Weltstufe ${S.worldTier}</b>${btn('+', 'wt', { d: 1 }, 'sm', S.worldTier >= S.wtMax)}</span></div>`;
+    h += '<div class="stack">';
     const active = zoneQuests(S.zone).filter((x) => x.s === 'active');
     for (const pl of placesOf(S.zone)) {
       let mark = '';
@@ -1107,7 +1083,7 @@ const UI = (() => {
     tut(d) { S.tut[d.k] = 1; forceRender(); },
     zones() { showZones(); },
     travel(d) { if (travel(+d.z)) { closeModal(); tab = 'kampf'; forceRender(); toast(`Reise nach ${zoneOf(+d.z).name}`, 'map'); } },
-    wt(d) { setWorldTier(S.worldTier + +d.d); forceRender(); },
+    wt(d) { setWorldTier(S.worldTier + +d.d); forceRender(); if (U.modal === 'zones') showZones(); },
     boss(d) {
       if (battle && battle.mode !== 'adventure') return;
       startBossFight(+d.z);

@@ -109,6 +109,9 @@ body.compact #scene { aspect-ratio: 3 / 1.2; }
   background: rgba(8, 6, 10, 0.72); border: 1px solid #000; box-shadow: inset 0 0 0 1px #5a4a2a; border-radius: 4px; font-size: 11px; }
 #instBar b { display: block; font: 700 11px var(--f-display); color: var(--gold); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 #instBar .bar { margin-top: 3px; }
+.tipline { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 4px; background: rgba(255, 210, 80, 0.08); box-shadow: inset 0 0 0 1px rgba(200, 160, 80, 0.45); }
+.placeline { display: flex; align-items: center; gap: 10px; padding: 2px 2px 4px; border-bottom: 1px solid rgba(200, 160, 80, 0.25); }
+.placeline .ttl { font: 700 14px var(--f-display); }
 .auras { display: flex; flex-wrap: wrap; gap: 3px; min-height: 0; }
 .auras:empty { display: none; }
 .auras.player { position: absolute; z-index: 2; left: max(8px, env(safe-area-inset-left, 0px)); top: 8px; max-width: 38%; }
