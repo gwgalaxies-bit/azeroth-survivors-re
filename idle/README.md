@@ -46,7 +46,7 @@ Versorgungskiste, Weltboss-Fenster, Tagesquests und die tägliche Anmeldeserie.
 | `js/ui.js` | Tabs, Ansichten, Modale, Toasts, Angel-Minispiel |
 | `js/main.js` | Start, Hauptschleife, Speichern, synthetisierte Soundeffekte |
 | `js/atlas.js` | Generierter Index der Sprite- und Icon-Atlanten |
-| `tools/faces.py` | Kopfposition und -größe jeder Figur für die runden Portraits; `tools/faces_sheet.py` zeigt alle Portraits zur Kontrolle |
+| `tools/faces.py` | Kopfposition und -größe jeder Figur für die runden Portraits (Kopf im oberen Drittel, darunter Schultern und Brust); `tools/faces_sheet.py` zeigt alle Portraits zur Kontrolle |
 | `tools/` | Python-Generator für alle Grafiken (`numpy`, `Pillow` mit WebP); `px.py` enthält den Pixel- und den gemalten Renderer |
 
 ### Eigene gemalte Bilder

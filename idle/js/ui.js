@@ -27,15 +27,18 @@ const UI = (() => {
     return `<i class="spr" style="width:${(r[2] * f).toFixed(1)}px;height:${(r[3] * f).toFixed(1)}px;background-size:${(W * f).toFixed(1)}px ${(H * f).toFixed(1)}px;background-position:-${(r[0] * f).toFixed(1)}px -${(r[1] * f).toFixed(1)}px;${style}"></i>`;
   }
   const FACES = ATLAS.sprites.faces || {};
-  // A round portrait: the sprite placed so its face sits in the middle and fills ~55% of the circle.
-  // faces[name] = [x, y, size] of the head as fractions of the sprite (see tools/faces.py).
+  // A round portrait showing head and upper body, like an MMO unit frame: the head fills about a third of the
+  // circle and sits in its upper third, so shoulders and chest show below it. Side-on beasts lean a little
+  // toward their body. faces[name] = [x, y, size] of the head as fractions of the sprite (tools/faces.py).
+  const PORTRAIT = { head: 0.36, headY: 0.35, lean: 0.25 };
   function face(name, box) {
     const r = ATLAS.sprites.map[name];
     if (!r) return '';
     const [fx, fy, fs] = FACES[name] || [0.5, 0.25, 0.3];
-    const scale = 0.55 * box * SSC / (fs * r[3]);
+    const scale = PORTRAIT.head * box * SSC / (fs * r[3]);
     const w = r[2] / SSC * scale, h = r[3] / SSC * scale;
-    return spr(name, scale, `left:${(box / 2 - w * fx).toFixed(1)}px;top:${(box / 2 - h * fy).toFixed(1)}px`);
+    const hx = box * (0.5 - clamp((0.5 - fx) * PORTRAIT.lean, -0.1, 0.1));
+    return spr(name, scale, `left:${(hx - w * fx).toFixed(1)}px;top:${(box * PORTRAIT.headY - h * fy).toFixed(1)}px`);
   }
   function heroFace(box) { return face(CLASSES[S.cls].sprite, box); }
   function uiImg(name, w, h, extra = '') { return `<i class="ui-img" style="width:${w}px;height:${h}px;background-image:url(assets/ui/${name}.png);${extra}"></i>`; }

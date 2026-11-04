@@ -7,25 +7,24 @@ import sys
 from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-K = 0.55  # share of the circle the head fills; keep in sync with face() in js/ui.js
+HEAD, HEAD_Y, LEAN = 0.36, 0.35, 0.25  # keep in sync with PORTRAIT in js/ui.js
 
 
 def portrait(atlas, rect, face, box=96):
     x, y, w, h = rect
     fx, fy, fs = face
-    s = K * box / (fs * h)
+    s = HEAD * box / (fs * h)
     sw, sh = w * s, h * s
+    hx = box * (0.5 - max(-0.1, min(0.1, (0.5 - fx) * LEAN)))
     img = Image.new('RGBA', (box, box), (36, 32, 44, 255))
     spr = atlas.crop((x, y, x + w, y + h)).resize((max(1, round(sw)), max(1, round(sh))), Image.LANCZOS)
-    img.paste(spr, (round(box / 2 - sw * fx), round(box / 2 - sh * fy)), spr)
+    img.paste(spr, (round(hx - sw * fx), round(box * HEAD_Y - sh * fy)), spr)
     mask = Image.new('L', (box, box), 0)
     ImageDraw.Draw(mask).ellipse([0, 0, box - 1, box - 1], fill=255)
     out = Image.new('RGBA', (box, box), (0, 0, 0, 0))
     out.paste(img, (0, 0), mask)
     d = ImageDraw.Draw(out)
     d.ellipse([0, 0, box - 1, box - 1], outline=(200, 160, 80, 255), width=2)
-    d.line([(box / 2 - 4, box / 2), (box / 2 + 4, box / 2)], fill=(255, 0, 0, 180))
-    d.line([(box / 2, box / 2 - 4), (box / 2, box / 2 + 4)], fill=(255, 0, 0, 180))
     return out
 
 
