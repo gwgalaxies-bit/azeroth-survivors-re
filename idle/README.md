@@ -58,7 +58,9 @@ Liegt in `art/` ein Bild mit passendem Namen, ersetzt es die erzeugte Grafik:
 | `art/hero_<klasse>.jpg`, `art/<boss>.jpg` | Figur; Schachbrett- oder einfarbiger Hintergrund wird freigestellt, Leuchteffekte bleiben weich |
 | `art/icons/<slot>.jpg` | Item-Icon; daraus entstehen sechs Stufen (Bronze, Eisen, Original, Gold, Leere, Legendär) |
 
-Gefährten und Arena-Gegner entstehen als umgefärbte Heldenbilder. Welche Figur wie groß gezeichnet wird
+Für jede Grafik, die noch fehlt, steht ein fertiger Prompt in `art/PROMPTS.md` (erzeugt von `tools/prompts.py`).
+Auch dort gelistete Monster, Gefährten und Icons werden automatisch übernommen, sobald die Datei in `art/` liegt.
+Gefährten ohne eigenes Bild und Arena-Gegner entstehen als umgefärbte Heldenbilder. Welche Figur wie groß gezeichnet wird
 und in welche Richtung sie schaut, steht in `tools/custom_art.py`.
 
 Grafiken neu erzeugen (dauert knapp zwei Minuten):

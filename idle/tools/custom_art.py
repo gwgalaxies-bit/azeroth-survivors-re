@@ -42,11 +42,11 @@ DERIVED = {
 
 
 def _src(name):
-    p = os.path.join(ART, name + '.jpg')
-    if os.path.exists(p):
-        return p
-    p = os.path.join(ART, name + '.png')
-    return p if os.path.exists(p) else None
+    for ext in ('.jpg', '.jpeg', '.png'):
+        p = os.path.join(ART, name + ext)
+        if os.path.exists(p):
+            return p
+    return None
 
 
 def backdrop(name, anchor=0.5, size=(960, 640)):
@@ -246,12 +246,21 @@ SOURCE_FACES_RIGHT = dict(hero_krieger=True, hero_magier=True, hero_jaeger=True,
                           kragg=True, morva=True, gromm=False, khet=False, glaciara=False, mordrek=False, umbrax=False)
 
 
-def catalogue(sc):
-    """Returns (sprites, backdrops, faces). Sprites are RGBA at `sc` pixels per logical pixel."""
+def _art_names():
+    return sorted({os.path.splitext(f)[0] for f in os.listdir(ART) if f.lower().endswith(('.jpg', '.jpeg', '.png'))})
+
+
+def catalogue(sc, known=None):
+    """Returns (sprites, backdrops, faces). Sprites are RGBA at `sc` pixels per logical pixel.
+    `known` maps procedural sprite names to their (w, h) in pixels; any image in art/ named like one replaces it."""
     S, B, faces = {}, {}, {}
+    known = known or {}
     for name, anchor in BACKDROPS.items():
         if _src(name):
             B[name] = backdrop(name, anchor)
+    for name in _art_names():
+        if name.startswith('bg_') and name not in B:
+            B[name] = backdrop(name, 0.5)
     cut = {}
     for name, (src, box, right, keep, face) in CHARACTERS.items():
         if not _src(src):
@@ -263,8 +272,18 @@ def catalogue(sc):
         if SOURCE_FACES_RIGHT.get(src) != right:
             fx = 1 - fx
         faces[name] = [round(fx, 3), round(fy, 3), z]
+    taken = set(CHARACTERS) | {v[0] for v in CHARACTERS.values()}
+    for name in _art_names():
+        if name.startswith('bg_') or name in taken or name not in known:
+            continue
+        # a painted replacement for a procedural sprite: about a quarter taller, facing as prompted
+        w, h = known[name]
+        lh = h / sc * 1.25
+        img = cutout(name, None, halo=True, halo_r=14)
+        S[name] = fit(img, (lh * 1.9, lh), sc, True, True)
+        faces[name] = [0.5, 0.22, 2.0]
     for name, (src, hr, target, scale, tint) in DERIVED.items():
-        if src in S:
+        if src in S and name not in S:
             base = S[src]
             img = recolour(base, hr, target)
             t = np.asarray(img).astype(float) * [tint[0], tint[1], tint[2], 1]
@@ -290,8 +309,11 @@ ARMOR_SLOTS = ('head', 'shoulder', 'chest', 'hands', 'legs', 'feet', 'trinket')
 
 
 def _icon_src(name):
-    p = os.path.join(ART, 'icons', name + '.jpg')
-    return p if os.path.exists(p) else None
+    for ext in ('.jpg', '.jpeg', '.png'):
+        p = os.path.join(ART, 'icons', name + ext)
+        if os.path.exists(p):
+            return p
+    return None
 
 
 def load_icon(name, cell):
@@ -366,4 +388,13 @@ def icons(cell):
         I['chest_gold'] = tier_variant(I['chest'], 3)
     if 'swords' in I:
         I['honor'] = tier_variant(I['swords'], 0)
+    # any other icon in art/icons/ named like a game icon (skills, currencies, ores, ...) is used as is
+    d = os.path.join(ART, 'icons')
+    for f in sorted(os.listdir(d)) if os.path.isdir(d) else []:
+        name, ext = os.path.splitext(f)
+        if ext.lower() not in ('.jpg', '.jpeg', '.png') or name in ICON_FILES.values():
+            continue
+        if name.startswith(('w_', 'a_')):
+            continue
+        I[name] = load_icon(name, cell)
     return I

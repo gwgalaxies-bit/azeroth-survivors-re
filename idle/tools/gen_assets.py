@@ -69,7 +69,7 @@ def main():
                 os.remove(os.path.join(ASSETS, d, f))
 
     spr = sprites.catalogue()
-    c_spr, c_bg, faces = custom_art.catalogue(sprites.SC)
+    c_spr, c_bg, faces = custom_art.catalogue(sprites.SC, {k: v.size for k, v in spr.items()})
     spr.update(c_spr)
     satlas, spos = pack(spr, max_w=2048, pad=2)
     satlas.save(os.path.join(ASSETS, 'sprites.webp'), quality=90, method=6)
