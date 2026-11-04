@@ -145,18 +145,19 @@ const Game = (() => {
       const o = offlineProgress(away, eff);
       gathered = catchUpProfessions();
       o.gathered = gathered;
-      if (showOffline && away > 120) UI.showOffline(o, away);
+      if (showOffline && away > 120 && !S.needsRace) UI.showOffline(o, away);
     } else catchUpProfessions();
     S.lastSeen = now();
     UI.rebuild();
+    if (S.needsRace) UI.showCreate(true);
     if (S.potionNote) {
       UI.toast(`Du trägst höchstens ${POTION_CAP} Heiltränke. ${S.potionNote} überzählige wurden verkauft.`, 'potion_heal', '#e02838');
       delete S.potionNote;
     }
   }
 
-  function create(cls, name) {
-    S = newState(cls, name);
+  function create(cls, name, race) {
+    S = newState(cls, name, race);
     statsDirty = true;
     checkDaily();
     checkLogin();

@@ -341,9 +341,9 @@ const Scene = (() => {
       const bob = heroDead ? 0 : walking ? -Math.abs(Math.sin(t * 9)) * 2.4 : Math.sin(t * 2.4) * 1.1;
       const lx = hero.lunge > 0 ? Math.sin(Math.PI * (1 - hero.lunge / 0.2)) * 7 : 0;
       const tilt = walking ? 0.05 * S.walk.dir : 0;
-      draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(CLASSES[S.cls].sprite, hero.x + lx, hero.y + bob, { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : tilt, grey: heroDead, flip: walking && S.walk.dir < 0 }); } });
+      draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(heroSprite(), hero.x + lx, hero.y + bob, { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : tilt, grey: heroDead, flip: walking && S.walk.dir < 0 }); } });
       if (!walking && b && b.mode === 'adventure' && here().kind === 'hub') drawNpcs(draws);
-      if (S.cls === 'jaeger' && !(ATLAS.sprites.painted || []).includes('hero_jaeger')) {
+      if (S.cls === 'jaeger' && !(ATLAS.sprites.painted || []).includes(heroSprite())) {
         const pet = A.pet;
         pet.lunge = Math.max(0, pet.lunge - dt);
         const px2 = (S.comp.thorga ? 88 : 100) + (pet.lunge > 0 ? Math.sin(Math.PI * (1 - pet.lunge / 0.25)) * 18 : 0);

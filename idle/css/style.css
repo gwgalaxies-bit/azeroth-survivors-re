@@ -362,6 +362,11 @@ body.compact #scene { aspect-ratio: 3 / 1.2; }
 
 /* class picker */
 .classes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.races { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.race { padding: 8px 4px; border: 0; border-radius: 4px; cursor: pointer; color: var(--ink); font: 700 13px var(--f-display);
+  background: linear-gradient(#2a2630, #17151b); box-shadow: inset 0 0 0 1px #000, inset 0 0 0 2px #3a3540; }
+.race.on { color: var(--gold); box-shadow: inset 0 0 0 1px #000, inset 0 0 0 2px var(--gold), 0 0 12px rgba(255, 209, 0, 0.3); }
+.racebox { margin-top: 8px; padding: 8px 10px; border-radius: 4px; background: rgba(0, 0, 0, 0.35); box-shadow: inset 0 0 0 1px rgba(200, 160, 80, 0.35); }
 .cls { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 6px; cursor: pointer; border: 0; border-radius: 4px; color: var(--ink);
   background: linear-gradient(#2a2630, #17151b); box-shadow: inset 0 0 0 1px #000, inset 0 0 0 2px #3a3540; }
 .cls.on { box-shadow: inset 0 0 0 1px #000, inset 0 0 0 2px var(--gold), 0 0 14px rgba(255, 209, 0, 0.35); }

@@ -72,6 +72,22 @@ const CLASSES = {
   },
 };
 
+// Peoples of Valdoran. pro/con use the stat keys of STAT_NAME (percent points); h scales the hero's height.
+const RACES = {
+  mensch: { name: 'Mensch', plural: 'Menschen', h: 1, desc: 'Anpassungsfähige Bewohner der Hohenmark. Sie lernen schnell und handeln geschickt.',
+    pro: { xpP: 10, goldP: 5 }, con: {} },
+  zwerg: { name: 'Zwerg', plural: 'Zwerge', h: 0.84, desc: 'Zähes Bergvolk aus den Frostgipfeln, geboren an Esse und Amboss. Kaum zu Fall zu bringen, aber nicht die Schnellsten.',
+    pro: { hpP: 10, defP: 15 }, con: { haste: -5 } },
+  elf: { name: 'Elf', plural: 'Elfen', h: 1.03, desc: 'Uraltes Volk der Sternenwälder. Flink und treffsicher, aber von zierlicher Gestalt.',
+    pro: { crit: 4, haste: 6 }, con: { hpP: -8 } },
+  ork: { name: 'Ork', plural: 'Orks', h: 1.08, desc: 'Stolze Krieger der Rotfelssteppe. Rohe Kraft und dicke Haut, doch wenig Geduld für Bücher.',
+    pro: { atkP: 10, hpP: 5 }, con: { xpP: -5 } },
+  halbling: { name: 'Halbling', plural: 'Halblinge', h: 0.72, desc: 'Kleines, findiges Volk aus den Hügeln. Sie finden immer etwas Glänzendes, schlagen aber nicht hart zu.',
+    pro: { goldP: 15, lootP: 15 }, con: { atkP: -6 } },
+  untot: { name: 'Untoter', plural: 'Untote', h: 1, desc: 'Von einem Fluch zurückgeholt. Ihr Fleisch heilt von selbst, doch Heiltränke wirken bei ihnen schwächer.',
+    pro: { regen: 0.6, bossP: 6 }, con: { potion: -30 } },
+};
+
 // kind: dmg | dot | heal | buff ; mult on ATK ; fx: projectile sprite
 const SKILLS = {
   schmetterhieb: { name: 'Schmetterhieb', icon: 'sk_schmetterhieb', lvl: 1, cd: 6, cost: 20, kind: 'dmg', mult: 1.44, fx: 'slash', desc: 'Ein wuchtiger Hieb: 144% Angriffsschaden.' },

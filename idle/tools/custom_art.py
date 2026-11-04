@@ -2,6 +2,7 @@
 of their (fake-checkerboard or flat) backgrounds, trimmed, mirrored to face the right way and scaled to the
 scene's sizes. Anything without a file keeps its procedural art."""
 import colorsys
+import re
 import os
 
 import numpy as np
@@ -33,6 +34,8 @@ CHARACTERS = {
 HALO = {'hero_magier': 16, 'hero_priester': 22, 'ignaroth': 16, 'kragg': 22, 'morva': 40, 'khet': 22, 'glaciara': 16, 'mordrek': 40, 'umbrax': 16}
 
 # companions and arena rivals are recoloured heroes: (source, hue range to move, target hue, scale)
+RACE_HEIGHT = dict(mensch=1.0, zwerg=0.84, elf=1.03, ork=1.08, halbling=0.72, untot=1.0)  # keep in sync with RACES in js/data.js
+
 DERIVED = {
     'comp_tank': ('hero_krieger', (0.94, 0.04), 0.62, 0.9, (0.78, 0.9, 1.22)),
     'comp_heiler': ('hero_priester', (0.09, 0.17), 0.30, 0.9, (0.92, 1.08, 0.9)),
@@ -380,12 +383,15 @@ def catalogue(sc, known=None):
         if name.startswith('bg_') and name not in B:
             B[name] = backdrop(name, 0.5)
     taken = set(CHARACTERS) | {v[0] for v in CHARACTERS.values()}
+    race_heroes = [n for n in _art_names() if re.fullmatch(r'hero_(krieger|magier|jaeger|priester)_[a-z]+', n)]
+    taken |= set(race_heroes)
     for n in _art_names():
         if n.startswith('npc_'):
             known[n] = (0, int(48 * sc))  # quest givers stand about as tall as the hero
     generic = [n for n in _art_names() if not n.startswith('bg_') and n not in taken and n in known]
     jobs = [(src, keep, name in HALO, HALO.get(name, 16), False) for name, (src, box, right, keep, face) in CHARACTERS.items() if _src(src)]
     jobs += [(n, None, True, 14, True) for n in generic]
+    jobs += [(n, None, True, 18, False) for n in race_heroes]
     cuts = _cutouts(jobs)
     for name, (src, box, right, keep, face) in CHARACTERS.items():
         if src not in cuts:
@@ -396,6 +402,11 @@ def catalogue(sc, known=None):
         if SOURCE_FACES_RIGHT.get(src) != right:
             fx = 1 - fx
         faces[name] = [round(fx, 3), round(fy, 3), z]
+    for name in race_heroes:
+        # a hero of another people: as tall as the class's hero times the people's height, facing right
+        cls, race = name.split('_')[1:]
+        box = CHARACTERS['hero_' + cls][1]
+        S[name] = fit(cuts[name], (box[0], box[1] * RACE_HEIGHT.get(race, 1.0)), sc, True, True)
     for name in generic:
         # a painted replacement for a procedural sprite: a bit taller than the drawn one, facing as prompted
         w, h = known[name]

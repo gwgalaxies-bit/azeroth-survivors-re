@@ -67,6 +67,12 @@ const BAG_SIZE = 40;
 const KEY_MAX = 5, KEY_REGEN = 20 * MIN;
 const ARENA_TICKETS = 5;
 const POTION_CAP = 20;
+// The hero's picture: a painted race-and-class image when there is one, else the class's.
+function heroSpriteFor(cls, race) {
+  const n = `hero_${cls}_${race}`;
+  return race && race !== 'mensch' && ATLAS.sprites.map[n] ? n : `hero_${cls}`;
+}
+function heroSprite() { return heroSpriteFor(S.cls, S.race); }
 
 // Fights last a while: a normal monster takes about 7 s at your level, an elite half a minute,
 // a boss one to two minutes. Monsters hit softer in exchange, so a fight costs about as much health as before.
@@ -98,10 +104,10 @@ function mobBase(L) {
 // ------------------------------------------------------------------------------------------ state
 let S = null;
 
-function newState(cls, name) {
+function newState(cls, name, race) {
   const t = now();
   const s = {
-    v: 1, created: t, lastSeen: t, name, cls, title: '',
+    v: 1, created: t, lastSeen: t, name, cls, race: race || 'mensch', title: '',
     level: 1, xp: 0, rested: 0, paragon: 0, pxp: 0,
     gold: 0, badges: 0, raidmarks: 0, honor: 0, keys: 3, keyT: t,
     gear: {}, bag: [], nextId: 1,
@@ -133,8 +139,10 @@ function newState(cls, name) {
 }
 
 function migrate(s) {
-  const base = newState(s.cls || 'krieger', s.name || 'Held');
+  const base = newState(s.cls || 'krieger', s.name || 'Held', 'mensch');
+  const hadRace = !!s.race;
   for (const k in base) if (s[k] === undefined) s[k] = base[k];
+  if (!hadRace) s.needsRace = true;
   for (const k in base.stats) if (s.stats[k] === undefined) s.stats[k] = 0;
   for (const k in base.prof) if (!s.prof[k]) s.prof[k] = { skill: 1 };
   for (const k in base.settings) if (s.settings[k] === undefined) s.settings[k] = base.settings[k];
@@ -334,6 +342,9 @@ function computeStats(gear, opt = {}) {
   const p = BASE_P();
   p.crit += c.mods.crit;
   p.haste += c.mods.haste;
+  const rc = RACES[S.race] || RACES.mensch;
+  for (const k in rc.pro) p[k] += rc.pro[k];
+  for (const k in rc.con) p[k] += rc.con[k];
   for (const slot of SLOTS) {
     const it = gear[slot];
     if (!it) continue;

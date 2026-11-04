@@ -442,6 +442,130 @@ Ranger in dark red leather armor with a longbow and a hood, full body, side view
 Fire sorceress in red and black robes with a flaming staff, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
 ```
 
+## Völker
+
+Deine Heldenfigur für jedes Volk und jede Klasse (Menschen haben schon Bilder). Blick nach rechts.
+
+**Zwerg · Krieger** → `hero_krieger_zwerg.jpg`
+
+```
+Stocky dwarf warrior with a long braided red beard in heavy steel plate armor with huge spiked shoulder plates and a red tabard, raised war axe and round shield, short and broad, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Zwerg · Magier** → `hero_magier_zwerg.jpg`
+
+```
+Stocky dwarf mage with a long braided grey beard in purple and gold runic robes with large shoulder pads, wooden staff topped with a glowing blue crystal, short and broad, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Zwerg · Jäger** → `hero_jaeger_zwerg.jpg`
+
+```
+Stocky dwarf hunter with a braided brown beard in fur-trimmed leather armor and a hooded cloak, heavy crossbow, a mountain ram companion at his side, short and broad, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Zwerg · Priester** → `hero_priester_zwerg.jpg`
+
+```
+Stocky dwarf priest with a white braided beard in white and gold robes with ornate shoulder pieces, golden war hammer, soft holy light around the hands, short and broad, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Elf · Krieger** → `hero_krieger_elf.jpg`
+
+```
+Tall slender elf warrior with long silver hair and pointed ears in elegant silver and green plate armor with leaf-shaped shoulder plates, curved longsword and glaive, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Elf · Magier** → `hero_magier_elf.jpg`
+
+```
+Tall slender elf mage with long white hair and pointed ears in flowing blue and silver robes with crescent moon ornaments, crystal staff with a glowing star, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Elf · Jäger** → `hero_jaeger_elf.jpg`
+
+```
+Tall slender elf ranger with long blond hair and pointed ears in green leaf-pattern leather armor and a cloak, ornate recurve longbow, a white stag companion, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Elf · Priester** → `hero_priester_elf.jpg`
+
+```
+Tall slender elf priestess with long golden hair and pointed ears in white and turquoise robes with silver filigree, moonlight staff, soft silver glow, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Ork · Krieger** → `hero_krieger_ork.jpg`
+
+```
+Massive green-skinned orc warrior with tusks and a topknot in spiked black iron armor with huge skull shoulder plates, giant double-bladed axe, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Ork · Magier** → `hero_magier_ork.jpg`
+
+```
+Green-skinned orc shaman-mage with tusks and tribal face paint in red hide robes with bone shoulder pads, totem staff crackling with lightning, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Ork · Jäger** → `hero_jaeger_ork.jpg`
+
+```
+Green-skinned orc hunter with tusks in rough hide and fur armor with a wolf-pelt hood, huge bone bow, a dire wolf companion, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Ork · Priester** → `hero_priester_ork.jpg`
+
+```
+Green-skinned orc spirit priest with tusks and white war paint in tattered brown and gold robes with feather shoulders, glowing spirit staff with skulls, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Halbling · Krieger** → `hero_krieger_halbling.jpg`
+
+```
+Small cheerful halfling warrior with curly brown hair and bare hairy feet in oversized patched chainmail with a dented helmet, short sword and wooden shield, very short, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Halbling · Magier** → `hero_magier_halbling.jpg`
+
+```
+Small halfling mage with curly red hair and bare hairy feet in a patched blue robe and a crooked wizard hat, little wand with a sparkling tip, very short, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Halbling · Jäger** → `hero_jaeger_halbling.jpg`
+
+```
+Small halfling hunter with curly hair and bare hairy feet in a green hooded cloak and leather vest, sling and short bow, a little fox companion, very short, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Halbling · Priester** → `hero_priester_halbling.jpg`
+
+```
+Small kind halfling priest with curly blond hair and bare hairy feet in simple white and gold robes, small golden mace, warm holy glow, very short, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Untoter · Krieger** → `hero_krieger_untot.jpg`
+
+```
+Undead warrior with grey decaying skin, glowing yellow eyes and exposed jaw in rusted black plate armor with jagged shoulder plates, notched greatsword, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Untoter · Magier** → `hero_magier_untot.jpg`
+
+```
+Undead mage with pale grey skin, glowing green eyes and a skeletal hand in tattered purple and black robes, staff with a green-burning skull, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Untoter · Jäger** → `hero_jaeger_untot.jpg`
+
+```
+Undead hunter with grey skin and glowing eyes in a ragged dark leather coat and hood, bone longbow, a skeletal hound companion, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Untoter · Priester** → `hero_priester_untot.jpg`
+
+```
+Undead shadow priest with pale grey skin and glowing violet eyes in black and purple robes with bone shoulder pieces, dark staff with violet shadow flames, full body, side view facing right, standing idle pose, stylized hand-painted fantasy MMO character, chunky heroic proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
 ## Auftraggeber
 
 Stehen in Dörfern und Außenposten und vergeben die Aufträge. Blick nach links.

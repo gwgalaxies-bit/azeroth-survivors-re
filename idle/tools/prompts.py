@@ -101,6 +101,28 @@ SECTIONS = [
         ('Varrik Falkenauge', 'comp_schuetze', 'Ranger in dark red leather armor with a longbow and a hood'),
         ('Mirra Sturmruf', 'comp_zauberin', 'Fire sorceress in red and black robes with a flaming staff'),
     ]),
+    ('Völker', 'Deine Heldenfigur für jedes Volk und jede Klasse (Menschen haben schon Bilder). Blick nach rechts.', ALLY, [
+        ('Zwerg · Krieger', 'hero_krieger_zwerg', 'Stocky dwarf warrior with a long braided red beard in heavy steel plate armor with huge spiked shoulder plates and a red tabard, raised war axe and round shield, short and broad'),
+        ('Zwerg · Magier', 'hero_magier_zwerg', 'Stocky dwarf mage with a long braided grey beard in purple and gold runic robes with large shoulder pads, wooden staff topped with a glowing blue crystal, short and broad'),
+        ('Zwerg · Jäger', 'hero_jaeger_zwerg', 'Stocky dwarf hunter with a braided brown beard in fur-trimmed leather armor and a hooded cloak, heavy crossbow, a mountain ram companion at his side, short and broad'),
+        ('Zwerg · Priester', 'hero_priester_zwerg', 'Stocky dwarf priest with a white braided beard in white and gold robes with ornate shoulder pieces, golden war hammer, soft holy light around the hands, short and broad'),
+        ('Elf · Krieger', 'hero_krieger_elf', 'Tall slender elf warrior with long silver hair and pointed ears in elegant silver and green plate armor with leaf-shaped shoulder plates, curved longsword and glaive'),
+        ('Elf · Magier', 'hero_magier_elf', 'Tall slender elf mage with long white hair and pointed ears in flowing blue and silver robes with crescent moon ornaments, crystal staff with a glowing star'),
+        ('Elf · Jäger', 'hero_jaeger_elf', 'Tall slender elf ranger with long blond hair and pointed ears in green leaf-pattern leather armor and a cloak, ornate recurve longbow, a white stag companion'),
+        ('Elf · Priester', 'hero_priester_elf', 'Tall slender elf priestess with long golden hair and pointed ears in white and turquoise robes with silver filigree, moonlight staff, soft silver glow'),
+        ('Ork · Krieger', 'hero_krieger_ork', 'Massive green-skinned orc warrior with tusks and a topknot in spiked black iron armor with huge skull shoulder plates, giant double-bladed axe'),
+        ('Ork · Magier', 'hero_magier_ork', 'Green-skinned orc shaman-mage with tusks and tribal face paint in red hide robes with bone shoulder pads, totem staff crackling with lightning'),
+        ('Ork · Jäger', 'hero_jaeger_ork', 'Green-skinned orc hunter with tusks in rough hide and fur armor with a wolf-pelt hood, huge bone bow, a dire wolf companion'),
+        ('Ork · Priester', 'hero_priester_ork', 'Green-skinned orc spirit priest with tusks and white war paint in tattered brown and gold robes with feather shoulders, glowing spirit staff with skulls'),
+        ('Halbling · Krieger', 'hero_krieger_halbling', 'Small cheerful halfling warrior with curly brown hair and bare hairy feet in oversized patched chainmail with a dented helmet, short sword and wooden shield, very short'),
+        ('Halbling · Magier', 'hero_magier_halbling', 'Small halfling mage with curly red hair and bare hairy feet in a patched blue robe and a crooked wizard hat, little wand with a sparkling tip, very short'),
+        ('Halbling · Jäger', 'hero_jaeger_halbling', 'Small halfling hunter with curly hair and bare hairy feet in a green hooded cloak and leather vest, sling and short bow, a little fox companion, very short'),
+        ('Halbling · Priester', 'hero_priester_halbling', 'Small kind halfling priest with curly blond hair and bare hairy feet in simple white and gold robes, small golden mace, warm holy glow, very short'),
+        ('Untoter · Krieger', 'hero_krieger_untot', 'Undead warrior with grey decaying skin, glowing yellow eyes and exposed jaw in rusted black plate armor with jagged shoulder plates, notched greatsword'),
+        ('Untoter · Magier', 'hero_magier_untot', 'Undead mage with pale grey skin, glowing green eyes and a skeletal hand in tattered purple and black robes, staff with a green-burning skull'),
+        ('Untoter · Jäger', 'hero_jaeger_untot', 'Undead hunter with grey skin and glowing eyes in a ragged dark leather coat and hood, bone longbow, a skeletal hound companion'),
+        ('Untoter · Priester', 'hero_priester_untot', 'Undead shadow priest with pale grey skin and glowing violet eyes in black and purple robes with bone shoulder pieces, dark staff with violet shadow flames'),
+    ]),
     ('Auftraggeber', 'Stehen in Dörfern und Außenposten und vergeben die Aufträge. Blick nach links.', NPC, [
         ('Hauptmann Aldric (Goldhain, Stadttor)', 'npc_aldric', 'Middle-aged human city guard captain in blue and silver plate armor with a short beard and a halberd'),
         ('Förster Jorik (Goldhain, Försterhütte)', 'npc_jorik', 'Burly human forester in green and brown leather with a woodcutter axe and a fur collar'),
@@ -207,3 +229,7 @@ if __name__ == '__main__':
     with open(path, 'w') as fh:
         fh.write(markdown())
     print(sum(len(r) for _, _, r in entries()), 'prompts →', path)
+
+
+# the section asked for most recently comes first
+SECTIONS.sort(key=lambda sec: 0 if sec[0] == 'Völker' else 1)

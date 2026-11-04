@@ -51,6 +51,8 @@ def table(names, derived):
         elif n.startswith('rival_') and ('hero_' + n[6:]) in FACES:
             x, y, s = FACES['hero_' + n[6:]]
             out[n] = [round(1 - x, 3), y, s]
+        elif n.count('_') == 2 and n.startswith('hero_') and ('hero_' + n.split('_')[1]) in FACES:
+            out[n] = list(FACES['hero_' + n.split('_')[1]])
         elif n.startswith('npc_'):
             out[n] = [0.5, 0.1, 0.11]
         elif not n.startswith('fx_'):

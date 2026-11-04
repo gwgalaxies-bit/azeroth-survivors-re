@@ -40,7 +40,7 @@ const UI = (() => {
     const hx = box * (0.5 - clamp((0.5 - fx) * PORTRAIT.lean, -0.1, 0.1));
     return spr(name, scale, `left:${(hx - w * fx).toFixed(1)}px;top:${(box * PORTRAIT.headY - h * fy).toFixed(1)}px`);
   }
-  function heroFace(box) { return face(CLASSES[S.cls].sprite, box); }
+  function heroFace(box) { return face(heroSprite(), box); }
   function uiImg(name, w, h, extra = '') { return `<i class="ui-img" style="width:${w}px;height:${h}px;background-image:url(assets/ui/${name}.png);${extra}"></i>`; }
   function bar(cls, frac, label = '', thin = false) {
     return `<div class="bar ${cls}${thin ? ' thin' : ''}"><i style="width:${clamp(frac, 0, 1) * 100}%"></i>${label ? `<span>${label}</span>` : ''}</div>`;
@@ -157,10 +157,10 @@ const UI = (() => {
     const st = heroStats();
     const b = battle;
     // player frame
-    if (lastHeroFace !== S.cls) { $('pFace').innerHTML = heroFace(52); lastHeroFace = S.cls; $('pResBar').className = 'bar thin ' + CLASSES[S.cls].resBar; }
+    if (lastHeroFace !== heroSprite()) { $('pFace').innerHTML = heroFace(52); lastHeroFace = heroSprite(); $('pResBar').className = 'bar thin ' + CLASSES[S.cls].resBar; }
     $('pLvl').textContent = S.level;
     $('pName').textContent = S.name;
-    $('pTitle').textContent = S.title || CLASSES[S.cls].name;
+    $('pTitle').textContent = S.title || `${RACES[S.race].name} · ${CLASSES[S.cls].name}`;
     const hp = b ? Math.max(0, b.h.hp) : st.hp;
     $('pHp').style.width = (hp / st.hp * 100) + '%';
     $('pHpT').textContent = `${fmt(hp)} / ${fmt(st.hp)}`;
@@ -455,8 +455,8 @@ const UI = (() => {
     const mount = MOUNTS.find((m) => m.id === S.mount);
     let h = `<div class="card"><div class="doll">${col(left)}<div class="center">
       <div class="power"><span>Kampfkraft</span><b>${fmt(st.power)}</b></div>
-      ${spr(CLASSES[S.cls].sprite, 2)}
-      <div class="small muted" style="text-align:center">${esc(CLASSES[S.cls].name)} · Stufe ${S.level}<br>Ø Gegenstandsstufe ${il.toFixed(1).replace('.', ',')}${mount ? `<br>Reittier: ${esc(mount.name)}` : ''}</div>
+      ${spr(heroSprite(), 2)}
+      <div class="small muted" style="text-align:center">${esc(RACES[S.race].name)} · ${esc(CLASSES[S.cls].name)} · Stufe ${S.level}<br>Ø Gegenstandsstufe ${il.toFixed(1).replace('.', ',')}${mount ? `<br>Reittier: ${esc(mount.name)}` : ''}</div>
     </div>${col(right)}</div>
     <div style="margin-top:8px">${btn(`${ico('star', 18)} Beste Ausrüstung anlegen`, 'bestgear', {}, `wide ${canBest ? 'gold' : ''}`, !canBest)}</div></div>`;
     const P = (v) => v.toFixed(1).replace('.', ',') + '%';
@@ -469,7 +469,8 @@ const UI = (() => {
       <div><span>Goldfund</span><b>+${P(st.goldP)}</b></div><div><span>Erfahrung</span><b>+${P(st.xpP)}</b></div>
       <div><span>Beutechance</span><b>+${P(st.lootP)}</b></div><div><span>Regeneration</span><b>${P(st.regen + 0.4)}/s</b></div>
       <div><span>Tippschaden</span><b>${fmt(st.atk * 0.35 * (1 + st.tapP / 100))}</b></div><div><span>Ruhmstufe</span><b>${S.paragon}</b></div>
-    </div><div class="small muted" style="margin-top:6px">Treuebonus: +${Math.min(30, S.login.streak)}% Gold (${S.login.streak} Tage in Folge)</div></div>`;
+    </div><div class="small" style="margin-top:6px">Volk: <b class="goldtxt">${esc(RACES[S.race].name)}</b> ${raceTraits(S.race)}</div>
+    <div class="small muted" style="margin-top:4px">Treuebonus: +${Math.min(30, S.login.streak)}% Gold (${S.login.streak} Tage in Folge)</div></div>`;
     return h;
   }
   function viewBag() {
@@ -647,7 +648,7 @@ const UI = (() => {
     const o = arenaOpponent();
     const pw = heroStats().power;
     let h = `<div class="card"><div class="row">${ico('honor', 40)}<div class="grow"><h3 style="margin:0">${esc(arenaRank(a.rating))}</h3><div class="small">Wertung <b class="goldtxt">${a.rating}</b> · Bestwert ${a.best} · ${a.wins} Siege</div><div class="small muted">Kampfkarten: ${a.tickets}/${ARENA_TICKETS} (täglich neu)</div></div><div style="text-align:right">${ico('honor', 18)} <b>${fmt(S.honor)}</b><div class="small muted">Ehre</div></div></div></div>`;
-    h += `<div class="inst"><div class="hero-img" style="height:120px;background-image:url(assets/bg/bg_arena.webp)"><div class="sprs" style="left:20px;right:auto">${spr(CLASSES[S.cls].sprite, 1)}</div><div class="sprs">${spr('rival_' + o.cls, 1)}</div><div class="t" style="text-align:center"><b>${esc(S.name)} gegen ${esc(o.name)}</b><small>${esc(CLASSES[o.cls].name)} · Wertung ${o.rating}</small></div></div>
+    h += `<div class="inst"><div class="hero-img" style="height:120px;background-image:url(assets/bg/bg_arena.webp)"><div class="sprs" style="left:20px;right:auto">${spr(heroSprite(), 1)}</div><div class="sprs">${spr('rival_' + o.cls, 1)}</div><div class="t" style="text-align:center"><b>${esc(S.name)} gegen ${esc(o.name)}</b><small>${esc(CLASSES[o.cls].name)} · Wertung ${o.rating}</small></div></div>
       <div class="body"><div class="row between small"><span>Gegnerische Kampfkraft: <b class="${o.power <= pw ? 'good' : 'bad'}">${fmt(o.power)}</b></span><span class="muted">Deine: ${fmt(pw)}</span></div>
       <div class="row between">${btn('Neuer Gegner', 'arenanew', {}, 'sm', S.gold < gpk(L()) * 5)}${btn('Kämpfen', 'arena', {}, 'gold', a.tickets < 1)}</div><div class="small muted">Neuer Gegner kostet ${fmt(gpk(L()) * 5)} Gold. Sieg: Ehre und Wertung. 90 Sekunden Zeitlimit.</div></div></div>`;
     h += vendorHTML('honor');
@@ -1062,12 +1063,31 @@ const UI = (() => {
     </div>`, { id: 'settings' });
   }
 
-  function showCreate() {
-    const opts = Object.entries(CLASSES).map(([id, c]) => `<button class="cls ${U.cls === id ? 'on' : ''}" data-act="pickcls" data-c="${id}">${spr(c.sprite, 1.5)}<b style="color:${c.color}">${c.name}</b><small>${esc(c.desc)}</small></button>`).join('');
-    modal(`<h2>Erschaffe deinen Helden</h2><div class="small muted" style="text-align:center;margin:-4px 0 8px">Das Königreich Valdoran braucht dich. Wähle deine Klasse:</div>
-      <div class="classes">${opts}</div>
-      <div style="margin-top:10px"><label class="small" for="heroName">Name</label><input type="text" id="heroName" maxlength="16" value="${esc(U.newName || randomName())}" autocomplete="off"></div>
-      <div class="mfoot">${btn('Abenteuer beginnen', 'create', {}, 'gold wide')}</div>`, { id: 'create', noClose: true });
+  function traitText(k, v) {
+    const n = STAT_NAME[k] || k;
+    const val = String(Math.abs(v)).replace('.', ',');
+    return `${v > 0 ? '+' : '−'}${val}% ${n}`;
+  }
+  function raceTraits(id) {
+    const r = RACES[id];
+    const pro = Object.entries(r.pro).map(([k, v]) => `<span class="good">${traitText(k, v)}</span>`);
+    const con = Object.entries(r.con).map(([k, v]) => `<span class="bad">${traitText(k, v)}</span>`);
+    return [...pro, ...con].join(' · ');
+  }
+  function showCreate(raceOnly) {
+    U.race = U.race || 'mensch';
+    const r = RACES[U.race];
+    const races = Object.entries(RACES).map(([id, rc]) => `<button class="race ${U.race === id ? 'on' : ''}" data-act="pickrace" data-r="${id}" data-only="${raceOnly ? 1 : ''}"><b>${esc(rc.name)}</b></button>`).join('');
+    const classes = Object.entries(CLASSES).map(([id, c]) => `<button class="cls ${U.cls === id ? 'on' : ''}" data-act="pickcls" data-c="${id}">${spr(heroSpriteFor(id, U.race), 1.15)}<b style="color:${c.color}">${c.name}</b><small>${esc(c.desc)}</small></button>`).join('');
+    const intro = raceOnly
+      ? `Die Völker von Valdoran unterscheiden sich jetzt. Zu welchem Volk gehört ${esc(S.name)}?`
+      : 'Das Königreich Valdoran braucht dich. Wähle Volk und Klasse:';
+    modal(`<h2>${raceOnly ? 'Wähle dein Volk' : 'Erschaffe deinen Helden'}</h2><div class="small muted" style="text-align:center;margin:-4px 0 8px">${intro}</div>
+      <div class="races">${races}</div>
+      <div class="racebox"><div class="ttl gold">${esc(r.plural)}</div><div class="small">${esc(r.desc)}</div><div class="small" style="margin-top:4px">${raceTraits(U.race)}</div></div>
+      ${raceOnly ? `<div class="row" style="justify-content:center;margin-top:8px">${spr(heroSpriteFor(S.cls, U.race), 1.4)}</div>` : `<div class="section-title" style="margin-top:10px">Klasse</div><div class="classes">${classes}</div>
+      <div style="margin-top:10px"><label class="small" for="heroName">Name</label><input type="text" id="heroName" maxlength="16" value="${esc(U.newName || randomName())}" autocomplete="off"></div>`}
+      <div class="mfoot">${raceOnly ? btn(`${esc(r.name)} wählen`, 'setrace', {}, 'gold wide') : btn('Abenteuer beginnen', 'create', {}, 'gold wide')}</div>`, { id: 'create', noClose: true });
   }
   function randomName() { return pick(NAME_PARTS[0]) + pick(NAME_PARTS[1]); }
 
@@ -1256,10 +1276,19 @@ const UI = (() => {
     resetno() { U.confirmReset = false; showSettings(); },
     resetyes() { Save.wipe(); closeModal(); U.confirmReset = false; showCreate(); },
     pickcls(d) { U.cls = d.c; const n = $('heroName'); if (n) U.newName = n.value; showCreate(); },
+    pickrace(d) { U.race = d.r; const n = $('heroName'); if (n) U.newName = n.value; showCreate(!!d.only); },
     create() {
       const n = ($('heroName').value || '').trim().slice(0, 16) || randomName();
-      Game.create(U.cls, n);
+      Game.create(U.cls, n, U.race || 'mensch');
       closeModal();
+    },
+    setrace() {
+      S.race = U.race || 'mensch';
+      delete S.needsRace;
+      statsDirty = true;
+      closeModal();
+      rebuild();
+      toast(`${S.name} gehört zum Volk der ${RACES[S.race].plural}`, 'castle', '#ffd200');
     },
     close() { closeModal(); },
   };
@@ -1324,5 +1353,5 @@ const UI = (() => {
 
   function rebuild() { buildActionbar(); lastHeroFace = null; abExtra = ''; forceRender(); }
 
-  return { init, update, toast, log, pulseSkill, showOffline, showCreate, showGot, rebuild, forceRender, closeModal, ico, get tab() { return tab; } };
+  return { init, update, toast, log, pulseSkill, showOffline, showCreate, raceTraits, showGot, rebuild, forceRender, closeModal, ico, get tab() { return tab; } };
 })();
