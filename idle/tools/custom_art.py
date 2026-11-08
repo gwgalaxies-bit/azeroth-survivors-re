@@ -199,6 +199,15 @@ def _background_mask(a):
         cand = (sat <= 9) & ((np.abs(lum - lo) < tol) | (np.abs(lum - hi) < tol) | ((lum > lo) & (lum < hi)))
         # shadows painted onto the checkerboard: darker, but still the same two-tone pattern
         cand |= (sat <= 16) & _checker_like(lum, lo, hi, cell, strict=False)
+        if lo < 10 and hi - lo < 64:
+            # a near-black, low-contrast board: the figure's dark outlines look just like it, so only count
+            # pixels where the pattern actually repeats
+            # (closed first: the generated board has seams where its phase jumps, and those must not survive
+            # as lines of "figure" between the cells)
+            per = Image.fromarray((_checker_like(lum, lo, hi, cell, strict=False) * 255).astype(np.uint8), 'L')
+            k = 2 * int(cell) + 1
+            per = per.filter(ImageFilter.MaxFilter(k)).filter(ImageFilter.MinFilter(k)).filter(ImageFilter.MaxFilter(5))
+            cand &= np.array(per) > 0
         tmap = (lo, hi, cell)
     m = Image.fromarray((cand * 255).astype(np.uint8), 'L').copy()
     seeds = [(x, 0) for x in range(0, w, 3)] + [(x, h - 1) for x in range(0, w, 3)] + [(0, y) for y in range(0, h, 3)] + [(w - 1, y) for y in range(0, h, 3)]
@@ -225,7 +234,10 @@ def _background_mask(a):
                 ok = True
             else:
                 fl, fh = nearlo[comp].mean(), nearhi[comp].mean()
-                ok = (fl > 0.18 and fh > 0.18) or chk[comp].mean() > 0.6
+                # both tones present is not enough on its own: grey skin or bone shades through them too
+                # unless the region holds nothing but the two flat, colourless tones
+                pure = fl + fh > 0.9 and sat[comp].mean() < 4
+                ok = chk[comp].mean() > 0.6 or (fl > 0.18 and fh > 0.18 and (chk[comp].mean() > 0.12 or pure))
         ImageDraw.floodfill(m, sd, 128 if ok else 60)
     bg = np.array(m) == 128
     bgi = Image.fromarray((bg * 255).astype(np.uint8), 'L').filter(ImageFilter.MaxFilter(3)).filter(ImageFilter.MinFilter(3))
@@ -239,6 +251,61 @@ def _colour_to_alpha(p, t):
     al = np.clip(np.maximum(up, dn).max(axis=2), 0, 1)
     g = (p - (1 - al[..., None]) * t) / np.maximum(al[..., None], 1e-3)
     return al, np.clip(g, 0, 255)
+
+
+def _checker_left(a, lo, hi, cell):
+    """How much painted checkerboard still shows through each pixel (0..1), and the colour in front of it.
+    A checkerboard of cell c is, to first order, two diagonal waves of period 2c holding two thirds of its
+    variance. Both are demodulated locally (in phase and quadrature, so a drifting grid does not matter);
+    painted texture is broadband and rarely puts that much of its variance into both diagonals at exactly that
+    frequency, so only such narrowband spots count. Over the pattern p = alpha * glow + (1 - alpha) * tone,
+    the waves' strength against the bare board's measures (1 - alpha)."""
+    lum = a.mean(axis=2)
+    c = max(3, int(cell))
+    h, w = lum.shape
+    Y, X = np.mgrid[0:h, 0:w].astype(float)
+    amps = []
+    for ph in (np.pi * (X + Y) / c, np.pi * (X - Y) / c):
+        i = _box_mean(lum * np.cos(ph), c) * 2
+        q = _box_mean(lum * np.sin(ph), c) * 2
+        amps.append(i * i + q * q)
+    weak = np.minimum(*amps)
+    mean = _box_mean(lum, c)
+    var = np.maximum(_box_mean(lum * lum, c) - mean * mean, 1)
+    pure = np.clip((weak / var - 0.38) / 0.17, 0, 1)
+    full = 8 / np.pi ** 2 * (hi - lo) / 2
+    k = pure * np.clip(np.sqrt(weak) / max(full, 4), 0, 1)
+    n = max(3, c) | 1
+    k = np.array(Image.fromarray((k * 255).astype(np.uint8), 'L').filter(ImageFilter.MinFilter(n)).filter(ImageFilter.MaxFilter(n))
+                 .filter(ImageFilter.MaxFilter(max(3, c // 2) | 1)).filter(ImageFilter.GaussianBlur(c / 3))).astype(float) / 255
+    m = np.dstack([_box_mean(a[..., i], c) for i in range(3)])
+    al = np.clip(1 - k, 0.02, 1)[..., None]
+    return k, np.clip((m - (1 - al) * (lo + hi) / 2) / al, 0, 255)
+
+
+def _box_aniso(x, ry, rx):
+    p = np.pad(x, ((ry + 1, ry + 1), (rx + 1, rx + 1)), mode='edge')
+    c = p.cumsum(0).cumsum(1)
+    ky, kx = 2 * ry + 1, 2 * rx + 1
+    s = c[ky:, kx:] - c[:-ky, kx:] - c[ky:, :-kx] + c[:-ky, :-kx]
+    return s[:x.shape[0], :x.shape[1]] / (ky * kx)
+
+
+def _checker_gaps(a, lo, hi, cell, fg):
+    """Narrow gaps of board inside the figure (between legs, staff and body) that a glow outline seals off:
+    along the gap the tone flips every cell and repeats every two, even where the glow tints it."""
+    lum = a.mean(axis=2)
+    c = max(3, int(cell))
+    found = np.zeros(lum.shape, bool)
+    for axis in (0, 1):
+        n1 = np.minimum(np.abs(lum - np.roll(lum, c, axis)), np.abs(lum - np.roll(lum, -c, axis)))
+        n2 = np.minimum(np.abs(lum - np.roll(lum, 2 * c, axis)), np.abs(lum - np.roll(lum, -2 * c, axis)))
+        ry, rx = (c, max(1, c // 4)) if axis == 0 else (max(1, c // 4), c)
+        b1, b2 = _box_aniso(n1, ry, rx), _box_aniso(n2, ry, rx)
+        found |= ((b1 - b2) / (b1 + 3) > 0.55) & (b1 > max(4.0, (hi - lo) * 0.4)) & (b1 < (hi - lo) * 1.6)
+    found &= fg
+    h, w = found.shape
+    return _drop_specks(found, frac=1.5 * c * c / (h * w)) if found.any() else found
 
 
 def cutout(name, keep=None, halo=False, halo_r=16, restrict=True):
@@ -283,6 +350,17 @@ def cutout(name, keep=None, halo=False, halo_r=16, restrict=True):
             del gl
             al = np.where(soft, np.minimum(al, ca), al)
             rgb = np.where(soft[..., None], g, rgb)
+    if halo and isinstance(tmap, tuple):
+        # checkerboard enclosed by a painted glow or outline (pockets the flood fill cannot reach, tinted halos)
+        k, g = _checker_left(a, *tmap)
+        hit = (k > 0.05) & (al > 0)
+        al = np.where(hit, np.minimum(al, 1 - k), al)
+        rgb = np.where(hit[..., None], g, rgb)
+        gaps = _checker_gaps(a, *tmap, al > 0.5)
+        if gaps.any():
+            soft = np.array(Image.fromarray((gaps * 255).astype(np.uint8), 'L').filter(ImageFilter.MaxFilter(3))
+                            .filter(ImageFilter.GaussianBlur(1.5))).astype(float) / 255
+            al = al * (1 - soft)
     out = np.dstack([np.clip(rgb, 0, 255), al * 255]).astype(np.uint8)
     img = Image.fromarray(out, 'RGBA')
     bbox = Image.fromarray((al > 0.08).astype(np.uint8) * 255, 'L').getbbox()
@@ -327,6 +405,8 @@ def recolour(img, hue_range, target, darken=1.0):
 # which way each source image faces (heroes must face right, monsters left)
 SOURCE_FACES_RIGHT = dict(hero_krieger=True, hero_magier=True, hero_jaeger=True, hero_priester=True, ignaroth=False,
                           kragg=True, morva=True, gromm=False, khet=False, glaciara=False, mordrek=False, umbrax=False)
+# other paintings that came out facing the wrong way and get mirrored
+MIRROR = {'nebelkoenig', 'tentakelmeister', 'comp_tank', 'hero_priester_zwerg', 'npc_aldric', 'npc_bertram'}
 
 
 def _art_names():
@@ -365,7 +445,8 @@ def _cutouts(jobs):
 def _trim(img, thr=0.45, pad=4):
     """Crop to the solid part of a cut-out: faint leftovers at the edges no longer widen the sprite."""
     a = np.asarray(img)[..., 3]
-    ys, xs = np.nonzero(a > thr * 255)
+    # stray specks left at the image's edges must not widen the box (the figure would be scaled down for them)
+    ys, xs = np.nonzero(_drop_specks(a > thr * 255, frac=0.001))
     if not len(xs):
         return img
     return img.crop((max(0, xs.min() - pad), max(0, ys.min() - pad), min(img.width, xs.max() + pad + 1), min(img.height, ys.max() + pad + 1)))
@@ -406,12 +487,15 @@ def catalogue(sc, known=None):
         # a hero of another people: as tall as the class's hero times the people's height, facing right
         cls, race = name.split('_')[1:]
         box = CHARACTERS['hero_' + cls][1]
-        S[name] = fit(cuts[name], (box[0], box[1] * RACE_HEIGHT.get(race, 1.0)), sc, True, True)
+        S[name] = fit(cuts[name], (box[0], box[1] * RACE_HEIGHT.get(race, 1.0)), sc, True, name not in MIRROR)
     for name in generic:
-        # a painted replacement for a procedural sprite: a bit taller than the drawn one, facing as prompted
+        # a painted replacement for a procedural sprite: a bit taller than the drawn one, facing as prompted;
+        # a companion with its own painting stands a little shorter than the hero it fights beside
         w, h = known[name]
         lh = min(100, h / sc * 1.45)
-        S[name] = fit(cuts[name], (lh * 1.9, lh), sc, True, True)
+        if name in DERIVED:
+            lh = CHARACTERS[DERIVED[name][0]][1][1] * 0.92
+        S[name] = fit(cuts[name], (lh * 1.9, lh), sc, True, name not in MIRROR)
         faces[name] = [0.5, 0.22, 2.0]
     for name, (src, hr, target, scale, tint) in DERIVED.items():
         if src in S and name not in S:
@@ -447,10 +531,31 @@ def _icon_src(name):
     return None
 
 
+def _frame_margin(im):
+    """How far a painted icon's own frame reaches in: the innermost long straight edge in the outer 22% of each
+    side. Generated icons put the frame anywhere from the edge to a tenth inwards, sometimes on a flat margin;
+    one side can be misread, so the widest of the four (capped) is used all round."""
+    g = np.asarray(im.convert('L').filter(ImageFilter.GaussianBlur(1.2))).astype(float)
+    h, w = g.shape
+    lim = int(0.22 * min(w, h))
+
+    def edges(a):
+        d = np.abs(np.diff(a, axis=0))
+        c0, c1 = int(a.shape[1] * 0.25), int(a.shape[1] * 0.75)
+        return (d[:, c0:c1] > 14).mean(axis=1)
+
+    out = []
+    for frac, n in ((edges(g), h), (edges(g.T), w)):
+        top = [y for y in range(1, lim) if frac[y] > 0.6]
+        bot = [y for y in range(n - lim, n - 2) if frac[y] > 0.6]
+        out += [(max(top) + 1) / n if top else 0.045, (n - min(bot)) / n if bot else 0.045]
+    return min(0.11, max(0.045, max(out)))
+
+
 def load_icon(name, cell):
     im = Image.open(_icon_src(name)).convert('RGB')
     w, h = im.size
-    m = int(round(w * 0.045))
+    m = int(round(w * (_frame_margin(im) + 0.012)))
     im = im.crop((m, m, w - m, h - m)).resize((cell, cell), Image.LANCZOS)
     return im.convert('RGBA')
 

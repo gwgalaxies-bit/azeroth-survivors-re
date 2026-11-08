@@ -143,10 +143,10 @@ const Game = (() => {
     if (away > 60) {
       const eff = 0.6 + heroStats().offline / 100;
       const o = offlineProgress(away, eff);
-      gathered = catchUpProfessions();
+      gathered = catchUpProfessions(true);
       o.gathered = gathered;
       if (showOffline && away > 120 && !S.needsRace) UI.showOffline(o, away);
-    } else catchUpProfessions();
+    } else catchUpProfessions(true);
     S.lastSeen = now();
     UI.rebuild();
     if (S.needsRace) UI.showCreate(true);
@@ -169,19 +169,21 @@ const Game = (() => {
     setTimeout(() => { if (S && !S.login.claimed) UI.toast('Deine erste Tagesbelohnung wartet in der Stadt!', 'gift', '#ffd200'); }, 4000);
   }
 
+  // Jeder Schritt einzeln abgesichert: ein Fehler in einem Teil darf das Spiel nicht einfrieren.
+  function safe(fn) { try { fn(); } catch (e) { if (!safe.warned) { safe.warned = true; console.error(e); } } }
   function loop(ts) {
     const dt = Math.min(0.25, (ts - last) / 1000 || 0);
     last = ts;
     if (S && battle) {
-      let rest = dt;
-      while (rest > 0) { const s = Math.min(0.05, rest); tickBattle(battle, s); rest -= s; }
+      safe(() => { let rest = dt; while (rest > 0) { const s = Math.min(0.05, rest); tickBattle(battle, s); rest -= s; } });
+      safe(() => gatherTick(dt));
       perT -= dt;
-      if (perT <= 0) { perT = 0.25; periodic(0.25); }
+      if (perT <= 0) { perT = 0.25; safe(() => periodic(0.25)); }
       saveT -= dt;
-      if (saveT <= 0) { saveT = 15; Save.write(); }
+      if (saveT <= 0) { saveT = 15; safe(() => Save.write()); }
     }
-    Scene.frame(dt);
-    UI.update(dt);
+    safe(() => Scene.frame(dt));
+    safe(() => UI.update(dt));
     requestAnimationFrame(loop);
   }
 
@@ -196,9 +198,8 @@ const Game = (() => {
     hiddenAt = 0;
     if (away > 10) {
       const o = offlineProgress(away, 0.8 + heroStats().offline / 100);
-      catchUpProfessions();
+      catchUpProfessions(true);
       if (away > 120) UI.showOffline(o, away);
-      else if (o.kills) UI.toast(`Im Hintergrund: ${fmt(o.kills)} Siege, +${fmt(o.xp)} EP`, 'clock');
     }
   }
 

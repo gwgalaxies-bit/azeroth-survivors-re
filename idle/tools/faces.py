@@ -28,15 +28,29 @@ FACES = {
     'sporenmutter': (0.20, 0.32, 0.40), 'krokilisk_alpha': (0.14, 0.48, 0.34), 'ulgra': (0.55, 0.25, 0.20),
     'skarabaeus': (0.30, 0.42, 0.30), 'nefra': (0.47, 0.13, 0.17), 'steinwaechter': (0.52, 0.15, 0.20),
     'yeti_boss': (0.45, 0.25, 0.25), 'halvar': (0.50, 0.16, 0.20), 'kryoskelett': (0.47, 0.15, 0.18),
-    'velia': (0.35, 0.25, 0.25), 'knochenkoloss': (0.50, 0.15, 0.20), 'malhar': (0.48, 0.15, 0.18),
-    'leerenbrut': (0.22, 0.58, 0.25), 'tentakelmeister': (0.42, 0.40, 0.35), 'abgrundwaechter': (0.42, 0.13, 0.15),
+    'velia': (0.235, 0.19, 0.22), 'knochenkoloss': (0.525, 0.15, 0.14), 'malhar': (0.49, 0.14, 0.17),
+    'leerenbrut': (0.42, 0.52, 0.3), 'tentakelmeister': (0.26, 0.4, 0.45), 'abgrundwaechter': (0.415, 0.14, 0.15),
     # raid and world bosses
-    'magmaul': (0.239, 0.477, 0.25), 'glutweberin': (0.18, 0.55, 0.30), 'aschenfaust': (0.40, 0.14, 0.20),
-    'ignis': (0.42, 0.25, 0.30), 'varn': (0.45, 0.15, 0.20), 'bleiche_dame': (0.299, 0.24, 0.26),
-    'nivara': (0.15, 0.30, 0.20), 'nebelkoenig': (0.50, 0.15, 0.20), 'sternenfresser': (0.219, 0.457, 0.25),
-    'zwillingsaugen': (0.45, 0.40, 0.35), 'xaroth': (0.12, 0.32, 0.20), 'nhalzor': (0.42, 0.40, 0.35),
-    'azurschwinge': (0.14, 0.3, 0.2), 'grollhuf': (0.42, 0.12, 0.18), 'verderbte_eiche': (0.383, 0.335, 0.25),
-    'eiche': (0.34, 0.3, 0.25),
+    'magmaul': (0.15, 0.26, 0.28), 'glutweberin': (0.34, 0.39, 0.25), 'aschenfaust': (0.39, 0.16, 0.2),
+    'ignis': (0.17, 0.13, 0.2), 'varn': (0.53, 0.13, 0.18), 'bleiche_dame': (0.45, 0.13, 0.17),
+    'nivara': (0.22, 0.38, 0.22), 'nebelkoenig': (0.53, 0.15, 0.19), 'sternenfresser': (0.15, 0.4, 0.3),
+    'zwillingsaugen': (0.33, 0.48, 0.5), 'xaroth': (0.11, 0.24, 0.22), 'nhalzor': (0.415, 0.39, 0.38),
+    'azurschwinge': (0.115, 0.27, 0.22), 'grollhuf': (0.14, 0.3, 0.22), 'verderbte_eiche': (0.17, 0.29, 0.25),
+    'eiche': (0.27, 0.31, 0.22),
+    # companions, painted
+    'comp_tank': (0.475, 0.125, 0.15), 'comp_zauberin': (0.445, 0.21, 0.13), 'comp_heiler': (0.5, 0.085, 0.11),
+    'comp_schuetze': (0.445, 0.11, 0.11),
+    # heroes of the other peoples
+    'hero_krieger_zwerg': (0.6, 0.19, 0.22), 'hero_magier_zwerg': (0.59, 0.17, 0.2), 'hero_jaeger_zwerg': (0.24, 0.18, 0.22),
+    'hero_priester_zwerg': (0.515, 0.13, 0.18),
+    'hero_krieger_elf': (0.37, 0.1, 0.09), 'hero_magier_elf': (0.37, 0.1, 0.09), 'hero_jaeger_elf': (0.45, 0.1, 0.1),
+    'hero_priester_elf': (0.52, 0.075, 0.09),
+    'hero_krieger_ork': (0.45, 0.1, 0.13), 'hero_magier_ork': (0.365, 0.2, 0.15), 'hero_jaeger_ork': (0.46, 0.18, 0.17),
+    'hero_priester_ork': (0.53, 0.2, 0.17),
+    'hero_krieger_halbling': (0.49, 0.19, 0.2), 'hero_magier_halbling': (0.47, 0.24, 0.2), 'hero_jaeger_halbling': (0.53, 0.18, 0.22),
+    'hero_priester_halbling': (0.53, 0.18, 0.2),
+    'hero_krieger_untot': (0.45, 0.12, 0.12), 'hero_magier_untot': (0.59, 0.135, 0.12), 'hero_jaeger_untot': (0.54, 0.13, 0.11),
+    'hero_priester_untot': (0.43, 0.15, 0.12),
 }
 
 

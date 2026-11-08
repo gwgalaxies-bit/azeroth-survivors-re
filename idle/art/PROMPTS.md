@@ -2,6 +2,106 @@
 
 Jeder Prompt ist vollständig. Speichere das Bild unter dem angegebenen Dateinamen in `idle/art/` (als `.jpg` oder `.png`) und führe `make idle-assets` aus.
 
+## Weitere Auftraggeber
+
+Die zwei weiteren Questgeber in jedem Gebiet, mit den Nebenquests. Blick nach links.
+
+**Bäuerin Marta (Goldhain, Marthas Hof)** → `npc_marta.jpg`
+
+```
+Sturdy human farm woman with rosy cheeks, a headscarf and an apron, holding a pitchfork and a basket of apples, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Händler Benno (Goldhain, Rastplatz)** → `npc_benno.jpg`
+
+```
+Round-bellied traveling merchant with a big moustache and a feathered hat, carrying a huge backpack full of wares, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Fischerin Odette (Nebelmoor, Fischersteg)** → `npc_odette.jpg`
+
+```
+Weathered fisherwoman in a yellow oilskin hat and tall waders, holding a fishing net and a lantern, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Torfstecher Gerwin (Nebelmoor, Torfhütte)** → `npc_gerwin.jpg`
+
+```
+Gaunt peat cutter in muddy brown work clothes and a flat cap, holding a long narrow peat spade, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Händlerin Zaida (Rotfels, Zaidas Wagen)** → `npc_zaida.jpg`
+
+```
+Shrewd caravan trader woman in colorful layered silks and gold jewelry, holding a ledger and a coin purse, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Feldscher Anselm (Rotfels, Verbandsplatz)** → `npc_anselm.jpg`
+
+```
+Field medic in a stained white apron over leather armor with a satchel of bandages and a small saw, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Kamelhirte Yussuf (Sonnenglut, Kamelgehege)** → `npc_yussuf.jpg`
+
+```
+Old camel herder with a white beard in a long striped desert robe and a turban, holding a shepherd crook, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Brunnenmeister Idris (Sonnenglut, Alter Brunnen)** → `npc_idris.jpg`
+
+```
+Well master in a sand-colored tunic and leather gloves, holding a bucket on a rope and a brass dowsing rod, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Holzfäller Torben (Frostgipfel, Sägewerk)** → `npc_torben.jpg`
+
+```
+Huge bearded lumberjack in a red checkered wool shirt and a fur vest with a big felling axe over his shoulder, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Hüttenwirtin Ingrid (Frostgipfel, Berghütte)** → `npc_ingrid.jpg`
+
+```
+Friendly mountain innkeeper woman with braided hair in a thick knitted sweater and an apron, holding a steaming tankard, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Küsterin Agnes (Schattenhain, Kirchhof)** → `npc_agnes.jpg`
+
+```
+Stern elderly church sexton woman in a black dress and a white bonnet, holding a ring of iron keys and a candle, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Chronist Eberhard (Schattenhain, Verfallener Turm)** → `npc_eberhard.jpg`
+
+```
+Old scholar with spectacles and a long grey beard in brown robes, carrying a thick book and a quill, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Wächterin Runa (Glutschlund, Aschenwall)** → `npc_runa.jpg`
+
+```
+Fierce warrior woman in ash-grey scale armor with a horned helmet and a fire-scorched spear, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Alchemist Zosimos (Glutschlund, Rauchlabor)** → `npc_zosimos.jpg`
+
+```
+Eccentric alchemist with wild white hair and brass goggles in a stained purple coat, holding a bubbling green flask, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Sternkundler Orlin (Leerenriss, Beobachtungsterrasse)** → `npc_orlin.jpg`
+
+```
+Thin astronomer in a dark blue robe with star patterns and a pointed hood, holding a brass telescope, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
+**Rissläuferin Vesna (Leerenriss, Rissläufer-Lager)** → `npc_vesna.jpg`
+
+```
+Agile scout woman in dark teal leather armor with a hooded cape, holding a glowing violet compass, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
+```
+
 ## Normale Monster
 
 Die siehst du ständig. Querformat oder quadratisch, Blick nach links.

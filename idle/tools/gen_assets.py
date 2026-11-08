@@ -8,6 +8,7 @@ only changes files whose drawing code changed.
 """
 import json
 import os
+import shutil
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -91,6 +92,11 @@ def main():
             im.convert('RGB').save(os.path.join(ASSETS, 'ui', n + '.webp'), quality=88, method=6)
         else:
             im.save(os.path.join(ASSETS, 'ui', n + '.png'), optimize=True)
+    # painted UI textures in art/ui/ (the reskin) replace or add to the generated ones, file for file
+    art_ui = os.path.join(ROOT, 'art', 'ui')
+    for f in sorted(os.listdir(art_ui)) if os.path.isdir(art_ui) else []:
+        if f.endswith(('.png', '.webp')):
+            shutil.copy(os.path.join(art_ui, f), os.path.join(ASSETS, 'ui', f))
 
     index = dict(
         sprites=dict(size=list(satlas.size), scale=sprites.SC, map=spos, faces=facemod.table(spos, {k: v[0] for k, v in custom_art.DERIVED.items()}), painted=sorted(c_spr)),

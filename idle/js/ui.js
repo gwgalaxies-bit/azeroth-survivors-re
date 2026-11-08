@@ -102,12 +102,16 @@ const UI = (() => {
 
   // --------------------------------------------------------------------------------------- toasts, log
   function toast(text, icon, color) {
+    const box = $('toasts');
+    // unten im Szenenbild einblenden (über dem Boden der Kampfszene), gleiche Meldung nicht doppelt
+    const sc = $('scene');
+    if (sc) { const r = sc.getBoundingClientRect(); box.style.bottom = Math.max(8, window.innerHeight - r.bottom + 16) + 'px'; }
+    for (const old of [...box.children]) if (old.textContent === text) old.remove();
     const el = document.createElement('div');
     el.className = 'toast';
-    el.style.setProperty('--tc', color || '#c8a050');
-    el.innerHTML = `${icon ? ico(icon, 24) : ''}<span>${esc(text)}</span>`;
-    $('toasts').appendChild(el);
-    while ($('toasts').children.length > 3) $('toasts').firstChild.remove();
+    el.textContent = text;
+    box.appendChild(el);
+    while (box.children.length > 3) box.firstChild.remove();
     setTimeout(() => el.classList.add('out'), 2600);
     setTimeout(() => el.remove(), 3100);
   }
@@ -127,6 +131,7 @@ const UI = (() => {
     $('cGoldI').innerHTML = ico('gold', 16);
     $('cBadgeI').innerHTML = ico('badge', 16);
     $('cKeyI').innerHTML = ico('key', 16);
+    $('cPotI').innerHTML = ico('potion_heal', 16);
     $('btnMenu').innerHTML = ico('cog', 22);
     if (S) buildActionbar();
   }
@@ -135,9 +140,8 @@ const UI = (() => {
     let h = '';
     cls.skills.forEach((id, i) => {
       const sk = SKILLS[id];
-      h += `<button class="abtn" id="sk-${id}" data-act="cast" data-id="${id}" aria-label="${esc(sk.name)} wirken">${ico(sk.icon, 44)}<span class="cd"></span><span class="cdt"></span><span class="key">${i + 1}</span></button>`;
+      h += `<button class="abtn" id="sk-${id}" data-act="cast" data-id="${id}" aria-label="${esc(sk.name)} wirken">${ico(sk.icon, 44)}<span class="cd"></span><span class="cdt"></span><span class="key">${i + 1}</span><span class="syn"></span></button>`;
     });
-    h += `<button class="abtn" id="ab-potion" data-act="potioninfo" aria-label="Heiltrank">${ico('potion_heal', 44)}<span class="cd"></span><span class="cnt" id="potCnt"></span></button>`;
     h += '<span class="spacer"></span>';
     h += '<span id="abExtra"></span>';
     $('actionbar').innerHTML = h;
@@ -231,6 +235,9 @@ const UI = (() => {
       const state = locked ? 'locked' : skillState(id);
       el.classList.toggle('ready', state === 'ready');
       el.classList.toggle('nores', state === 'res');
+      const badge = locked ? '' : synBadge(b, id, sk);
+      el.classList.toggle('primed', !!badge);
+      el.children[4].textContent = ''; // keine Zahlen: die Synergie zeigt der gestrichelte, leuchtende Rahmen
       const cd = b ? Math.max(0, b.cd[id] || 0) : 0;
       const full = sk.cd * (1 - st.cdr / 100);
       el.children[1].style.setProperty('--p', locked ? 1 : cd / full);
@@ -238,7 +245,8 @@ const UI = (() => {
     }
     $('potCnt').textContent = S.cons.potion_heal || 0;
     const pcd = b ? Math.max(0, b.h.potionCd) : 0;
-    $('ab-potion').querySelector('.cd').style.setProperty('--p', pcd / 30);
+    $('cPot').classList.toggle('cooling', pcd > 0.05);
+    $('cPot').classList.toggle('empty', !(S.cons.potion_heal || 0));
     // extra action button (boss / leave)
     let ex = '';
     if (!inst && bossAvailable(S.zone)) ex = btn(`${ico('skull', 18)} Boss`, 'boss', { z: S.zone }, 'sm');
@@ -249,7 +257,7 @@ const UI = (() => {
   let auraKey = '';
   function auraLeft(s) { return s === null ? '' : s >= 3600 ? Math.ceil(s / 3600) + 'h' : s >= 60 ? Math.ceil(s / 60) + 'm' : Math.ceil(s) + 's'; }
   function auraHTML(a) {
-    return `<button class="aura ${a.debuff ? 'debuff' : ''} ${a.left !== null && a.left < 5 ? 'low' : ''}" data-act="aura" data-n="${esc(a.name)}" data-d="${esc(a.desc)}" data-i="${a.icon}">${ico(a.icon, 24)}${a.stacks > 1 ? `<i class="st">${a.stacks}</i>` : ''}<b>${auraLeft(a.left)}</b></button>`;
+    return `<button class="aura ${a.debuff ? 'debuff' : ''} ${a.left !== null && a.left < 5 ? 'low' : ''}" data-act="aura" data-n="${esc(a.name)}" data-d="${esc(a.desc)}" data-i="${a.icon}">${ico(a.icon, 16)}${a.stacks > 1 ? `<i class="st">${a.stacks}</i>` : ''}<b>${auraLeft(a.left)}</b></button>`;
   }
   function renderAuras(low) {
     const a = auras();
@@ -266,9 +274,9 @@ const UI = (() => {
     const inst = b && b.mode !== 'adventure';
     const z = zoneOf(S.zone);
     const bg = b ? b.bg : z.bg;
-    const m0 = giverMarker(S.zone, 0), m1 = giverMarker(S.zone, 1);
+    const gms = [0, 1, 2, 3].map((gi) => giverMarker(S.zone, gi));
     const label = inst ? b.title : S.walk ? 'Unterwegs' : here().name;
-    const key = bg + label + S.worldTier + m0 + m1;
+    const key = bg + label + S.worldTier + gms.join();
     if (key === mmKey) return;
     mmKey = key;
     $('mmZone').textContent = label;
@@ -280,7 +288,7 @@ const UI = (() => {
       dots += `<i class="mm-dot" style="left:${50 + Math.cos(a) * d * 42}%;top:${50 + Math.sin(a) * d * 42}%"></i>`;
     }
     if (!inst) {
-      [[m0, 22, 38], [m1, 70, 44]].forEach(([mk, x, y]) => {
+      [[gms[0], 22, 38], [gms[1], 70, 44], [gms[2], 36, 64], [gms[3], 58, 24]].forEach(([mk, x, y]) => {
         if (mk === 'avail' || mk === 'turnin') dots += `<i class="mm-q" style="left:${x}%;top:${y}%;background-image:url(assets/ui/${mk === 'turnin' ? 'q_turnin' : 'q_bang'}.png)"></i>`;
       });
     }
@@ -356,15 +364,15 @@ const UI = (() => {
     let h = '';
     const tip = !S.tut.quests
       ? ['quests', uiImg('q_bang', 14, 22), 'Gelbes <b>!</b>: Auftrag annehmen. Gelbes <b>?</b>: abgeben. Dazwischen läufst du zu den Gegnern.']
-      : !S.tut.skills ? ['skills', ico(SKILLS[CLASSES[S.cls].skills[0]].icon, 24), 'Fähigkeiten wirkst du selbst: Tippe auf leuchtende Knöpfe (1–3). Gedrückt halten zeigt die Wirkung.'] : null;
+      : !S.tut.skills ? ['skills', ico(SKILLS[CLASSES[S.cls].skills[0]].icon, 24), 'Fähigkeiten wirkst du selbst: Tippe auf leuchtende Knöpfe (1–5). Violett markierte sind verstärkt: Fähigkeiten bauen aufeinander auf. Gedrückt halten zeigt die Wirkung.'] : null;
     if (tip) h += `<div class="tipline">${tip[1]}<span class="grow small">${tip[2]}</span>${btn('OK', 'tut', { k: tip[0] }, 'sm')}</div>`;
     // where you are
     const w = battle && battle.mode === 'adventure' ? S.walk : null;
-    const placeIcon = pl.kind === 'hunt' ? `<span class="bp" style="width:32px;height:32px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px #8a6a3a">${face(pl.mob, 32)}</span>` : ico({ hub: 'castle', elite: 'skull', boss: 'raid' }[pl.kind], 32);
+    const placeIcon = pl.kind === 'hunt' ? `<span class="bp" style="width:32px;height:32px;border-radius:50%;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px #8a6a3a">${face(pl.mob, 32)}</span>` : ico({ hub: 'castle', spot: 'flag', elite: 'skull', boss: 'raid' }[pl.kind], 32);
     h += `<div class="placeline">${w ? ico('map', 32) : placeIcon}<div class="grow"><div class="ttl gold">${w ? `Unterwegs nach ${esc(placeOf(w.z, w.p).name)}` : esc(pl.name)}</div><div class="small muted">${esc(z.name)}${w ? '' : ` · ${placeDesc(pl)}`}</div></div>${btn(`${ico('map', 18)} Karte`, 'zones', {}, 'sm')}</div>`;
     // quests in this zone, each with its next step
     const mine = zoneQuests(S.zone).filter((x) => x.s === 'active' || x.s === 'done');
-    const offers = [0, 1].filter((gi) => giverMarker(S.zone, gi) === 'avail');
+    const offers = Array.from({ length: giverCount(S.zone) }, (_, gi) => gi).filter((gi) => giverMarker(S.zone, gi) === 'avail');
     if (mine.length || offers.length) {
       h += '<div class="stack">';
       for (const x of mine) h += trackerRow(x);
@@ -384,6 +392,7 @@ const UI = (() => {
 
   function placeDesc(pl) {
     if (pl.kind === 'hub') return 'Hier ruht dein Held und sammelt Erholungsbonus.';
+    if (pl.kind === 'spot') return 'Sammelplatz: Hier findest du, was gesucht wird.';
     if (pl.kind === 'hunt') return `Jagdgebiet: ${esc(MOBS[pl.mob])}`;
     if (pl.kind === 'elite') return `Versteck von ${esc(MOBS[pl.mob])} (Elite)`;
     return `Hort von ${esc(MOBS[pl.mob])}`;
@@ -395,26 +404,28 @@ const UI = (() => {
       case 'collect': return `${esc(q.item)}: ${x.p}/${x.need} <span class="muted">(von ${esc(MOBS[q.target])})</span>`;
       case 'elite': return `${esc(MOBS[q.target])} besiegt: ${x.p}/1 <span class="muted">(Elite)</span>`;
       case 'any': return `Kreaturen in ${esc(zoneOf(x.zi).name)} besiegt: ${x.p}/${x.need}`;
+      case 'gather': return `${esc(q.item)} gefunden: ${x.p}/${x.need} <span class="muted">(Sammelplatz)</span>`;
+      case 'talk': return `Sprich mit ${esc(x.tgiver.name)}`;
       case 'boss': return `${esc(MOBS[q.target])} besiegt: ${x.p}/1 <span class="muted">(Boss, 2 Min. Zeit)</span>`;
     }
     return '';
   }
   // one line of the objective tracker with the next step as its button
   function trackerRow(x) {
-    const gp = giverPlace(x.g);
+    const gp = giverPlace(x.tg);
     const walkingTo = S.walk && S.walk.z === x.zi ? S.walk.p : null;
     const at = (p) => !S.walk && S.loc.z === x.zi && S.loc.p === p;
     let act;
     if (x.s === 'done') {
-      act = at(gp) ? btn('Abgeben', 'npc', { g: x.g }, 'sm gold') : walkingTo === gp ? '<span class="small muted">Unterwegs…</span>' : btn(`Zu ${esc(x.giver.name.split(' ').pop())}`, 'goto', { z: x.zi, p: gp }, 'sm gold');
+      act = at(gp) ? btn(x.q.kind === 'talk' ? 'Sprechen' : 'Abgeben', 'npc', { g: x.tg }, 'sm gold') : walkingTo === gp ? '<span class="small muted">Unterwegs…</span>' : btn(`Zu ${esc(x.tgiver.name.split(' ').pop())}`, 'goto', { z: x.zi, p: gp }, 'sm gold');
     } else if (x.q.kind === 'any' ? !S.walk && S.loc.z === x.zi && ['hunt', 'elite', 'boss'].includes(here().kind) : at(x.place)) {
-      act = x.q.kind === 'boss' ? btn('Herausfordern', 'boss', { z: x.zi }, 'sm gold') : '<span class="small goldtxt">Hier</span>';
+      act = x.q.kind === 'boss' ? btn('Herausfordern', 'boss', { z: x.zi }, 'sm gold') : x.q.kind === 'gather' ? '<span class="small goldtxt">Sucht…</span>' : '<span class="small goldtxt">Hier</span>';
     } else {
       act = walkingTo === x.place ? '<span class="small muted">Unterwegs…</span>' : btn('Hingehen', 'goto', { z: x.zi, p: x.place }, 'sm');
     }
     return `<div class="li ${x.s === 'done' ? 'claim' : ''}">${uiImg(x.s === 'done' ? 'q_turnin' : 'q_bang', 14, 22, x.s === 'done' ? '' : 'filter:grayscale(1) brightness(1.4)')}<div class="grow"><div class="ttl">${esc(x.q.t)}</div>
-      <div class="small">${x.s === 'done' ? `Erledigt. Zurück zu ${esc(x.giver.name)} (${esc(placeOf(x.zi, gp).name)})` : `${objective(x)} · <span class="muted">${esc(placeOf(x.zi, x.place).name)}</span>`}</div>
-      ${x.s === 'done' ? '' : bar('yellow', x.p / x.need, '', true)}</div>${act}</div>`;
+      <div class="small">${x.s === 'done' ? (x.q.kind === 'talk' ? `Sprich mit ${esc(x.tgiver.name)} (${esc(placeOf(x.zi, gp).name)})` : `Erledigt. Zurück zu ${esc(x.tgiver.name)} (${esc(placeOf(x.zi, gp).name)})`) : `${objective(x)} · <span class="muted">${esc(placeOf(x.zi, x.place).name)}</span>`}</div>
+      ${x.s === 'done' || x.q.kind === 'talk' ? '' : bar('yellow', x.p / x.need, '', true)}</div>${act}</div>`;
   }
 
 
@@ -521,13 +532,14 @@ const UI = (() => {
       const z = ZONES[zi];
       const all = zoneQuests(zi);
       const turned = all.filter((x) => x.s === 'turned').length;
-      if (turned === 6) {
+      const main = all.filter((x) => x.qi < MAIN_Q && x.s === 'turned').length;
+      if (turned === all.length) {
         h += `<div class="li done">${ico('trophy', 28)}<div class="grow"><div class="ttl gold">${esc(z.name)}</div><div class="small muted">Alle Aufträge erledigt · Stufe ${z.lvl[0]}–${z.lvl[1]}</div></div>${zi !== S.zone ? btn('Reisen', 'travel', { z: zi }, 'sm') : '<span class="small muted">Hier</span>'}</div>`;
         continue;
       }
-      h += `<div class="section-title">${esc(z.name)} · ${turned}/6</div><div class="stack">`;
+      h += `<div class="section-title">${esc(z.name)} · ${main}/${MAIN_Q} · Nebenquests ${turned - main}/${all.length - MAIN_Q}</div><div class="stack">`;
       for (const x of all.filter((y) => y.s === 'active' || y.s === 'done')) h += trackerRow(x);
-      for (const gi of [0, 1]) {
+      for (let gi = 0; gi < giverCount(zi); gi++) {
         const offer = all.filter((y) => y.g === gi && y.s === 'avail');
         if (!offer.length) continue;
         const g = giverOf(zi, gi), gp = giverPlace(gi);
@@ -536,7 +548,7 @@ const UI = (() => {
       }
       h += '</div>';
     }
-    if (S.zoneMax < ZONES.length - 1) h += `<div class="li done">${ico('lock', 28)}<div class="grow"><div class="ttl">${esc(ZONES[S.zoneMax + 1].name)}</div><div class="small muted">Erledige alle Aufträge in ${esc(ZONES[S.zoneMax].name)}.</div></div></div>`;
+    if (S.zoneMax < ZONES.length - 1) h += `<div class="li done">${ico('lock', 28)}<div class="grow"><div class="ttl">${esc(ZONES[S.zoneMax + 1].name)}</div><div class="small muted">Erledige die Hauptquests in ${esc(ZONES[S.zoneMax].name)}.</div></div></div>`;
     return h;
   }
   function dqRow(e, i, weekly) {
@@ -852,14 +864,22 @@ const UI = (() => {
     return h + '</div>';
   }
   function viewComp() {
-    let h = '<div class="card plain small">Gefährten kämpfen an deiner Seite – in der Wildnis, in Dungeons und Raids. Ihre Stufe kann deine nicht übersteigen.</div>';
+    let h = '<div class="card plain small">Du kannst nur einen Gefährten mitnehmen. Er kämpft an deiner Seite – in der Wildnis, in Dungeons und Raids. Wen du wegschickst, behält seine Stufe und lässt sich jederzeit wieder rufen. Die Stufe eines Gefährten kann deine nicht übersteigen.</div>';
     for (const c of COMPANIONS) {
       const lv = S.comp[c.id] || 0;
       const unlocked = S.level >= c.unlock;
+      const on = compOn(c.id);
       const cost = lv ? compUpCost(lv) : compRecruitCost(c);
-      h += `<div class="li" style="align-items:flex-end">${spr(c.sprite, 1.5)}<div class="grow"><div class="ttl gold">${esc(c.name)}</div><div class="small">${esc(c.role)}${lv ? ` · Stufe ${lv}` : ''}</div><div class="small muted">${esc(c.desc)}</div>
+      let right = '';
+      if (!unlocked) right = `<span class="small bad">Ab Stufe ${c.unlock}</span>`;
+      else {
+        if (lv) right += on ? btn('Wegschicken', 'compsend', { id: c.id }, 'sm') : btn('Rufen', 'compcall', { id: c.id }, 'sm gold');
+        if (lv >= S.level) right += '<span class="small muted">Max. Stufe</span>';
+        else right += btn(`${lv ? 'Ausbilden' : 'Anheuern'} ${ico('gold', 16)} ${fmt(cost)}`, 'comp', { id: c.id }, `sm ${lv ? '' : 'gold'}`, S.gold < cost);
+      }
+      h += `<div class="li ${on ? 'claim' : ''}" style="align-items:flex-end">${spr(c.sprite, 1.5)}<div class="grow"><div class="ttl gold">${esc(c.name)}</div><div class="small">${esc(c.role)}${lv ? ` · Stufe ${lv}` : ''}${on ? ' · <span class="goldtxt">Dabei</span>' : ''}</div><div class="small muted">${esc(c.desc)}</div>
         ${lv ? `<div class="small">Stärke: ${fmt(compPower(c.id) * (c.type === 'dps' ? 1.6 : c.type === 'tank' ? 0.6 : 0.3))} Schaden/Sek.</div>` : ''}</div>
-        ${!unlocked ? `<span class="small bad">Ab Stufe ${c.unlock}</span>` : lv >= S.level ? '<span class="small muted">Max. Stufe</span>' : btn(`${lv ? 'Ausbilden' : 'Anheuern'} ${ico('gold', 16)} ${fmt(cost)}`, 'comp', { id: c.id }, `sm ${lv ? '' : 'gold'}`, S.gold < cost)}</div>`;
+        <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">${right}</div></div>`;
     }
     return h;
   }
@@ -883,6 +903,16 @@ const UI = (() => {
     m.hidden = false;
     m.innerHTML = `<div class="mbox" role="dialog" aria-modal="true">${opts.noClose ? '' : '<button class="x" data-act="close" aria-label="Schließen">×</button>'}${html}</div>`;
     U.modal = opts.id || 'x';
+    // Titel im Banner so lange verkleinern, bis sie hineinpassen
+    const fitTitles = () => m.querySelectorAll('h2').forEach((h) => {
+      h.style.fontSize = '';
+      let fs = parseFloat(getComputedStyle(h).fontSize) || 18;
+      while (h.scrollWidth > h.clientWidth + 1 && fs > 9) { fs -= 0.5; h.style.fontSize = fs + 'px'; }
+    });
+    fitTitles();
+    // Schrift kann erst nach dem Laden breiter werden: danach noch einmal anpassen
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitles);
+    setTimeout(fitTitles, 500);
   }
   function closeModal() { $('modal').hidden = true; $('modal').innerHTML = ''; U.modal = null; }
 
@@ -920,8 +950,8 @@ const UI = (() => {
       if (active.some((x) => x.place === pl.id)) mark += ` ${ico('swords', 16)}`;
       const icon = pl.kind === 'hunt' || pl.kind === 'elite' || pl.kind === 'boss'
         ? `<span class="bp" style="width:40px;height:40px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px ${pl.kind === 'hunt' ? '#8a6a3a' : '#ff8a3a'}">${face(pl.mob, 40)}</span>`
-        : ico('castle', 40);
-      const sub2 = pl.kind === 'hub' ? `${esc(giverOf(S.zone, pl.giver).name)}` : pl.kind === 'hunt' ? esc(MOBS[pl.mob]) : `${esc(MOBS[pl.mob])} · ${pl.kind === 'elite' ? 'Elite' : 'Boss'}`;
+        : ico(pl.kind === 'spot' ? 'flag' : 'castle', 40);
+      const sub2 = pl.kind === 'spot' ? 'Sammelplatz' : pl.kind === 'hub' ? `${esc(giverOf(S.zone, pl.giver).name)}` : pl.kind === 'hunt' ? esc(MOBS[pl.mob]) : `${esc(MOBS[pl.mob])} · ${pl.kind === 'elite' ? 'Elite' : 'Boss'}`;
       const from = S.walk ? S.walk : S.loc;
       const secs = Math.round(walkSeconds(from.z, from.p, S.zone, pl.id));
       h += `<div class="li ${pl.id === cur ? 'claim' : ''}">${icon}<div class="grow"><div class="ttl ${pl.id === cur ? 'gold' : ''}">${esc(pl.name)} ${mark}</div><div class="small muted">${sub2}</div></div>${pl.id === cur ? '<span class="small goldtxt">Hier</span>' : btn(`${secs} Sek.`, 'goto', { z: S.zone, p: pl.id }, 'sm')}</div>`;
@@ -932,7 +962,7 @@ const UI = (() => {
       const open = i <= S.zoneMax;
       const turned = zoneQuests(i).filter((x) => x.s === 'turned').length;
       h += `<div class="li" style="padding:0;overflow:hidden"><div style="width:84px;height:56px;flex:none;background:url(assets/bg/${zz.bg}.webp) 50% 80%/cover;${open ? '' : 'filter:grayscale(1) brightness(.4)'}"></div>
-        <div class="grow" style="padding:4px 0"><div class="ttl ${open ? 'gold' : ''}">${esc(zz.name)}</div><div class="small muted">Stufe ${zz.lvl[0]}–${zz.lvl[1]} · ${open ? `${turned}/6 Aufträge` : 'Gesperrt'}</div></div>
+        <div class="grow" style="padding:4px 0"><div class="ttl ${open ? 'gold' : ''}">${esc(zz.name)}</div><div class="small muted">Stufe ${zz.lvl[0]}–${zz.lvl[1]} · ${open ? `${turned}/${zoneQuests(i).length} Aufträge` : 'Gesperrt'}</div></div>
         <div style="padding-right:8px">${open ? btn('Reisen', 'travel', { z: i }, 'sm') : ico('lock', 24)}</div></div>`;
     });
     modal(h + '</div>', { id: 'zones' });
@@ -946,10 +976,11 @@ const UI = (() => {
     let h = `<div class="row"><span class="bp" style="width:56px;height:56px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 3px #c8a050">${face(npcSprite(zi, gi), 56)}</span><div class="grow"><h2 style="text-align:left;margin:0">${esc(g.name)}</h2><div class="small muted">${esc(g.role)} · ${esc(placeOf(zi, giverPlace(gi)).name)}</div></div></div>`;
     h += '<div class="parch" style="margin-top:10px">';
     if (!list.length) h += `<p>Im Moment habe ich nichts für dich, ${esc(S.name)}. ${zoneComplete(zi) ? 'Du hast hier alles getan, was getan werden musste.' : 'Sieh dich anderswo um.'}</p>`;
-    else h += `<p>Sei gegrüßt, ${esc(S.name)}. ${list.some((x) => x.s === 'done') ? 'Du bringst Neuigkeiten?' : 'Ich könnte Hilfe gebrauchen.'}</p>`;
+    else h += `<p>Sei gegrüßt, ${esc(S.name)}. ${list.some((x) => x.s === 'done' && x.tg === gi) ? 'Du bringst Neuigkeiten?' : 'Ich könnte Hilfe gebrauchen.'}</p>`;
     for (const x of list) {
       const icon = x.s === 'done' ? uiImg('q_turnin', 10, 16) : x.s === 'avail' ? uiImg('q_bang', 10, 16) : uiImg('q_bang', 10, 16, 'filter:grayscale(1) brightness(.8)');
-      h += `<button class="li" style="width:100%;border:0;cursor:pointer;margin-top:6px;text-align:left;background:rgba(80,50,20,.12);color:inherit" data-act="quest" data-z="${zi}" data-q="${x.qi}">${icon}<span class="grow"><b>${esc(x.q.t)}</b><br><span class="small">${x.s === 'done' ? 'Abgeben' : x.s === 'avail' ? 'Neuer Auftrag' : `In Arbeit · ${x.p}/${x.need}`}</span></span></button>`;
+      const label = x.s === 'done' ? (x.tg === gi ? (x.q.kind === 'talk' ? 'Nachricht überbracht' : 'Abgeben') : `Sprich mit ${esc(x.tgiver.name)}`) : x.s === 'avail' ? 'Neuer Auftrag' : x.q.kind === 'gather' ? `Gesammelt · ${x.p}/${x.need}` : `In Arbeit · ${x.p}/${x.need}`;
+      h += `<button class="li" style="width:100%;border:0;cursor:pointer;margin-top:6px;text-align:left;background:rgba(80,50,20,.12);color:inherit" data-act="quest" data-z="${zi}" data-q="${x.qi}">${icon}<span class="grow"><b>${esc(x.q.t)}</b><br><span class="small">${label}</span></span></button>`;
     }
     h += '</div>';
     if (!there) h += `<div class="mfoot">${btn('Hingehen', 'goto', { z: zi, p: giverPlace(gi) }, 'gold')}</div>`;
@@ -958,16 +989,16 @@ const UI = (() => {
 
   function showQuest(zi, qi) {
     const x = questInfo(zi, qi);
-    const there = atGiver(zi, x.g);
+    const there = atGiver(zi, x.s === 'done' ? x.tg : x.g);
     const rw = questRewards(zi, qi);
     let h = `<div class="parch"><div class="row">${uiImg(x.s === 'done' ? 'q_turnin' : 'q_bang', 20, 32)}<div class="grow"><h3 style="margin:0">${esc(x.q.t)}</h3><div class="small muted">${esc(x.giver.name)} · ${esc(zoneOf(zi).name)}</div></div></div>`;
-    h += x.s === 'done' ? `<p>${esc(pick(TURNIN_LINES))}</p>` : `<p>${esc(x.q.txt)}</p>`;
+    h += x.s === 'done' && !(x.q.kind === 'talk' && !there) ? `<p>${esc(x.q.kind === 'talk' && x.q.reply ? x.q.reply : pick(TURNIN_LINES))}</p>` : `<p>${esc(x.q.txt)}</p>`;
     h += `<div class="obj small"><b>Ziel:</b> ${objective(x)}</div><div class="small muted">Ort: ${esc(placeOf(zi, x.place).name)}</div>`;
     h += `<div class="small" style="margin:8px 0 2px"><b>Belohnung:</b></div>${rewardHTML(rwList(rw))}</div><div class="mfoot">`;
     if (x.s === 'avail') h += there ? btn('Annehmen', 'accept', { z: zi, q: qi }, 'gold') : btn('Zum Auftraggeber', 'goto', { z: zi, p: giverPlace(x.g) }, 'gold');
-    else if (x.s === 'done') h += there ? btn('Abschließen', 'turnin', { z: zi, q: qi }, 'gold') : btn('Zurück zum Auftraggeber', 'goto', { z: zi, p: giverPlace(x.g) }, 'gold');
+    else if (x.s === 'done') h += there ? btn(x.q.kind === 'talk' ? 'Nachricht überbringen' : 'Abschließen', 'turnin', { z: zi, q: qi }, 'gold') : btn(x.q.kind === 'talk' ? `Zu ${esc(x.tgiver.name)}` : 'Zurück zum Auftraggeber', 'goto', { z: zi, p: giverPlace(x.tg) }, 'gold');
     else if (x.s === 'active') h += btn('Hingehen', 'goto', { z: zi, p: x.place }, 'gold');
-    h += btn('Zurück', 'npc', { g: x.g, z: zi }, 'sm') + '</div>';
+    h += btn('Zurück', 'npc', { g: x.s === 'done' && there ? x.tg : x.g, z: zi }, 'sm') + '</div>';
     modal(h, { id: 'quest' });
   }
 
@@ -1022,24 +1053,14 @@ const UI = (() => {
 
   function showOffline(o, sec) {
     const lines = [];
-    lines.push(['clock', `${fmtTime(sec)} unterwegs${o.sec < sec ? ` (max. ${fmtTime(o.sec)})` : ''}`]);
-    if (o.kills) lines.push(['swords', `${fmt(o.kills)} Monster besiegt`]);
-    if (o.xp) lines.push(['xp', `+${fmt(o.xp)} Erfahrung${o.levels ? ` · ${o.levels} Stufenaufstieg${o.levels > 1 ? 'e' : ''}!` : ''}`]);
-    if (o.gold) lines.push(['gold', `+${fmt(o.gold)} Gold`]);
-    if (o.items) lines.push(['bag', `${o.items} Gegenstände in den Taschen${o.sold ? `, ${o.sold} verkauft` : ''}`]);
-    if (o.best && o.best.r >= 3) lines.push([itemIcon(o.best), `Bester Fund: ${o.best.name}`, o.best.r]);
-    const mats = Object.assign({}, o.mats);
-    if (o.gathered) for (const k in o.gathered) mats[k] = (mats[k] || 0) + o.gathered[k];
-    const matList = Object.keys(mats).filter((k) => mats[k]).map((k) => [k, mats[k]]);
-    if (o.quest) lines.push(['scroll', `${o.quest.t}: +${o.quest.gained}${o.quest.done ? ' — abgeschlossen!' : ''}`]);
-    if (o.inn) lines.push(['castle', `Dein Held hat in ${o.place} gerastet und keine Gegner bekämpft`]);
+    lines.push(['clock', `${fmtTime(sec)} unterwegs`]);
     if (o.rested > 0) lines.push(['star', 'Du bist erholt: doppelte Erfahrung für eine Weile']);
     const exp = S.exp.active.filter((x) => x.end <= now()).length;
     if (exp) lines.push(['flag', `${exp} Expedition${exp > 1 ? 'en' : ''} zurückgekehrt`]);
-    let h = `<h2>Willkommen zurück, ${esc(S.name)}!</h2><div class="small muted" style="text-align:center;margin-top:-4px">Während du weg warst, hat dein Held weitergekämpft.</div><div class="loot-list" style="margin-top:10px">`;
-    for (const [icon, txt, r] of lines) h += `<div class="li">${ico(icon, 28)}<div class="grow small ${r !== undefined ? 'q' + r : ''}">${esc(txt)}</div></div>`;
-    if (matList.length) h += `<div class="li">${ico('pickaxe', 28)}<div class="grow"><div class="small">Material gesammelt</div>${rewardHTML(matList)}</div></div>`;
-    h += `</div><div class="mfoot">${btn('Weiter kämpfen', 'close', {}, 'gold')}</div>`;
+    if (lines.length < 2) return;
+    let h = `<h2>Willkommen!</h2><div class="small muted" style="text-align:center;margin-top:-4px">Schön, dass du zurück bist, ${esc(S.name)}.</div><div class="loot-list" style="margin-top:10px">`;
+    for (const [icon, txt] of lines) h += `<div class="li">${ico(icon, 28)}<div class="grow small">${esc(txt)}</div></div>`;
+    h += `</div><div class="mfoot">${btn('Weiter', 'close', {}, 'gold')}</div>`;
     modal(h, { id: 'offline' });
   }
 
@@ -1137,7 +1158,7 @@ const UI = (() => {
       if (battle && battle.mode !== 'adventure') { toast('Verlasse zuerst den Kampf', 'lock', '#ff4a3a'); return; }
       if (goTo(zi, d.p)) { closeModal(); tab = 'kampf'; forceRender(); }
     },
-    skillinfo(d) { const sk = SKILLS[d.id]; modal(`<div class="row">${ico(sk.icon, 48)}<div class="grow"><h2 style="text-align:left;margin:0">${esc(sk.name)}</h2><div class="small muted">Ab Stufe ${sk.lvl} · Abklingzeit ${sk.cd} Sek. · Kosten ${sk.cost} ${CLASSES[S.cls].res}</div></div></div><div class="tip" style="margin-top:8px">${esc(sk.desc)}<div class="d" style="margin-top:4px">Tippe den Knopf in der Aktionsleiste, um sie zu wirken. Leuchtet er, ist sie bereit.</div></div>`); },
+    skillinfo(d) { const sk = SKILLS[d.id]; modal(`<div class="row">${ico(sk.icon, 48)}<div class="grow"><h2 style="text-align:center;margin:0">${esc(sk.name)}</h2><div class="small muted" style="text-align:center">Ab Stufe ${sk.lvl} · Abklingzeit ${sk.cd} Sek. · Kosten ${sk.cost} ${CLASSES[S.cls].res}</div></div></div><div class="tip" style="margin-top:8px">${esc(sk.desc)}${synText(sk) ? `<div class="d" style="margin-top:4px;color:#d9a0ff">Synergie: ${esc(synText(sk))}</div>` : ''}<div class="d" style="margin-top:4px">Tippe den Knopf in der Aktionsleiste, um sie zu wirken. Leuchtet er, ist sie bereit.</div></div>`); },
     cast(d) {
       const r = castManual(d.id);
       if (r === 'locked') { ACT.skillinfo(d); return; }
@@ -1244,10 +1265,20 @@ const UI = (() => {
       if (S.gold < cost) return;
       S.gold -= cost;
       S.comp[c.id] = lv + 1;
-      if (!lv) { toast(`${c.name} schließt sich dir an!`, 'flag', '#ffd200'); Snd.play('quest'); } else Snd.play('upgrade');
+      if (!lv) { S.compActive = c.id; toast(`${c.name} schließt sich dir an!`, 'flag', '#ffd200'); Snd.play('quest'); } else Snd.play('upgrade');
       statsDirty = true;
       forceRender();
     },
+    compcall(d) {
+      const c = COMPANIONS.find((x) => x.id === d.id);
+      if (!c || !(S.comp[c.id] > 0)) return;
+      S.compActive = c.id;
+      toast(`${c.name} begleitet dich.`, 'flag', '#ffd200');
+      Snd.play('click');
+      statsDirty = true;
+      forceRender();
+    },
+    compsend(d) { if (S.compActive === d.id) S.compActive = null; Snd.play('click'); statsDirty = true; forceRender(); },
     mount(d) { S.mount = d.id; statsDirty = true; Snd.play('click'); forceRender(); },
     mountbuy(d) {
       const m = MOUNTS.find((x) => x.id === d.id);
@@ -1330,7 +1361,7 @@ const UI = (() => {
       if (e.key === 'Escape' && U.modal && U.modal !== 'create') closeModal();
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === ' ' && S) { e.preventDefault(); tapAttack(); }
-      if (S && /^[1-3]$/.test(e.key)) { const id = CLASSES[S.cls].skills[+e.key - 1]; if (id) ACT.cast({ id }); }
+      if (S && /^[1-5]$/.test(e.key)) { const id = CLASSES[S.cls].skills[+e.key - 1]; if (id) ACT.cast({ id }); }
     });
     Hooks.toast = toast;
     Hooks.log = log;

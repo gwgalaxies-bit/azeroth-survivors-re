@@ -50,25 +50,25 @@ const CLASSES = {
     name: 'Krieger', res: 'Wut', resBar: 'red', sprite: 'hero_krieger', color: '#c79c6e',
     desc: 'Ein Bollwerk in schwerer Platte. Viel Leben und Rüstung, baut im Kampf Wut auf.',
     mods: { atk: 1.0, hp: 1.3, def: 1.35, crit: 5, haste: 0 },
-    skills: ['schmetterhieb', 'klingensturm', 'kampfschrei'],
+    skills: ['schmetterhieb', 'klingensturm', 'kampfschrei', 'erdstoss', 'hinrichten'],
   },
   magier: {
     name: 'Magier', res: 'Mana', resBar: 'blue', sprite: 'hero_magier', color: '#69ccf0',
     desc: 'Meister der Elemente. Enormer Schaden, aber zerbrechlich wie Glas.',
     mods: { atk: 1.35, hp: 0.85, def: 0.8, crit: 8, haste: 0 },
-    skills: ['feuerkugel', 'eislanze', 'arkanflut'],
+    skills: ['feuerkugel', 'eislanze', 'arkanflut', 'sternenregen', 'arkanes_finale'],
   },
   jaeger: {
     name: 'Jäger', res: 'Fokus', resBar: 'orange', sprite: 'hero_jaeger', color: '#abd473',
     desc: 'Schneller Fernkämpfer mit treuem Wolfsgefährten. Hohe Kritchance und Tempo.',
     mods: { atk: 1.12, hp: 1.0, def: 1.0, crit: 10, haste: 8 },
-    skills: ['praeziser_schuss', 'pfeilhagel', 'wolfsbiss'],
+    skills: ['praeziser_schuss', 'pfeilhagel', 'wolfsbiss', 'schnellfeuer', 'todesschuss'],
   },
   priester: {
     name: 'Priester', res: 'Mana', resBar: 'blue', sprite: 'hero_priester', color: '#f0ebe0',
     desc: 'Diener des Lichts. Heilt sich selbst, verflucht Feinde mit Schatten und ist schwer zu bezwingen.',
     mods: { atk: 1.08, hp: 1.1, def: 1.0, crit: 5, haste: 0 },
-    skills: ['lichtstrahl', 'schattenpein', 'segnung'],
+    skills: ['lichtstrahl', 'schattenpein', 'segnung', 'laeuterndes_feuer', 'goettlicher_zorn'],
   },
 };
 
@@ -90,18 +90,26 @@ const RACES = {
 
 // kind: dmg | dot | heal | buff ; mult on ATK ; fx: projectile sprite
 const SKILLS = {
-  schmetterhieb: { name: 'Schmetterhieb', icon: 'sk_schmetterhieb', lvl: 1, cd: 6, cost: 20, kind: 'dmg', mult: 1.44, fx: 'slash', desc: 'Ein wuchtiger Hieb: 144% Angriffsschaden.' },
-  klingensturm: { name: 'Klingensturm', icon: 'sk_klingensturm', lvl: 6, cd: 14, cost: 35, kind: 'dmg', mult: 2.52, fx: 'whirl', desc: 'Wirbelt durch den Gegner: 252% Angriffsschaden.' },
-  kampfschrei: { name: 'Kampfschrei', icon: 'sk_kampfschrei', lvl: 14, cd: 30, cost: 10, kind: 'buff', mult: 0.35, dur: 10, fx: 'ring', desc: '+35% Angriff für 10 Sek.' },
-  feuerkugel: { name: 'Feuerkugel', icon: 'sk_feuerkugel', lvl: 1, cd: 5, cost: 25, kind: 'dmg', mult: 1.44, fx: 'fx_fire', desc: 'Schleudert eine Feuerkugel: 144% Angriffsschaden.' },
-  eislanze: { name: 'Eislanze', icon: 'sk_eislanze', lvl: 6, cd: 10, cost: 30, kind: 'dmg', mult: 1.32, slow: 6, fx: 'fx_frost', desc: '132% Schaden und verlangsamt die Angriffe des Ziels 6 Sek. lang um 40%.' },
-  arkanflut: { name: 'Arkanflut', icon: 'sk_arkanflut', lvl: 14, cd: 20, cost: 50, kind: 'dmg', mult: 3.9, fx: 'fx_arcane', desc: 'Entfesselt arkane Energie: 390% Angriffsschaden.' },
-  praeziser_schuss: { name: 'Präziser Schuss', icon: 'sk_praeziser_schuss', lvl: 1, cd: 6, cost: 25, kind: 'dmg', mult: 1.5, fx: 'fx_arrow', desc: 'Ein genau gezielter Schuss: 150% Angriffsschaden.' },
-  pfeilhagel: { name: 'Pfeilhagel', icon: 'sk_pfeilhagel', lvl: 6, cd: 15, cost: 40, kind: 'dmg', mult: 2.64, fx: 'fx_arrow', desc: 'Lässt Pfeile regnen: 264% Angriffsschaden.' },
-  wolfsbiss: { name: 'Wolfsbiss', icon: 'sk_wolfsbiss', lvl: 14, cd: 12, cost: 20, kind: 'dot', mult: 2.4, dur: 8, fx: 'slash', desc: 'Dein Wolf reißt eine Wunde: 240% Schaden über 8 Sek.' },
-  lichtstrahl: { name: 'Lichtstrahl', icon: 'sk_lichtstrahl', lvl: 1, cd: 6, cost: 20, kind: 'dmg', mult: 1.38, fx: 'fx_holy', desc: 'Ein Strahl heiligen Lichts: 138% Angriffsschaden.' },
-  schattenpein: { name: 'Schattenpein', icon: 'sk_schattenpein', lvl: 6, cd: 12, cost: 25, kind: 'dot', mult: 3.0, dur: 10, fx: 'fx_shadow', desc: 'Schattenmagie zehrt am Ziel: 300% Schaden über 10 Sek.' },
-  segnung: { name: 'Segnung', icon: 'sk_segnung', lvl: 14, cd: 16, cost: 35, kind: 'heal', mult: 0.4, fx: 'ring_green', desc: 'Heilt dich um 40% deines maximalen Lebens.' },
+  schmetterhieb: { name: 'Schmetterhieb', icon: 'sk_schmetterhieb', lvl: 1, cd: 6, cost: 20, kind: 'dmg', mult: 1.44, fx: 'slash', syn: [{ target: 'klingensturm', kind: 'dmg', bonus: 0.5 }, { target: 'auto', kind: 'weaken', bonus: 0.2, charges: 1 }], desc: 'Ein wuchtiger Hieb: 144% Angriffsschaden.' },
+  klingensturm: { name: 'Klingensturm', icon: 'sk_klingensturm', lvl: 6, cd: 14, cost: 35, kind: 'dmg', mult: 2.52, fx: 'whirl', syn: [{ target: 'auto', kind: 'dmg', bonus: 0.5, charges: 3 }, { target: 'auto', kind: 'heal', bonus: 0.02, charges: 3 }], desc: 'Wirbelt durch den Gegner: 252% Angriffsschaden.' },
+  kampfschrei: { name: 'Kampfschrei', icon: 'sk_kampfschrei', lvl: 14, cd: 30, cost: 10, kind: 'buff', mult: 0.35, dur: 10, fx: 'ring', syn: [{ target: 'any', kind: 'dmg', bonus: 0.35 }, { target: 'any', kind: 'dodge', bonus: 1 }], desc: '+35% Angriff für 10 Sek.' },
+  feuerkugel: { name: 'Feuerkugel', icon: 'sk_feuerkugel', lvl: 1, cd: 5, cost: 25, kind: 'dmg', mult: 1.44, fx: 'fx_fire', syn: [{ target: 'eislanze', kind: 'dmg', bonus: 0.5 }, { target: 'eislanze', kind: 'vuln', bonus: 0.15 }], desc: 'Schleudert eine Feuerkugel: 144% Angriffsschaden.' },
+  eislanze: { name: 'Eislanze', icon: 'sk_eislanze', lvl: 6, cd: 10, cost: 30, kind: 'dmg', mult: 1.32, slow: 6, fx: 'fx_frost', syn: [{ target: 'arkanflut', kind: 'dmg', bonus: 0.6 }, { target: 'auto', kind: 'weaken', bonus: 0.2, charges: 1 }], desc: '132% Schaden und verlangsamt die Angriffe des Ziels 6 Sek. lang um 40%.' },
+  arkanflut: { name: 'Arkanflut', icon: 'sk_arkanflut', lvl: 14, cd: 20, cost: 50, kind: 'dmg', mult: 3.9, fx: 'fx_arcane', syn: [{ target: 'auto', kind: 'dmg', bonus: 0.4, charges: 4 }, { target: 'auto', kind: 'heal', bonus: 0.015, charges: 4 }], desc: 'Entfesselt arkane Energie: 390% Angriffsschaden.' },
+  praeziser_schuss: { name: 'Präziser Schuss', icon: 'sk_praeziser_schuss', lvl: 1, cd: 6, cost: 25, kind: 'dmg', mult: 1.5, fx: 'fx_arrow', syn: [{ target: 'pfeilhagel', kind: 'dmg', bonus: 0.5 }, { target: 'auto', kind: 'dodge', bonus: 1, charges: 1 }], desc: 'Ein genau gezielter Schuss: 150% Angriffsschaden.' },
+  pfeilhagel: { name: 'Pfeilhagel', icon: 'sk_pfeilhagel', lvl: 6, cd: 15, cost: 40, kind: 'dmg', mult: 2.64, fx: 'fx_arrow', syn: [{ target: 'wolfsbiss', kind: 'dmg', bonus: 0.5 }, { target: 'wolfsbiss', kind: 'vuln', bonus: 0.15 }], desc: 'Lässt Pfeile regnen: 264% Angriffsschaden.' },
+  wolfsbiss: { name: 'Wolfsbiss', icon: 'sk_wolfsbiss', lvl: 14, cd: 12, cost: 20, kind: 'dot', mult: 2.4, dur: 8, fx: 'slash', syn: [{ target: 'auto', kind: 'dmg', bonus: 0.5, charges: 3 }, { target: 'auto', kind: 'weaken', bonus: 0.2, charges: 1 }], desc: 'Dein Wolf reißt eine Wunde: 240% Schaden über 8 Sek.' },
+  lichtstrahl: { name: 'Lichtstrahl', icon: 'sk_lichtstrahl', lvl: 1, cd: 6, cost: 20, kind: 'dmg', mult: 1.38, fx: 'fx_holy', syn: [{ target: 'schattenpein', kind: 'dmg', bonus: 0.5 }, { target: 'auto', kind: 'heal', bonus: 0.03, charges: 2 }], desc: 'Ein Strahl heiligen Lichts: 138% Angriffsschaden.' },
+  schattenpein: { name: 'Schattenpein', icon: 'sk_schattenpein', lvl: 6, cd: 12, cost: 25, kind: 'dot', mult: 3.0, dur: 10, fx: 'fx_shadow', syn: [{ target: 'lichtstrahl', kind: 'dmg', bonus: 0.6 }, { target: 'lichtstrahl', kind: 'weaken', bonus: 0.2 }], desc: 'Schattenmagie zehrt am Ziel: 300% Schaden über 10 Sek.' },
+  segnung: { name: 'Segnung', icon: 'sk_segnung', lvl: 14, cd: 16, cost: 35, kind: 'heal', mult: 0.4, fx: 'ring_green', syn: [{ target: 'any', kind: 'dmg', bonus: 0.4 }, { target: 'auto', kind: 'heal', bonus: 0.03, charges: 3 }], desc: 'Heilt dich um 40% deines maximalen Lebens.' },
+  erdstoss: { name: 'Erdstoß', icon: 'anvil', lvl: 24, cd: 16, cost: 40, kind: 'dmg', mult: 3.2, fx: 'slash', syn: [{ target: 'schmetterhieb', kind: 'dmg', bonus: 0.8 }, { target: 'auto', kind: 'vuln', bonus: 0.2, charges: 1 }], desc: 'Ein Stoß, der den Boden erbeben lässt: 320% Angriffsschaden.' },
+  hinrichten: { name: 'Hinrichten', icon: 'skull', lvl: 36, cd: 28, cost: 55, kind: 'dmg', mult: 4.5, fx: 'whirl', finisher: 0.45, desc: 'Vernichtender Schlag: 450% Angriffsschaden.' },
+  sternenregen: { name: 'Sternenregen', icon: 'star', lvl: 24, cd: 15, cost: 40, kind: 'dmg', mult: 3.0, fx: 'fx_arcane', syn: [{ target: 'feuerkugel', kind: 'dmg', bonus: 0.8 }, { target: 'any', kind: 'dodge', bonus: 1 }], desc: 'Lässt Sterne vom Himmel fallen: 300% Angriffsschaden.' },
+  arkanes_finale: { name: 'Arkanes Finale', icon: 'book_blue', lvl: 36, cd: 28, cost: 55, kind: 'dmg', mult: 4.5, fx: 'fx_arcane', finisher: 0.45, desc: 'Der Höhepunkt jedes Zaubers: 450% Angriffsschaden.' },
+  schnellfeuer: { name: 'Schnellfeuer', icon: 'st_haste', lvl: 24, cd: 14, cost: 35, kind: 'dmg', mult: 3.0, fx: 'fx_arrow', syn: [{ target: 'praeziser_schuss', kind: 'dmg', bonus: 0.8 }, { target: 'any', kind: 'heal', bonus: 0.06 }], desc: 'Eine rasche Salve: 300% Angriffsschaden.' },
+  todesschuss: { name: 'Todesschuss', icon: 'st_crit', lvl: 36, cd: 28, cost: 55, kind: 'dmg', mult: 4.5, fx: 'fx_arrow', finisher: 0.45, desc: 'Der Schuss, der alles entscheidet: 450% Angriffsschaden.' },
+  laeuterndes_feuer: { name: 'Läuterndes Feuer', icon: 'honor', lvl: 24, cd: 15, cost: 38, kind: 'dmg', mult: 3.0, fx: 'fx_holy', syn: [{ target: 'lichtstrahl', kind: 'dmg', bonus: 0.8 }, { target: 'any', kind: 'dodge', bonus: 1 }], desc: 'Heiliges Feuer brennt das Böse aus: 300% Angriffsschaden.' },
+  goettlicher_zorn: { name: 'Göttlicher Zorn', icon: 'crown', lvl: 36, cd: 28, cost: 55, kind: 'dmg', mult: 4.5, fx: 'fx_holy', finisher: 0.45, desc: 'Das Urteil des Lichts: 450% Angriffsschaden.' },
 };
 
 const MOBS = {
@@ -115,7 +123,7 @@ const MOBS = {
   leerwandler: 'Leerwandler', tentakelgrauen: 'Tentakelgrauen', sternenbestie: 'Sternenbestie', augenlose_wache: 'Augenlose Wache', umbrax: 'Umbrax der Sternenschlinger',
 };
 
-function Q(t, txt, kind, n, target, item) { return { t, txt, kind, n, target, item }; }
+function Q(t, txt, kind, n, target, item, extra) { return Object.assign({ t, txt, kind, n, target, item }, extra || {}); }
 
 const ZONES = [
   {
@@ -398,7 +406,7 @@ const COOKING = [
 ];
 
 const DAILY_POOL = [
-  { id: 'kills', name: 'Monsterjagd', desc: 'Besiege {n} Monster', n: 60, stat: 'kills', icon: 'swords' },
+  { id: 'kills', name: 'Monsterjagd', desc: 'Besiege {n} Monster', n: 20, stat: 'kills', icon: 'swords' },
   { id: 'bosses', name: 'Bosshatz', desc: 'Besiege {n} Bosse', n: 2, stat: 'bosses', icon: 'skull' },
   { id: 'dungeon', name: 'In die Tiefe', desc: 'Schließe {n} Dungeon ab', n: 1, stat: 'dungeons', icon: 'portal' },
   { id: 'fish', name: 'Angelausflug', desc: 'Fange {n} Fische', n: 5, stat: 'fish', icon: 'rod' },
@@ -512,6 +520,99 @@ const WORLD = {
 };
 // quest index -> giver index and the quests that must be turned in first
 const QUEST_FLOW = [{ g: 0, req: [] }, { g: 0, req: [] }, { g: 0, req: [0, 1] }, { g: 1, req: [2] }, { g: 1, req: [2] }, { g: 1, req: [3, 4] }];
+
+// ---- Mehr Questgeber: je Gebiet zwei weitere (Hof und Rastplatz) und zwei Sammelplätze.
+// Die sechs Hauptquests (Index 0-5) behalten ihre Kette aus QUEST_FLOW, Nebenquests (Index 6+) hängen an den neuen Gebern.
+const WORLD_EXTRA = {
+  goldhain: { givers: [{ id: 'marta', name: 'Bäuerin Marta', role: 'Bäuerin' }, { id: 'benno', name: 'Händler Benno', role: 'Wanderhändler' }], n2: 'Marthas Hof', n3: 'Rastplatz an der Handelsstraße', spots: ['Beerenhang', 'Verlassenes Lager'] },
+  nebelmoor: { givers: [{ id: 'odette', name: 'Fischerin Odette', role: 'Fischerin' }, { id: 'gerwin', name: 'Torfstecher Gerwin', role: 'Torfstecher' }], n2: 'Fischersteg', n3: 'Torfhütte', spots: ['Schilfinsel', 'Irrlichtteich'] },
+  rotfels: { givers: [{ id: 'zaida', name: 'Händlerin Zaida', role: 'Karawanenhändlerin' }, { id: 'anselm', name: 'Feldscher Anselm', role: 'Feldscher' }], n2: 'Zaidas Wagen', n3: 'Verbandsplatz', spots: ['Zerbrochener Wagenzug', 'Kristallspalt'] },
+  sonnenglut: { givers: [{ id: 'yussuf', name: 'Kamelhirte Yussuf', role: 'Kamelhirte' }, { id: 'idris', name: 'Brunnenmeister Idris', role: 'Brunnenmeister' }], n2: 'Kamelgehege', n3: 'Alter Brunnen', spots: ['Palmenhain', 'Scherbenfeld'] },
+  frostgipfel: { givers: [{ id: 'torben', name: 'Holzfäller Torben', role: 'Holzfäller' }, { id: 'ingrid', name: 'Hüttenwirtin Ingrid', role: 'Hüttenwirtin' }], n2: 'Sägewerk', n3: 'Berghütte', spots: ['Tannenwald', 'Eisklippe'] },
+  schattenhain: { givers: [{ id: 'agnes', name: 'Küsterin Agnes', role: 'Küsterin' }, { id: 'eberhard', name: 'Chronist Eberhard', role: 'Chronist' }], n2: 'Kirchhof', n3: 'Verfallener Turm', spots: ['Verwilderter Garten', 'Alte Bibliothek'] },
+  glutschlund: { givers: [{ id: 'runa', name: 'Wächterin Runa', role: 'Aschenwächterin' }, { id: 'zosimos', name: 'Alchemist Zosimos', role: 'Alchemist' }], n2: 'Aschenwall', n3: 'Rauchlabor', spots: ['Obsidianfeld', 'Schwefelquelle'] },
+  leerenriss: { givers: [{ id: 'orlin', name: 'Sternkundler Orlin', role: 'Sternkundler' }, { id: 'vesna', name: 'Rissläuferin Vesna', role: 'Rissläuferin' }], n2: 'Beobachtungsterrasse', n3: 'Rissläufer-Lager', spots: ['Sternenstaubfeld', 'Splitterfeld'] },
+};
+for (const id in WORLD_EXTRA) {
+  const w = WORLD[id], e = WORLD_EXTRA[id];
+  w.givers.push(...e.givers);
+  w.n2 = e.n2; w.n3 = e.n3; w.spots = e.spots;
+}
+const MAIN_Q = 6; // Hauptquests je Gebiet; sie schalten das nächste Gebiet frei
+QUEST_FLOW.forEach((f, i) => ZONES.forEach((z) => { z.quests[i].g = f.g; z.quests[i].req = f.req; }));
+
+// Quest-Arten: kill/any/collect/elite/boss (Kampf), gather (am Sammelplatz Dinge finden, ohne Kampf),
+// talk (zu einem anderen Questgeber gehen und mit ihm reden; abgegeben wird dort).
+// Extras: g = Geber, req = vorher abzugebende Quests, to = Empfänger (talk), reply = Antwort des Empfängers,
+// lf = Stufenanteil im Gebiet, gift = zusätzlich ein Ausrüstungsteil als Belohnung.
+const SIDE_QUESTS = {
+  goldhain: [
+    Q('Beeren für die Kinder', 'Meine Kinder haben seit Tagen nichts Süßes gehabt. Pflück sechs Körbe Beeren am Beerenhang, aber lass dich nicht von den Wölfen erwischen.', 'gather', 6, 's0', 'Wilde Beere', { g: 2, req: [], lf: 0.1 }),
+    Q('Nachricht an den Förster', 'Förster Jorik wollte nach meinem Zaun sehen. Geh zu seiner Hütte und sag ihm, dass die Wölfe schon wieder am Gatter waren.', 'talk', 1, null, null, { g: 2, req: [6], to: 1, lf: 0.15, reply: 'Schon wieder am Gatter? Danke, dass du es mir sagst. Ich lege heute Nacht Fallen aus.' }),
+    Q('Spinnen in der Scheune', 'Große Spinnen haben sich im Heuboden eingenistet. Schaff mir die Biester vom Hals.', 'kill', 10, 'waldspinne', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Brief an den Hauptmann', 'Ich habe Berichte über den Wegezoll für Hauptmann Aldric. Bring sie ihm, ich wage mich nicht mehr durchs Tor.', 'talk', 1, null, null, { g: 3, req: [2], to: 0, lf: 0.45, reply: 'Die Berichte! Gut, dass jemand sie bringt. Ich lese sie noch heute.' }),
+    Q('Verlorene Ladung', 'Kobolde haben Teile meiner Fracht im Wald verstreut. Such sie im verlassenen Lager zusammen.', 'gather', 5, 's1', 'Warenpaket', { g: 3, req: [9], lf: 0.55 }),
+    Q('Koboldfeuersteine', 'Kobolde tragen Feuersteine bei sich, genau das, was ich auf der Straße verkaufen kann. Bring mir sechs.', 'collect', 6, 'kobold', 'Koboldfeuerstein', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+  nebelmoor: [
+    Q('Lilien für die Heilerin', 'Die Moorlilien auf der Schilfinsel heilen Fieber. Pflück sechs davon, aber pass auf, wo du hintrittst.', 'gather', 6, 's0', 'Moorlilie', { g: 2, req: [], lf: 0.1 }),
+    Q('Der Fang bleibt aus', 'Sag der Kräuterkundigen Wilma im Dorf, dass die Kriecher alle Fische verscheuchen. Vielleicht weiß sie Rat.', 'talk', 1, null, null, { g: 2, req: [6], to: 0, lf: 0.15, reply: 'Das erklärt, warum die Fische ausbleiben. Danke, ich kümmere mich darum.' }),
+    Q('Schleim am Steg', 'Moorschleime kriechen auf meinen Steg und fressen die Netze. Räum sie weg.', 'kill', 12, 'moorschleim', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Warnung an die Wache', 'Die Torfgruben stehen halb unter Wasser. Sag der Pfahlbau-Wacht Bescheid, bevor jemand hineinfällt.', 'talk', 1, null, null, { g: 3, req: [2], to: 1, lf: 0.45, reply: 'Verstanden. Wir schicken morgen einen Trupp zu den Gruben.' }),
+    Q('Leuchtmoos für die Lampen', 'Im Moor gehen uns die Lampenöle aus. Leuchtmoos vom Irrlichtteich brennt auch ohne. Sammle sechs Büschel.', 'gather', 6, 's1', 'Leuchtmoos', { g: 3, req: [9], lf: 0.55 }),
+    Q('Krokiliskzähne', 'Aus Krokiliskzähnen schnitze ich Haken, die nie brechen. Bring mir fünf.', 'collect', 5, 'krokilisk', 'Krokiliskzahn', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+  rotfels: [
+    Q('Verlorene Wasserschläuche', 'Bei dem Überfall ist unser Wagenzug zerbrochen. Such zwischen den Trümmern nach den Wasserschläuchen.', 'gather', 5, 's0', 'Wasserschlauch', { g: 2, req: [], lf: 0.1 }),
+    Q('Lieferung für das Fort', 'Oberst Rothmann wartet auf meine Lieferliste. Bring sie ihm ins Fort.', 'talk', 1, null, null, { g: 2, req: [6], to: 1, lf: 0.15, reply: 'Endlich die Liste. Zaida ist zuverlässig. Richte ihr meinen Dank aus.' }),
+    Q('Hyänenplage', 'Hyänen reißen meine Packtiere. Dünne ihr Rudel aus, bevor die Karawane weiterzieht.', 'kill', 14, 'hyaene', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Verbände fehlen', 'Mir gehen die Verbände aus. Sag Späherin Kaya im Lager, dass sie Nachschub schicken soll.', 'talk', 1, null, null, { g: 3, req: [2], to: 0, lf: 0.45, reply: 'Verbände? Ich lasse sofort welche packen. Gut, dass du Bescheid sagst.' }),
+    Q('Heilkristalle', 'Die roten Kristalle im Spalt lindern Schmerzen, wenn man sie zermahlt. Bring mir sechs.', 'gather', 6, 's1', 'Roter Kristall', { g: 3, req: [9], lf: 0.55 }),
+    Q('Ogerhauer', 'Aus Ogerhauern kocht man eine Brühe, die Verwundete wieder auf die Beine bringt. Besorg mir sechs.', 'collect', 6, 'oger', 'Ogerhauer', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+  sonnenglut: [
+    Q('Datteln für die Kamele', 'Meine Kamele sind schwach vom Wüstenwind. Im Palmenhain wachsen Datteln, hol mir sechs Büschel.', 'gather', 6, 's0', 'Dattel', { g: 2, req: [], lf: 0.1 }),
+    Q('Tragkraft der Kamele', 'Sag Archäologe Bertram im Lager: Meine Kamele tragen seine Funde, aber nicht bei Sandsturm.', 'talk', 1, null, null, { g: 2, req: [6], to: 0, lf: 0.15, reply: 'Gut zu wissen. Dann planen wir die Transporte für klare Tage.' }),
+    Q('Skorpione im Gehege', 'Glutskorpide haben sich im Gehege eingenistet. Vertreib sie, bevor sie meine Tiere stechen.', 'kill', 12, 'skorpid', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Der Brunnen versiegt', 'Der Brunnen führt kaum noch Wasser. Sag Wüstenführerin Samira an der Oase, dass wir bald auf ihre Quellen angewiesen sind.', 'talk', 1, null, null, { g: 3, req: [2], to: 1, lf: 0.45, reply: 'Das habe ich befürchtet. Meine Oase teilt, solange sie kann.' }),
+    Q('Alte Tonscherben', 'Auf den Scherben stehen Zeichen, die den Brunnen beschreiben. Sammle sechs davon im Scherbenfeld.', 'gather', 6, 's1', 'Alte Tonscherbe', { g: 3, req: [9], lf: 0.55 }),
+    Q('Mumienbinden', 'Die Binden der Sandmumien sind getränkt mit Harz, das Wasser hält. Bring mir sechs.', 'collect', 6, 'mumie', 'Mumienbinde', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+  frostgipfel: [
+    Q('Harz für die Sägen', 'Ohne Harz klemmen die Sägeblätter im Frost. Sammle sechs Klumpen im Tannenwald.', 'gather', 6, 's0', 'Harzklumpen', { g: 2, req: [], lf: 0.1 }),
+    Q('Lawinengefahr', 'Am Nordhang hängt eine Lawine. Sag Jägerin Sigrun an der Passwacht, dass sie ihre Leute fernhält.', 'talk', 1, null, null, { g: 2, req: [6], to: 1, lf: 0.15, reply: 'Danke für die Warnung. Ich halte die Jäger vom Nordhang fern.' }),
+    Q('Wölfe am Sägewerk', 'Frostwölfe schleichen jede Nacht ums Sägewerk. Vertreib sie.', 'kill', 12, 'frostwolf', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Vorräte bestellen', 'Mehl und Salz sind alle. Sag Bergführer Halvdan im Dorf, dass er Träger heraufschicken soll.', 'talk', 1, null, null, { g: 3, req: [2], to: 0, lf: 0.45, reply: 'Mehl und Salz, wird erledigt. Die Träger gehen morgen früh los.' }),
+    Q('Eiskristalle für den Keller', 'Mein Keller muss kalt bleiben. Hol mir sechs Eiskristalle von der Klippe.', 'gather', 6, 's1', 'Eiskristall', { g: 3, req: [9], lf: 0.55 }),
+    Q('Yetipelze', 'Wer einen Yetipelz trägt, friert nicht. Bring mir fünf, ich zahle gut.', 'collect', 5, 'yeti', 'Yetipelz', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+  schattenhain: [
+    Q('Kräuter zur Weihe', 'Für die Weihe brauche ich Nachtschatten aus dem verwilderten Garten. Pflück sechs Stängel.', 'gather', 6, 's0', 'Nachtschatten', { g: 2, req: [], lf: 0.1 }),
+    Q('Die Glocke läutet', 'Die Kirchenglocke läutet von selbst. Sag Totengräber Morten Bescheid, er wird wissen, was das bedeutet.', 'talk', 1, null, null, { g: 2, req: [6], to: 1, lf: 0.15, reply: 'Die Glocke läutet? Dann sind die Toten unruhig. Danke für die Warnung.' }),
+    Q('Ghule am Kirchhof', 'Hungrige Ghule graben nachts die Gräber auf. Mach dem ein Ende.', 'kill', 12, 'ghul', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Seite aus der Chronik', 'Diese Seite beschreibt, wie Mordrek einst gebannt wurde. Bring sie zu Priesterin Elinor in die Kapelle.', 'talk', 1, null, null, { g: 3, req: [2], to: 0, lf: 0.45, reply: 'Diese Seite fehlte uns! Das könnte der Schlüssel sein.' }),
+    Q('Verstreute Seiten', 'Die übrigen Seiten der Chronik liegen in der alten Bibliothek verstreut. Sammle sechs davon.', 'gather', 6, 's1', 'Zerrissene Seite', { g: 3, req: [9], lf: 0.55 }),
+    Q('Banshee-Schleier', 'Die Schleier der Banshees halten Geistertinte. Bring mir fünf, damit ich weiterschreiben kann.', 'collect', 5, 'banshee', 'Geisterschleier', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+  glutschlund: [
+    Q('Obsidian für das Tor', 'Das Tor im Wall braucht neue Splitter aus schwarzem Glas. Such sechs im Obsidianfeld.', 'gather', 6, 's0', 'Obsidiansplitter', { g: 2, req: [], lf: 0.1 }),
+    Q('Bestellung für den Schmied', 'Sag Schmied Thorvald, er soll neue Torbeschläge schmieden, bevor die Lava den Wall erreicht.', 'talk', 1, null, null, { g: 2, req: [6], to: 1, lf: 0.15, reply: 'Torbeschläge? Die Esse brennt schon. In drei Tagen sind sie fertig.' }),
+    Q('Lavahunde am Wall', 'Lavahunde springen über den Wall und verbrennen unsere Vorräte. Treib sie zurück.', 'kill', 14, 'lavahund', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Gasalarm', 'Meine Proben zeigen giftigen Rauch aus dem Krater. Warne Feuerwächter Brandt in der Feste.', 'talk', 1, null, null, { g: 3, req: [2], to: 0, lf: 0.45, reply: 'Giftiger Rauch? Wir verdoppeln sofort die Wachen.' }),
+    Q('Schwefelkristalle', 'Für ein Gegenmittel brauche ich Schwefelkristalle von der Quelle. Sammle sechs, aber atme flach.', 'gather', 6, 's1', 'Schwefelkristall', { g: 3, req: [9], lf: 0.55 }),
+    Q('Wichtelzunder', 'Glutwichtel tragen Zunder bei sich, der nie erlischt. Bring mir sechs Stück.', 'collect', 6, 'wichtel', 'Glutzunder', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+  leerenriss: [
+    Q('Sternenstaub sammeln', 'Der Staub der gefallenen Sterne verrät mir, wie der Riss wächst. Sammle sechs Proben auf dem Feld.', 'gather', 6, 's0', 'Sternenstaub', { g: 2, req: [], lf: 0.1 }),
+    Q('Messwerte für den Jäger', 'Sag Leerenjäger Varos am Vorposten: Die Sterne verschieben sich, der Riss wächst schneller als gedacht.', 'talk', 1, null, null, { g: 2, req: [6], to: 1, lf: 0.15, reply: 'Er wächst schneller als berechnet. Wir müssen vorbereitet sein.' }),
+    Q('Leerwandler vor der Terrasse', 'Leerwandler stören meine Messungen. Vertreib sie von der Terrasse.', 'kill', 14, 'leerwandler', null, { g: 2, req: [7], lf: 0.25, gift: true }),
+    Q('Eilbericht an die Erzmagierin', 'Der Riss hat sich heute Nacht geöffnet. Bring Erzmagierin Selwyn diesen Bericht in die Sternwacht, mehr weiß ich nicht.', 'talk', 1, null, null, { g: 3, req: [2], to: 0, lf: 0.45, reply: 'Das bestätigt unsere Berechnungen. Danke für den Eilbericht.' }),
+    Q('Leerensplitter', 'Am Splitterfeld liegen Bruchstücke des Risses. Sammle sechs, damit ich sie untersuchen kann.', 'gather', 6, 's1', 'Leerensplitter', { g: 3, req: [9], lf: 0.55 }),
+    Q('Tentakelspitzen', 'Die Spitzen der Tentakelgrauen enthalten Leerenenergie. Bring mir fünf davon.', 'collect', 5, 'tentakelgrauen', 'Tentakelspitze', { g: 3, req: [10], lf: 0.7, gift: true }),
+  ],
+};
+ZONES.forEach((z) => z.quests.push(...SIDE_QUESTS[z.id]));
+
 // painted stand-ins for quest givers until art/npc_<id>.jpg exists
 const NPC_SPRITES = ['comp_tank', 'comp_heiler', 'comp_schuetze', 'comp_zauberin', 'rival_krieger', 'rival_priester', 'rival_jaeger', 'rival_magier'];
 const TURNIN_LINES = [

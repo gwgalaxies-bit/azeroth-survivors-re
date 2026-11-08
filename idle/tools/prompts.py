@@ -141,6 +141,24 @@ SECTIONS = [
         ('Erzmagierin Selwyn (Leerenriss, Sternwacht)', 'npc_selwyn', 'Elegant elder archmage woman in midnight blue robes with silver stars and a crystal staff'),
         ('Leerenjäger Varos (Leerenriss, Vorposten)', 'npc_varos', 'Hooded void hunter in dark violet leather armor with twin glowing daggers'),
     ]),
+    ('Weitere Auftraggeber', 'Die zwei weiteren Questgeber in jedem Gebiet, mit den Nebenquests. Blick nach links.', NPC, [
+        ('Bäuerin Marta (Goldhain, Marthas Hof)', 'npc_marta', 'Sturdy human farm woman with rosy cheeks, a headscarf and an apron, holding a pitchfork and a basket of apples'),
+        ('Händler Benno (Goldhain, Rastplatz)', 'npc_benno', 'Round-bellied traveling merchant with a big moustache and a feathered hat, carrying a huge backpack full of wares'),
+        ('Fischerin Odette (Nebelmoor, Fischersteg)', 'npc_odette', 'Weathered fisherwoman in a yellow oilskin hat and tall waders, holding a fishing net and a lantern'),
+        ('Torfstecher Gerwin (Nebelmoor, Torfhütte)', 'npc_gerwin', 'Gaunt peat cutter in muddy brown work clothes and a flat cap, holding a long narrow peat spade'),
+        ('Händlerin Zaida (Rotfels, Zaidas Wagen)', 'npc_zaida', 'Shrewd caravan trader woman in colorful layered silks and gold jewelry, holding a ledger and a coin purse'),
+        ('Feldscher Anselm (Rotfels, Verbandsplatz)', 'npc_anselm', 'Field medic in a stained white apron over leather armor with a satchel of bandages and a small saw'),
+        ('Kamelhirte Yussuf (Sonnenglut, Kamelgehege)', 'npc_yussuf', 'Old camel herder with a white beard in a long striped desert robe and a turban, holding a shepherd crook'),
+        ('Brunnenmeister Idris (Sonnenglut, Alter Brunnen)', 'npc_idris', 'Well master in a sand-colored tunic and leather gloves, holding a bucket on a rope and a brass dowsing rod'),
+        ('Holzfäller Torben (Frostgipfel, Sägewerk)', 'npc_torben', 'Huge bearded lumberjack in a red checkered wool shirt and a fur vest with a big felling axe over his shoulder'),
+        ('Hüttenwirtin Ingrid (Frostgipfel, Berghütte)', 'npc_ingrid', 'Friendly mountain innkeeper woman with braided hair in a thick knitted sweater and an apron, holding a steaming tankard'),
+        ('Küsterin Agnes (Schattenhain, Kirchhof)', 'npc_agnes', 'Stern elderly church sexton woman in a black dress and a white bonnet, holding a ring of iron keys and a candle'),
+        ('Chronist Eberhard (Schattenhain, Verfallener Turm)', 'npc_eberhard', 'Old scholar with spectacles and a long grey beard in brown robes, carrying a thick book and a quill'),
+        ('Wächterin Runa (Glutschlund, Aschenwall)', 'npc_runa', 'Fierce warrior woman in ash-grey scale armor with a horned helmet and a fire-scorched spear'),
+        ('Alchemist Zosimos (Glutschlund, Rauchlabor)', 'npc_zosimos', 'Eccentric alchemist with wild white hair and brass goggles in a stained purple coat, holding a bubbling green flask'),
+        ('Sternkundler Orlin (Leerenriss, Beobachtungsterrasse)', 'npc_orlin', 'Thin astronomer in a dark blue robe with star patterns and a pointed hood, holding a brass telescope'),
+        ('Rissläuferin Vesna (Leerenriss, Rissläufer-Lager)', 'npc_vesna', 'Agile scout woman in dark teal leather armor with a hooded cape, holding a glowing violet compass'),
+    ]),
     ('Dungeon- und Raid-Hintergründe', 'Querformat 3:2 oder 16:9.', HALL, [
         ('Die Kobaltminen', 'bg_mine', 'Abandoned underground mine tunnel, wooden support beams, lanterns, glowing blue ore veins in the rock walls, rail tracks'),
         ('Die Moderhöhle', 'bg_cave', 'Damp fungal cave, giant glowing purple and green mushrooms, hanging roots, murky puddles'),
@@ -224,12 +242,18 @@ def markdown():
     return '\n'.join(out)
 
 
+def _have(f):
+    art = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'art')
+    return any(os.path.exists(os.path.join(art, f + e)) for e in ('.jpg', '.jpeg', '.png'))
+
+
+# sections that still miss pictures come first
+SECTIONS.sort(key=lambda sec: 0 if any(not _have(f) for _, f, _ in sec[3]) else 1)
+
+
 if __name__ == '__main__':
     path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'art', 'PROMPTS.md')
     with open(path, 'w') as fh:
         fh.write(markdown())
     print(sum(len(r) for _, _, r in entries()), 'prompts →', path)
 
-
-# the section asked for most recently comes first
-SECTIONS.sort(key=lambda sec: 0 if sec[0] == 'Völker' else 1)

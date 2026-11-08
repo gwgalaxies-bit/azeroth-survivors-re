@@ -58,7 +58,15 @@ function seeded(seed) {
 
 // ------------------------------------------------------------------------------------------ economy
 const killXP = (L) => 6 * Math.pow(1.095, L - 1);
-const xpNeed = (L) => Math.floor(killXP(L) * 6 * Math.pow(1.095, L - 1) * (1 + L / 15));
+// Balance-Regler: höher = langsamer
+const XP_NEED_MULT = 0.9;   // Erfahrung pro Stufe
+const MOB_HP_MULT = 5.6;    // Lebenspunkte aller Gegner und Bosse
+const MOB_ATK_MULT = 0.4;   // Gegnerschaden pro Sekunde (gleicht die längeren Kämpfe etwas aus)
+const MOB_IV_MULT = 1.4;    // Gegner schlagen seltener, dafür pro Treffer entsprechend härter
+const BOSS_TIME_MULT = MOB_HP_MULT; // Zeitlimit der Bosskämpfe wächst mit
+const WALK_MULT = 2.2;      // Laufzeit im Gebiet
+const ZONE_TRAVEL_SEC = 42; // Reise in ein anderes Gebiet (vorher 14 s)
+const xpNeed = (L) => Math.floor(killXP(L) * 6 * Math.pow(1.095, L - 1) * (1 + L / 15) * XP_NEED_MULT);
 const gpk = (L) => 3 * g(L); // gold per normal kill
 const xpPenalty = (heroL, mobL) => { if (S.worldTier > 0) return 1; const d = heroL - mobL; return d >= 8 ? 0.02 : d >= 5 ? 0.1 : d >= 3 ? 0.5 : 1; };
 const paragonNeed = (p) => Math.floor(xpNeed(60) * 0.6 * Math.pow(1.04, p));
@@ -80,10 +88,10 @@ const KILL_REWARD = 1.6;
 const KIND = {
   normal: { hp: 1, atk: 1, iv: 2.0, xp: 1, gold: 1, limit: 0 },
   elite: { hp: 4.5, atk: 1.5, iv: 2.0, xp: 6, gold: 6, limit: 0 },
-  boss: { hp: 10, atk: 0.8, iv: 2.4, xp: 25, gold: 30, limit: 120, special: 22, spMul: 0.12 },
-  dboss: { hp: 8, atk: 0.85, iv: 2.2, xp: 14, gold: 18, limit: 120, special: 24, spMul: 0.12 },
-  rboss: { hp: 45, atk: 2.0, iv: 2.4, xp: 30, gold: 45, limit: 240, special: 24, spMul: 0.3 },
-  wboss: { hp: 20, atk: 1.4, iv: 2.4, xp: 30, gold: 45, limit: 240, special: 26, spMul: 0.22 },
+  boss: { hp: 10, atk: 0.8, iv: 2.4, xp: 25, gold: 30, limit: 120 * BOSS_TIME_MULT, special: 22, spMul: 0.12 },
+  dboss: { hp: 8, atk: 0.85, iv: 2.2, xp: 14, gold: 18, limit: 120 * BOSS_TIME_MULT, special: 24, spMul: 0.12 },
+  rboss: { hp: 45, atk: 2.0, iv: 2.4, xp: 30, gold: 45, limit: 240 * BOSS_TIME_MULT, special: 24, spMul: 0.3 },
+  wboss: { hp: 20, atk: 1.4, iv: 2.4, xp: 30, gold: 45, limit: 240 * BOSS_TIME_MULT, special: 26, spMul: 0.22 },
   arena: { hp: 1, atk: 1, iv: 1.7, xp: 0, gold: 0, limit: 90 },
 };
 const DROP_TABLE = {
@@ -98,7 +106,7 @@ function mobBase(L) {
   const dr = e.def / (e.def + 22 * g(L));
   const s = Math.min(1, 0.22 + L * 0.04);
   const sh = Math.min(1, 0.55 + L * 0.03);
-  return { hp: e.atk * 2.1 * 3.0 * sh, atk: e.hp * 0.05 / (1 - dr) * s * 0.6 };
+  return { hp: e.atk * 2.1 * 3.0 * sh * MOB_HP_MULT, atk: e.hp * 0.05 / (1 - dr) * s * 0.6 * MOB_ATK_MULT };
 }
 
 // ------------------------------------------------------------------------------------------ state
@@ -116,7 +124,7 @@ function newState(cls, name, race) {
     talents: {}, training: {}, comp: {}, mounts: [], mount: null,
     cons: { potion_heal: 3 }, mats: {}, buffs: {},
     prof: { mining: { skill: 1 }, herb: { skill: 1 }, smith: { skill: 1 }, alch: { skill: 1 }, cook: { skill: 1 }, fish: { skill: 1 } },
-    gatherT: t + 120000, gatherCd: 0,
+    gatherT: t + 1800000, gatherCd: 0,
     fishLog: {},
     dungeons: {}, raids: { week: weekKey(t), kills: {} }, raidEver: {},
     wbKilled: -1,
@@ -153,10 +161,16 @@ function migrate(s) {
     const saved = S;
     S = s;
     const open = zoneQuests(s.zone).find((x) => x.s === 'active' || x.s === 'done');
-    s.loc = { z: s.zone, p: open ? (open.s === 'done' ? giverPlace(open.g) : open.place) : 'hub' };
+    s.loc = { z: s.zone, p: open ? (open.s === 'done' ? giverPlace(open.tg) : open.place) : 'hub' };
     S = saved;
   }
   if (!s.loc) s.loc = { z: s.zone, p: 'hub' };
+  fixQuestCaps(s);
+  if (s.compActive === undefined) {
+    let best = null;
+    for (const id in s.comp) if (s.comp[id] > 0 && (!best || s.comp[id] > s.comp[best])) best = id;
+    s.compActive = best;
+  }
   if ((s.cons.potion_heal || 0) > POTION_CAP) {
     const extra = s.cons.potion_heal - POTION_CAP;
     s.cons.potion_heal = POTION_CAP;
@@ -411,6 +425,7 @@ function refPower(L, ilvl, r, train) {
 
 function talentPoints() { return Math.max(0, S.level - 4); }
 function talentSpent() { let n = 0; for (const k in S.talents) n += S.talents[k]; return n; }
+const compOn = (id) => S.compActive === id && (S.comp[id] || 0) > 0;
 function compPower(id) {
   const lv = S.comp[id] || 0;
   if (!lv) return 0;
@@ -421,7 +436,6 @@ const compUpCost = (lv) => Math.ceil(30 * Math.pow(1.165, lv));
 const mountCost = (m) => Math.ceil(m.price * 10 * gpk(m.lvl));
 const trainCost = (tr, rank) => Math.ceil(tr.base * Math.pow(tr.growth, rank));
 const trainCap = (tr) => tr.max || (S.level + S.wtMax * 10);
-function questN(zi, q) { return q.kind === 'elite' || q.kind === 'boss' ? q.n : Math.round(q.n * (1 + zi * 0.5)); }
 const talentResetCost = () => Math.ceil(gpk(S.level) * 50);
 
 // ------------------------------------------------------------------------------------------ zones & quests
@@ -433,12 +447,17 @@ function mobLevel(zi) {
   return clamp(S.level, z.lvl[0], z.lvl[1]);
 }
 // ---- places: the hero stands at one of them and walks between them
-const PLACE_X = { hub: 0, h0: 1, h1: 2, post: 2.6, h2: 3.2, elite: 3.8, boss: 4.8 };
+const PLACE_X = { hub: 0, n2: 0.5, h0: 1, s0: 1.5, h1: 2, s1: 2.3, post: 2.6, h2: 3.2, n3: 3.5, elite: 3.8, boss: 4.8 };
+const GATHER_SEC = 4; // so lange dauert es, bis du an einem Sammelplatz einen Gegenstand findest
 function placesOf(zi) {
   const z = zoneOf(zi), w = WORLD[z.id];
   const out = [
     { id: 'hub', kind: 'hub', name: w.hub, giver: 0 },
     { id: 'post', kind: 'hub', name: w.post, giver: 1 },
+    { id: 'n2', kind: 'hub', name: w.n2, giver: 2 },
+    { id: 'n3', kind: 'hub', name: w.n3, giver: 3 },
+    { id: 's0', kind: 'spot', name: w.spots[0] },
+    { id: 's1', kind: 'spot', name: w.spots[1] },
   ];
   z.mobs.forEach((m, i) => out.push({ id: 'h' + i, kind: 'hunt', name: w.hunts[m], mob: m }));
   out.push({ id: 'elite', kind: 'elite', name: w.elite, mob: z.elite });
@@ -448,14 +467,16 @@ function placesOf(zi) {
 function placeOf(zi, pid) { return placesOf(zi).find((p) => p.id === pid) || placesOf(zi)[0]; }
 function here() { return placeOf(S.zone, S.loc ? S.loc.p : 'hub'); }
 function giverOf(zi, gi) { return WORLD[zoneOf(zi).id].givers[gi]; }
-function giverPlace(gi) { return gi === 0 ? 'hub' : 'post'; }
+const GIVER_PLACES = ['hub', 'post', 'n2', 'n3'];
+function giverPlace(gi) { return GIVER_PLACES[gi] || 'hub'; }
+function giverCount(zi) { return WORLD[zoneOf(zi).id].givers.length; }
 function npcSprite(zi, gi) {
   const g = giverOf(zi, gi);
   if (ATLAS.sprites.map['npc_' + g.id]) return 'npc_' + g.id;
-  return NPC_SPRITES[(zi * 2 + gi) % NPC_SPRITES.length];
+  return NPC_SPRITES[(zi * 2 + (gi < 2 ? gi : gi + 2)) % NPC_SPRITES.length];
 }
 function walkSeconds(fromZ, fromP, toZ, toP) {
-  let sec = fromZ !== toZ ? 14 : 3 + Math.abs(PLACE_X[fromP] - PLACE_X[toP]) * 2.5;
+  let sec = fromZ !== toZ ? ZONE_TRAVEL_SEC : (3 + Math.abs(PLACE_X[fromP] - PLACE_X[toP]) * 2.5) * WALK_MULT;
   const m = S.mount && MOUNTS.find((x) => x.id === S.mount);
   if (m) sec /= 1 + m.bonus / 50;
   return Math.max(1.5, sec);
@@ -499,11 +520,19 @@ function zq(zi) {
 function questStatus(zi, qi) {
   const r = zq(zi)[qi];
   if (r) return r.s;
-  return QUEST_FLOW[qi].req.every((j) => (zq(zi)[j] || {}).s === 'turned') ? 'avail' : 'locked';
+  return QF(zi, qi).req.every((j) => (zq(zi)[j] || {}).s === 'turned') ? 'avail' : 'locked';
 }
-function questN(zi, q) { return q.kind === 'elite' || q.kind === 'boss' ? q.n : Math.round(q.n * (1 + zi * 0.5)); }
+// Wie viele Gegner/Dinge eine Quest verlangt: nie mehr als 20 Gegner, nie mehr als 8 Beutestücke.
+function questN(zi, q) {
+  if (q.kind === 'elite' || q.kind === 'boss' || q.kind === 'talk') return q.n;
+  if (q.kind === 'gather') return Math.min(8, q.n);
+  return Math.min(q.kind === 'collect' ? 8 : 20, Math.round(q.n * (1 + zi * 0.15)));
+}
+function QF(zi, qi) { const q = zoneOf(zi).quests[qi]; return { g: q.g, req: q.req }; }
 function questTargetPlace(zi, qi) {
   const q = zoneOf(zi).quests[qi];
+  if (q.kind === 'talk') return giverPlace(q.to);
+  if (q.kind === 'gather') return q.target;
   if (q.kind === 'elite') return 'elite';
   if (q.kind === 'boss') return 'boss';
   if (q.kind === 'any') return 'h0';
@@ -512,26 +541,31 @@ function questTargetPlace(zi, qi) {
 function questInfo(zi, qi) {
   const q = zoneOf(zi).quests[qi];
   const r = zq(zi)[qi];
-  return { zi, qi, q, s: questStatus(zi, qi), p: r ? r.p : 0, need: questN(zi, q), g: QUEST_FLOW[qi].g, giver: giverOf(zi, QUEST_FLOW[qi].g), place: questTargetPlace(zi, qi) };
+  const f = QF(zi, qi);
+  const tg = q.to !== undefined ? q.to : f.g; // wer die Quest am Ende entgegennimmt
+  return { zi, qi, q, s: questStatus(zi, qi), p: r ? r.p : 0, need: questN(zi, q), g: f.g, tg, giver: giverOf(zi, f.g), tgiver: giverOf(zi, tg), place: questTargetPlace(zi, qi) };
 }
 function zoneQuests(zi) { return zoneOf(zi).quests.map((_, qi) => questInfo(zi, qi)); }
-function giverQuests(zi, gi) { return zoneQuests(zi).filter((x) => x.g === gi && x.s !== 'locked' && x.s !== 'turned'); }
+function giverQuests(zi, gi) { return zoneQuests(zi).filter((x) => x.s !== 'locked' && x.s !== 'turned' && (x.g === gi || (x.s === 'done' && x.tg === gi))); }
 function giverMarker(zi, gi) {
   const qs = giverQuests(zi, gi);
-  if (qs.some((x) => x.s === 'done')) return 'turnin';
-  if (qs.some((x) => x.s === 'avail')) return 'avail';
-  if (qs.some((x) => x.s === 'active')) return 'active';
+  if (qs.some((x) => x.s === 'done' && x.tg === gi)) return 'turnin';
+  if (qs.some((x) => x.s === 'avail' && x.g === gi)) return 'avail';
+  if (qs.some((x) => (x.s === 'active' || x.s === 'done') && x.g === gi)) return 'active';
   return null;
 }
-function zoneComplete(zi) { return zoneOf(zi).quests.every((_, qi) => questStatus(zi, qi) === 'turned'); }
-function questLevel(zi, qi) { const z = zoneOf(zi); return z.lvl[0] + Math.floor((z.lvl[1] - z.lvl[0]) * qi / 5); }
+function zoneComplete(zi) { for (let qi = 0; qi < MAIN_Q; qi++) if (questStatus(zi, qi) !== 'turned') return false; return true; } // Nebenquests sind freiwillig
+function questLevel(zi, qi) { const z = zoneOf(zi), q = z.quests[qi]; const f = qi < MAIN_Q ? qi / 5 : (q.lf !== undefined ? q.lf : 0.5); return z.lvl[0] + Math.floor((z.lvl[1] - z.lvl[0]) * f); }
 function questRewards(zi, qi) {
   const L = questLevel(zi, qi);
-  const xpm = [0.25, 0.25, 0.3, 0.4, 0.3, 0.7][qi];
-  const gm = [12, 12, 14, 28, 18, 70][qi];
+  const sq = zoneOf(zi).quests[qi];
+  const side = { talk: [0.12, 8], gather: [0.2, 10], kill: [0.24, 12], any: [0.24, 12], collect: [0.22, 12] }[sq.kind] || [0.2, 10];
+  const xpm = qi < MAIN_Q ? [0.25, 0.25, 0.3, 0.4, 0.3, 0.7][qi] : side[0];
+  const gm = qi < MAIN_Q ? [12, 12, 14, 28, 18, 70][qi] : side[1];
   const r = { xp: Math.floor(xpNeed(Math.min(L, S.level)) * xpm), gold: Math.ceil(gpk(L) * gm) };
   if (qi === 3) r.item = { ilvl: L + 1, r: 3 };
   if (qi === 5) r.item = { ilvl: L + 2, r: zi >= 3 ? 4 : 3 };
+  if (sq.gift) r.item = { ilvl: L, r: 2 };
   return r;
 }
 function atGiver(zi, gi) { return !S.walk && S.loc.z === zi && S.loc.p === giverPlace(gi); }
@@ -539,8 +573,14 @@ function atGiver(zi, gi) { return !S.walk && S.loc.z === zi && S.loc.p === giver
 function acceptQuest(zi, qi) {
   const x = questInfo(zi, qi);
   if (x.s !== 'avail' || !atGiver(zi, x.g)) return false;
-  zq(zi)[qi] = { s: 'active', p: 0 };
-  Hooks.log(`<span class="quest">Quest angenommen: ${x.q.t}</span>`);
+  if (x.q.kind === 'talk') {
+    // nichts zu erledigen außer hinzugehen: abgegeben wird beim Empfänger
+    zq(zi)[qi] = { s: 'done', p: 1 };
+    Hooks.log(`<span class="quest">Quest angenommen: ${x.q.t}. Sprich mit ${x.tgiver.name} (${placeOf(zi, giverPlace(x.tg)).name}).</span>`);
+  } else {
+    zq(zi)[qi] = { s: 'active', p: 0 };
+    Hooks.log(`<span class="quest">Quest angenommen: ${x.q.t}</span>`);
+  }
   Hooks.sound('click');
   Hooks.dirty('quest');
   return true;
@@ -556,15 +596,16 @@ function questProgress(kind, target, zi, n = 1) {
     if (q.kind === 'elite' && kind === 'elite' && q.target === target) hit = true;
     if (q.kind === 'boss' && kind === 'boss' && q.target === target) hit = true;
     if (q.kind === 'collect' && kind === 'collect' && q.target === target) hit = true;
+    if (q.kind === 'gather' && kind === 'gather' && q.target === target) hit = true;
     if (!hit) continue;
     const r = zq(zi)[x.qi];
     r.p = Math.min(x.need, r.p + n);
-    if (q.kind === 'collect' && n === 1) Hooks.log(`<span class="quest">${q.item}: ${r.p}/${x.need}</span>`);
+    if ((q.kind === 'collect' || q.kind === 'gather') && n === 1) Hooks.log(`<span class="quest">${q.item}: ${r.p}/${x.need}</span>`);
     if (r.p >= x.need) {
       r.s = 'done';
       Hooks.toast(`Quest abgeschlossen: ${q.t}`, 'scroll', '#ffd200');
       Hooks.sound('quest');
-      Hooks.log(`<span class="quest">${q.t} abgeschlossen. Kehre zu ${x.giver.name} (${placeOf(zi, giverPlace(x.g)).name}) zurück.</span>`);
+      Hooks.log(`<span class="quest">${q.t} abgeschlossen. Kehre zu ${x.tgiver.name} (${placeOf(zi, giverPlace(x.tg)).name}) zurück.</span>`);
     }
     Hooks.dirty('quest');
   }
@@ -572,7 +613,7 @@ function questProgress(kind, target, zi, n = 1) {
 
 function turnInQuest(zi, qi) {
   const x = questInfo(zi, qi);
-  if (x.s !== 'done' || !atGiver(zi, x.g)) return null;
+  if (x.s !== 'done' || !atGiver(zi, x.tg)) return null;
   const rw = questRewards(zi, qi);
   gainXP(rw.xp, true);
   gainGold(rw.gold);
@@ -587,7 +628,7 @@ function turnInQuest(zi, qi) {
   Hooks.sound('turnin');
   // tell the player where the story continues
   for (const y of zoneQuests(zi)) {
-    if (y.s === 'avail' && QUEST_FLOW[y.qi].req.includes(qi) && y.g !== x.g) {
+    if (y.s === 'avail' && QF(zi, y.qi).req.includes(qi) && y.g !== x.tg) {
       Hooks.toast(`Neuer Auftrag bei ${y.giver.name} (${placeOf(zi, giverPlace(y.g)).name})`, 'scroll', '#ffd200');
       break;
     }
@@ -605,7 +646,7 @@ function turnInQuest(zi, qi) {
     }
   }
   Hooks.dirty('quest');
-  return { rw, itemTxt, line: pick(TURNIN_LINES) };
+  return { rw, itemTxt, line: x.q.kind === 'talk' && x.q.reply ? x.q.reply : pick(TURNIN_LINES) };
 }
 
 // travel to another zone: walk to its village
@@ -639,6 +680,19 @@ function migrateQuests(s) {
   for (const zi in s.qs) {
     const m = s.qs[zi];
     for (let qi = 0; qi < 6; qi++) if (m[qi] && m[qi].s !== 'turned') for (const j of QUEST_FLOW[qi].req) if (!m[j]) m[j] = { s: 'turned', p: 0 };
+  }
+}
+
+// Ziele wurden gesenkt: angenommene Quests, die damit schon erfüllt sind, gelten als erledigt.
+function fixQuestCaps(s) {
+  for (const zi in s.qs || {}) {
+    const m = s.qs[zi];
+    for (const qi in m) {
+      const q = ZONES[+zi] && ZONES[+zi].quests[+qi];
+      if (!q || m[qi].s !== 'active') continue;
+      const need = questN(+zi, q);
+      if (m[qi].p >= need) m[qi] = { s: 'done', p: need };
+    }
   }
 }
 
@@ -685,10 +739,11 @@ let battle = null;
 function makeEnemy(spec) {
   const k = KIND[spec.kind];
   const L = spec.level;
+  const ivm = spec.kind === 'arena' ? 1 : MOB_IV_MULT;
   const e = {
     key: spec.key, name: spec.name, sprite: spec.sprite || spec.key, level: L, kind: spec.kind,
-    maxHp: mobBase(L).hp * k.hp * (spec.hpMul || 1), atk: mobBase(L).atk * k.atk * (spec.atkMul || 1), iv: k.iv,
-    timer: k.iv * 0.8, dots: [], slow: 0, spT: k.special ? k.special : 0, special: spec.special, warn: 0, crit: spec.crit || 0,
+    maxHp: mobBase(L).hp * k.hp * (spec.hpMul || 1), atk: mobBase(L).atk * k.atk * (spec.atkMul || 1) * ivm, iv: k.iv * ivm,
+    timer: k.iv * ivm * 0.8, dots: [], slow: 0, spT: k.special ? k.special : 0, special: spec.special, warn: 0, crit: spec.crit || 0,
   };
   e.hp = e.maxHp;
   if (spec.stats) Object.assign(e, spec.stats, { hp: spec.stats.maxHp });
@@ -701,7 +756,7 @@ function newBattle(mode, opts = {}) {
     mode, bg: opts.bg || zoneOf(S.zone).bg, title: opts.title || '', queue: opts.queue || [], enemy: null,
     h: { hp: battle && mode === 'adventure' && battle.mode === 'adventure' ? Math.min(battle.h.hp, st.hp) : st.hp,
       res: CLASSES[S.cls].res === 'Wut' ? 0 : 100, timer: 0.4, buffT: 0, buffMul: 0, dead: 0, potionCd: 0 },
-    cd: {}, comp: {}, t: 0, respawn: 0.5, result: null, dmgMul: opts.dmgMul || 1, healPct: opts.healPct || 0,
+    cd: {}, comp: {}, syn: [], t: 0, respawn: 0.5, result: null, dmgMul: opts.dmgMul || 1, healPct: opts.healPct || 0,
     fx: opts.headless ? false : true, onKill: opts.onKill, onEnd: opts.onEnd, eliteCd: 0, killsInRow: 0, meta: opts.meta || {},
     total: opts.queue ? opts.queue.length : 0, log: [],
   };
@@ -715,7 +770,7 @@ function startAdventure() {
   battle.place = pl.id;
   Hooks.dirty('battle');
 }
-function huntsHere() { const pl = here(); return !S.walk && pl.kind !== 'hub'; }
+function huntsHere() { const pl = here(); return !S.walk && pl.kind !== 'hub' && pl.kind !== 'spot'; }
 
 function adventureSpec() {
   const z = zoneOf(S.zone);
@@ -775,6 +830,7 @@ function heroHit(b, st, mult, src, fxKind) {
   let d = st.atk * mult * rnd(0.92, 1.08);
   if (src !== 'auto' && src !== 'tap') d *= 1 + st.skillP / 100;
   if (e.kind !== 'normal') d *= 1 + st.bossP / 100;
+  if (e.vuln && e.vuln.t > 0) d *= 1 + e.vuln.mul;
   if (src === 'tap') d *= 1 + st.tapP / 100;
   if (b.h.buffT > 0) d *= 1 + b.h.buffMul;
   d *= b.dmgMul;
@@ -884,13 +940,16 @@ function tickBattle(b, dt) {
   if (!isRage) h.res = Math.min(100, h.res + (CLASSES[S.cls].res === 'Fokus' ? 12 : 8) * dt);
   // buffs
   if (h.buffT > 0) h.buffT -= dt;
+  synTick(b, dt);
   // regen
   h.hp = Math.min(st.hp, h.hp + st.hp * (st.regen / 100 + b.healPct / 100 + 0.004) * dt);
   // auto attack
   h.timer -= dt;
   if (h.timer <= 0) {
     h.timer += st.interval;
-    heroHit(b, st, 1, 'auto', S.cls === 'jaeger' ? 'arrow' : S.cls === 'magier' ? 'bolt' : S.cls === 'priester' ? 'bolt' : 'melee');
+    const autoSyn = synTake(b, 'auto');
+    heroHit(b, st, 1 + synDmg(autoSyn), 'auto', S.cls === 'jaeger' ? 'arrow' : S.cls === 'magier' ? 'bolt' : S.cls === 'priester' ? 'bolt' : 'melee');
+    if (autoSyn.length) synFire(b, st, autoSyn);
     if (isRage) h.res = Math.min(100, h.res + 14);
     if (b.fx && Hooks.fx) Hooks.fx.attack('hero');
   }
@@ -900,6 +959,7 @@ function tickBattle(b, dt) {
       const sk = SKILLS[id];
       if (S.level < sk.lvl || (b.cd[id] || 0) > 0 || h.res < sk.cost) continue;
       if (sk.kind === 'heal' && h.hp > st.hp * 0.6) continue;
+      if (sk.finisher && !(b.syn || []).length) continue;
       castSkill(b, st, id, sk);
       b.cd[id] = sk.cd * (1 - st.cdr / 100);
       h.res -= sk.cost;
@@ -922,7 +982,7 @@ function tickBattle(b, dt) {
   if (e.slow > 0) e.slow -= dt;
   // companions
   for (const c of COMPANIONS) {
-    const lv = S.comp[c.id];
+    const lv = compOn(c.id) ? S.comp[c.id] : 0;
     if (!lv) continue;
     b.comp[c.id] = (b.comp[c.id] || rnd(0.5, 1.5)) - dt;
     if (b.comp[c.id] > 0) continue;
@@ -943,15 +1003,21 @@ function tickBattle(b, dt) {
   if (e.hp <= 0) { enemyDies(b); return; }
   // enemy attacks
   const dr = Math.min(0.75, st.def / (st.def + 22 * g(e.level)));
-  const tank = S.comp.thorga ? 0.18 : 0;
+  const tank = compOn('thorga') ? 0.18 : 0;
   e.timer -= dt * (e.slow > 0 ? 0.6 : 1);
   if (e.timer <= 0) {
     e.timer += e.iv;
-    let d = e.atk * rnd(0.9, 1.1) * (1 - dr) * (1 - tank);
+    let d = e.atk * rnd(0.9, 1.1) * (1 - dr) * (1 - tank) * (e.weak && e.weak.t > 0 ? 1 - e.weak.mul : 1);
     if (e.crit && Math.random() * 100 < e.crit) d *= 1.5;
-    h.hp -= d;
-    if (isRage) h.res = Math.min(100, h.res + 6);
-    if (b.fx && Hooks.fx) { Hooks.fx.attack('enemy'); Hooks.fx.hit('hero', d, false, 'melee'); }
+    if (h.dodge && h.dodge.left > 0) {
+      h.dodge.left--;
+      if (h.dodge.left <= 0) h.dodge = null;
+      if (b.fx && Hooks.fx) { Hooks.fx.attack('enemy'); Hooks.fx.dodge(); }
+    } else {
+      h.hp -= d;
+      if (isRage) h.res = Math.min(100, h.res + 6);
+      if (b.fx && Hooks.fx) { Hooks.fx.attack('enemy'); Hooks.fx.hit('hero', d, false, 'melee'); }
+    }
   }
   // boss special
   const kd = KIND[e.kind];
@@ -964,7 +1030,7 @@ function tickBattle(b, dt) {
     if (e.spT <= 0) {
       e.spT = kd.special;
       e.warn = 0;
-      const d = st.hp * kd.spMul * (1 - tank) * rnd(0.9, 1.1);
+      const d = st.hp * kd.spMul * (1 - tank) * rnd(0.9, 1.1) * (e.weak && e.weak.t > 0 ? 1 - e.weak.mul : 1);
       h.hp -= d;
       if (b.fx && Hooks.fx) { Hooks.fx.special(); Hooks.fx.hit('hero', d, true, 'special'); }
     }
@@ -988,14 +1054,106 @@ function tickBattle(b, dt) {
   }
 }
 
+// ---- Synergien: eine Fähigkeit verstärkt die nächsten Angriffe oder eine bestimmte andere Fähigkeit.
+// Wirkungsarten (kind): dmg = mehr Schaden, heal = Heilung, weaken = Gegner richtet weniger Schaden an,
+// vuln = Gegner erleidet mehr Schaden, dodge = du weichst Angriffen aus.
+// b.syn = [{ target (Fähigkeit | 'auto' | 'any'), kind, bonus, left (Ladungen), t (Sekunden), src }]
+const SYN_DUR = 8; // Sekunden, die Schwächung und Verwundbarkeit anhalten
+function synAdd(b, m) {
+  const t = m.target === 'auto' ? 12 : 15;
+  const cur = b.syn.find((x) => x.target === m.target && x.kind === m.kind && x.src === m.src); // jede Quelle bleibt eigene Verstärkung
+  if (!cur) b.syn.push({ target: m.target, kind: m.kind, bonus: m.bonus, left: m.charges || 1, t, src: m.src });
+  else if (m.bonus >= cur.bonus) Object.assign(cur, { bonus: m.bonus, left: m.charges || 1, t, src: m.src });
+  else cur.t = t;
+}
+function synTake(b, key) {
+  const out = [];
+  for (const m of b.syn || []) if (m.target === key) { out.push({ kind: m.kind, bonus: m.bonus, target: m.target }); m.left--; }
+  b.syn = (b.syn || []).filter((m) => m.left > 0);
+  return out;
+}
+function synTakeAll(b) {
+  const out = (b.syn || []).map((m) => ({ kind: m.kind, bonus: m.bonus, target: m.target }));
+  b.syn = [];
+  return out;
+}
+const synDmg = (list) => list.reduce((a, m) => a + (m.kind === 'dmg' ? m.bonus : 0), 0);
+// Alles außer Schaden löst aus, sobald die Verstärkung verbraucht wird.
+function synFire(b, st, list) {
+  const e = b.enemy, h = b.h, notes = [];
+  for (const m of list) {
+    if (m.kind === 'heal') {
+      const amt = st.hp * m.bonus;
+      h.hp = Math.min(st.hp, h.hp + amt);
+      if (b.fx && Hooks.fx) Hooks.fx.heal(amt, 'skill');
+    } else if (m.kind === 'weaken' && e && !e.dead) { e.weak = { mul: Math.max(m.bonus, e.weak && e.weak.t > 0 ? e.weak.mul : 0), t: SYN_DUR }; notes.push('Gegner geschwächt'); }
+    else if (m.kind === 'vuln' && e && !e.dead) { e.vuln = { mul: Math.max(m.bonus, e.vuln && e.vuln.t > 0 ? e.vuln.mul : 0), t: SYN_DUR }; notes.push('Gegner verwundbar'); }
+    else if (m.kind === 'dodge') { h.dodge = { left: (h.dodge ? h.dodge.left : 0) + m.bonus, t: 10 }; notes.push('Ausweichen bereit'); }
+  }
+  if (notes.length && b.fx && Hooks.fx && Hooks.fx.synergy) Hooks.fx.synergy(notes[0]);
+}
+const SYN_SYM = { heal: '✚', weaken: '▼', vuln: '◎', dodge: '↯' };
+const synNum = (x) => String(+(x * 100).toFixed(1)).replace('.', ',');
+function synEff(m) {
+  if (m.kind === 'dmg') return `+${synNum(m.bonus)}% Schaden`;
+  if (m.kind === 'heal') return `Heilung ${synNum(m.bonus)}% deines Lebens`;
+  if (m.kind === 'weaken') return `Gegner richtet ${synNum(m.bonus)}% weniger Schaden an (${SYN_DUR} Sek.)`;
+  if (m.kind === 'vuln') return `Gegner erleidet ${synNum(m.bonus)}% mehr Schaden (${SYN_DUR} Sek.)`;
+  return `Ausweichen vor ${m.bonus} Angriff${m.bonus > 1 ? 'en' : ''}`;
+}
+function synTarget(t, n) {
+  if (t === 'auto') return n > 1 ? `die nächsten ${n} Angriffe` : 'den nächsten Angriff';
+  if (t === 'any') return 'die nächste Schadensfähigkeit';
+  return `„${SKILLS[t].name}“`;
+}
+function synGroups(list) {
+  const groups = [];
+  for (const m of list) {
+    const n = m.target === 'auto' ? (m.charges || m.left || 1) : 1;
+    const key = m.target + '|' + n;
+    let g = groups.find((x) => x.key === key);
+    if (!g) groups.push(g = { key, target: m.target, n, effs: [] });
+    g.effs.push(m);
+  }
+  return groups;
+}
+function synText(sk) {
+  const out = synGroups(sk.syn || []).map((g) => `Verstärkt ${synTarget(g.target, g.n)}: ${g.effs.map(synEff).join(', ')}.`);
+  if (sk.finisher) out.push(`Löst alle aktiven Verstärkungen auf einmal aus: +${Math.round(sk.finisher * 100)}% Schaden für jede.`);
+  return out.join(' ');
+}
+// Kurzanzeige für den Knopf in der Aktionsleiste
+function synBadge(b, id, sk) {
+  if (!b || !b.syn || !b.syn.length) return '';
+  const list = sk.finisher ? b.syn : b.syn.filter((m) => m.target === id || (m.target === 'any' && (sk.kind === 'dmg' || sk.kind === 'dot')));
+  if (!list.length) return '';
+  let dmg = sk.finisher ? new Set(list.map((m) => m.target)).size * sk.finisher : synDmg(list);
+  const syms = [...new Set(list.map((m) => SYN_SYM[m.kind]).filter(Boolean))].join('');
+  return (dmg > 0 ? '+' + Math.round(dmg * 100) + '%' : '') + syms;
+}
+function synTick(b, dt) {
+  for (const m of b.syn) m.t -= dt;
+  b.syn = b.syn.filter((m) => m.t > 0);
+  const h = b.h;
+  if (h.dodge) { h.dodge.t -= dt; if (h.dodge.t <= 0) h.dodge = null; }
+  const e = b.enemy;
+  if (e) { if (e.weak) { e.weak.t -= dt; if (e.weak.t <= 0) e.weak = null; } if (e.vuln) { e.vuln.t -= dt; if (e.vuln.t <= 0) e.vuln = null; } }
+}
 function castSkill(b, st, id, sk) {
   const h = b.h, e = b.enemy;
   if (b.fx && Hooks.fx) Hooks.fx.cast(id, sk);
+  b.syn = b.syn || [];
+  const dealsDmg = sk.kind === 'dmg' || sk.kind === 'dot';
+  let trig = synTake(b, id);
+  if (dealsDmg) trig = sk.finisher ? trig.concat(synTakeAll(b)) : trig.concat(synTake(b, 'any'));
+  let bonus = synDmg(trig);
+  if (sk.finisher) bonus = new Set(trig.map((m) => m.target)).size * sk.finisher;
+  if (bonus > 0 && b.fx && Hooks.fx && Hooks.fx.synergy) Hooks.fx.synergy(`Synergie +${Math.round(bonus * 100)}%`);
   if (sk.kind === 'dmg') {
-    heroHit(b, st, sk.mult, 'skill', sk.fx);
+    heroHit(b, st, sk.mult * (1 + bonus), 'skill', sk.fx);
     if (sk.slow) e.slow = sk.slow;
   } else if (sk.kind === 'dot') {
-    const total = st.atk * sk.mult * (1 + st.skillP / 100) * (e.kind !== 'normal' ? 1 + st.bossP / 100 : 1) * b.dmgMul * (h.buffT > 0 ? 1 + h.buffMul : 1);
+    const total = (1 + bonus) * st.atk * sk.mult * (1 + st.skillP / 100) * (e.kind !== 'normal' ? 1 + st.bossP / 100 : 1) * b.dmgMul * (h.buffT > 0 ? 1 + h.buffMul : 1);
     e.dots.push({ id, t: sk.dur, dps: total / sk.dur, acc: 0, tick: total / sk.dur });
   } else if (sk.kind === 'heal') {
     const amt = st.hp * sk.mult;
@@ -1004,6 +1162,12 @@ function castSkill(b, st, id, sk) {
   } else if (sk.kind === 'buff') {
     h.buffT = sk.dur;
     h.buffMul = sk.mult;
+  }
+  synFire(b, st, trig);
+  for (const sy of sk.syn || []) synAdd(b, { target: sy.target, kind: sy.kind || 'dmg', bonus: sy.bonus, charges: sy.charges, src: id });
+  if ((sk.syn || []).length && b.fx && Hooks.fx && Hooks.fx.synergy) {
+    const g = synGroups(sk.syn)[0];
+    Hooks.fx.synergy(g.target === 'auto' ? 'Angriffe verstärkt' : g.target === 'any' ? 'Nächste Fähigkeit verstärkt' : `${SKILLS[g.target].name} verstärkt`);
   }
 }
 
@@ -1016,6 +1180,13 @@ function auras() {
     const sk = SKILLS.kampfschrei;
     hero.push({ key: 'kampfschrei', icon: sk.icon, name: sk.name, desc: `+${Math.round(b.h.buffMul * 100)}% Angriff`, left: b.h.buffT });
   }
+  // jede Verstärkung als eigenes Symbol (nicht zusammengefasst), mit Restladungen als Zahl
+  const SYN_NAME = { dmg: 'Mehr Schaden', heal: 'Heilung', weaken: 'Schwächung', vuln: 'Verwundbarkeit', dodge: 'Ausweichen' };
+  if (b && b.syn) for (const m of b.syn) {
+    const n = m.target === 'auto' ? m.left : 1;
+    hero.push({ key: `syn_${m.src}_${m.target}_${m.kind}`, icon: SKILLS[m.src].icon, name: `${SKILLS[m.src].name}: ${SYN_NAME[m.kind] || 'Verstärkt'}`, desc: `Wirkt auf ${synTarget(m.target, n)}: ${synEff(m)}`, left: m.t, stacks: m.target === 'auto' && m.left > 1 ? m.left : 0 });
+  }
+  if (b && b.h.dodge) hero.push({ key: 'dodge', icon: 'st_haste', name: 'Ausweichen', desc: `Du weichst den nächsten ${b.h.dodge.left} Angriffen aus.`, left: b.h.dodge.t });
   const map = { atk: 'elixir_atk', xp: 'elixir_xp', luck: 'elixir_luck', titan: 'flask_titan' };
   for (const k in map) if (S.buffs[k] > t) hero.push({ key: k, icon: map[k], name: CONSUMABLES[map[k]].name, desc: CONSUMABLES[map[k]].desc, left: (S.buffs[k] - t) / 1000 });
   if (S.buffs.food > t && S.buffs.foodId) hero.push({ key: 'food', icon: S.buffs.foodId, name: CONSUMABLES[S.buffs.foodId].name, desc: CONSUMABLES[S.buffs.foodId].desc, left: (S.buffs.food - t) / 1000 });
@@ -1033,6 +1204,8 @@ function auras() {
       if (seen[d.id] > 1) continue;
       enemy.push({ key: d.id, icon: sk.icon, name: sk.name, desc: 'Erleidet Schaden über Zeit.', left: d.t, debuff: true, stacks: e.dots.filter((x) => x.id === d.id).length });
     }
+    if (e.weak && e.weak.t > 0) enemy.push({ key: 'weak', icon: 'st_def', name: 'Geschwächt', desc: `Richtet ${synNum(e.weak.mul)}% weniger Schaden an.`, left: e.weak.t, debuff: true });
+    if (e.vuln && e.vuln.t > 0) enemy.push({ key: 'vuln', icon: 'st_crit', name: 'Verwundbar', desc: `Erleidet ${synNum(e.vuln.mul)}% mehr Schaden.`, left: e.vuln.t, debuff: true });
     if (e.slow > 0) enemy.push({ key: 'slow', icon: SKILLS.eislanze.icon, name: 'Unterkühlt', desc: 'Greift 40% langsamer an.', left: e.slow, debuff: true });
     const kd = KIND[e.kind];
     if (kd.special && e.spT <= 3) enemy.push({ key: 'cast', icon: 'st_crit', name: e.special || 'Mächtiger Angriff', desc: 'Wirkt gleich einen schweren Angriff.', left: Math.max(0, e.spT) });
@@ -1404,7 +1577,7 @@ function doGather(kind, active) {
 }
 function activeGather() {
   if (now() < S.gatherCd) return null;
-  S.gatherCd = now() + 30000;
+  S.gatherCd = now() + 1800000; // alle 30 Minuten
   const a = doGather('ore', true), b = doGather('herb', true);
   Hooks.sound('gather');
   return [a, b];
@@ -1629,7 +1802,7 @@ function estimateKillRate() {
   const L = mobLevel(S.zone);
   const hp = mobBase(L).hp, atk = mobBase(L).atk;
   let compDps = 0;
-  for (const c of COMPANIONS) if (S.comp[c.id]) compDps += compPower(c.id) * (c.type === 'dps' ? 1.6 : c.type === 'tank' ? 0.6 : 0.3);
+  for (const c of COMPANIONS) if (compOn(c.id)) compDps += compPower(c.id) * (c.type === 'dps' ? 1.6 : c.type === 'tank' ? 0.6 : 0.3);
   const dps = st.atk / st.interval * (1 + st.crit / 100 * st.critDmg / 100) + compDps;
   const ttk = hp / dps;
   const dr = Math.min(0.75, st.def / (st.def + 22 * g(L)));
@@ -1640,60 +1813,14 @@ function estimateKillRate() {
 }
 
 // Grants progress for `sec` seconds away, in slices so levels gained on the way change the rates.
+// Keine AFK-Belohnung: Erfahrung, Gold, Beute, Material und Questfortschritt gibt es nur beim Spielen.
+// Einzig der Erholungsbonus (doppelte Erfahrung) wächst, solange du weg bist.
 function offlineProgress(sec, eff) {
-  const capped = Math.min(sec, maxOfflineSec());
-  const out = { sec: capped, kills: 0, xp: 0, gold: 0, items: 0, sold: 0, best: null, mats: {}, rested: 0, quest: null, levels: 0 };
-  const lvl0 = S.level;
-  const slices = clamp(Math.ceil(capped / 600), 1, 24);
-  const per = capped / slices;
-  let made = 0;
+  const out = { sec: Math.min(sec, maxOfflineSec()), rested: 0 };
   checkWalk();
-  const walking = !!S.walk;
   const pl = here();
-  const elite = pl.kind === 'elite';
-  const before = {};
-  for (const x of zoneQuests(S.zone)) before[x.qi] = x;
-  for (let i = 0; i < slices && pl.kind !== 'hub' && !walking; i++) {
-    statsDirty = true;
-    const st = heroStats();
-    const { rate, L } = estimateKillRate();
-    const kills = Math.floor(rate * per * eff / (elite ? KIND.elite.hp : 1));
-    if (kills <= 0) continue;
-    const pen = xpPenalty(S.level, L);
-    const kx = (elite ? KIND.elite.xp : 1) * KILL_REWARD;
-    out.kills += kills;
-    out.xp += gainXP(killXP(L) * (1 + st.xpP / 100) * pen * kills * kx);
-    out.gold += gainGold(gpk(L) * kills * (1 + st.goldP / 100) * kx);
-    S.stats.kills += kills;
-    questProgress('kill', pl.kind === 'hunt' || elite ? pl.mob : null, S.zone, kills);
-    if (pl.mob) questProgress('collect', pl.mob, S.zone, Math.floor(kills * 0.45));
-    if (elite) questProgress('elite', pl.mob, S.zone, kills);
-    const drops = Math.floor(kills * 0.07 * (1 + st.lootP / 100) + Math.random());
-    for (let d = 0; d < drops; d++) {
-      if (made >= 30) { out.gold += gainGold(gpk(L) * 3); out.sold++; continue; }
-      made++;
-      const it = dropItem(L, 'normal');
-      const res = giveItem(it, true);
-      if (res === 'sold') out.sold++; else out.items++;
-      if (!out.best || it.r > out.best.r) out.best = it;
-    }
-    const matDrops = Math.floor(kills * 0.045);
-    if (matDrops) {
-      const tier = clamp(Math.floor((S.worldTier > 0 ? 7 : S.zone) / 1.6), 0, 4);
-      const a = Math.ceil(matDrops / 2), b = Math.floor(matDrops / 2);
-      addMat(ORES[tier], a); addMat(HERBS[tier], b);
-      out.mats[ORES[tier]] = (out.mats[ORES[tier]] || 0) + a;
-      out.mats[HERBS[tier]] = (out.mats[HERBS[tier]] || 0) + b;
-    }
-  }
-  out.levels = S.level - lvl0;
-  for (const x of zoneQuests(S.zone)) {
-    const b0 = before[x.qi];
-    if (b0 && b0.s === 'active' && x.p > b0.p) { out.quest = { t: x.q.t, gained: x.p - b0.p, done: x.s === 'done' }; break; }
-  }
   out.place = pl.name;
   out.inn = pl.kind === 'hub';
-  // rested xp
   if (S.level < MAX_LEVEL && sec > 600) {
     const add = xpNeed(S.level) * 0.05 * (sec / 3600) * (pl.kind === 'hub' ? 3 : 1);
     const before = S.rested;
@@ -1704,15 +1831,36 @@ function offlineProgress(sec, eff) {
   return out;
 }
 
-function catchUpProfessions() {
+// Berufe: automatische Ernte alle 30 Minuten (nur solange du spielst; für die Abwesenheit gibt es nichts).
+function catchUpProfessions(afterAway) {
   const t = now();
-  let n = 0;
-  while (S.gatherT <= t && n < 300) { S.gatherT += 120000; n++; }
-  if (S.gatherT <= t) S.gatherT = t + 120000;
-  return n ? passiveGather(n) : null;
+  if (S.gatherT > t) return null;
+  S.gatherT = t + 1800000;
+  return afterAway ? null : passiveGather(1);
 }
 
 let achTimer = 0;
+let gatherAcc = 0;
+const GATHER_ICON = { 'Wilde Beere': 'kraut_blutdorn', 'Warenpaket': 'bag', 'Moorlilie': 'kraut_nebelmoos', 'Leuchtmoos': 'kraut_nebelmoos', 'Wasserschlauch': 'flask_titan', 'Roter Kristall': 'erz_sternen',
+  'Dattel': 'kraut_sonnenbluete', 'Alte Tonscherbe': 'cauldron', 'Harzklumpen': 'erz_kupfer', 'Eiskristall': 'erz_silber', 'Nachtschatten': 'kraut_blutdorn', 'Zerrissene Seite': 'scroll',
+  'Obsidiansplitter': 'erz_eisen', 'Schwefelkristall': 'erz_mondstahl', 'Sternenstaub': 'dust', 'Leerensplitter': 'erz_sternen' };
+// Für die Szene: was hier gerade gesammelt wird und wie weit der Balken ist (0..1).
+function gatherInfo() {
+  if (S.walk || !S.loc) return null;
+  const pl = here();
+  if (pl.kind !== 'spot') return null;
+  const x = zoneQuests(S.zone).find((y) => y.s === 'active' && y.q.kind === 'gather' && y.q.target === pl.id);
+  if (!x) return null;
+  return { item: x.q.item, icon: GATHER_ICON[x.q.item] || 'bag', frac: Math.min(1, gatherAcc / GATHER_SEC), p: x.p, need: x.need };
+}
+// An einem Sammelplatz findest du alle GATHER_SEC Sekunden einen Gegenstand für die offene Sammelquest.
+function gatherTick(dt) {
+  const pl = !S.walk && S.loc ? here() : null;
+  const x = pl && pl.kind === 'spot' ? zoneQuests(S.zone).find((y) => y.s === 'active' && y.q.kind === 'gather' && y.q.target === pl.id) : null;
+  if (!x) { gatherAcc = 0; return; }
+  gatherAcc += dt;
+  if (gatherAcc >= GATHER_SEC) { gatherAcc -= GATHER_SEC; questProgress('gather', pl.id, S.zone, 1); }
+}
 function periodic(dt) {
   S.stats.playTime += dt;
   checkWalk();

@@ -105,7 +105,7 @@ const Scene = (() => {
   }
 
   // which part of the zone picture a place shows; walking pans from the start view to the goal's
-  const VIEW_OX = { hub: 0.15, h0: 0.0, h1: 0.5, post: 0.65, h2: 1.0, elite: 0.35, boss: 0.85 };
+  const VIEW_OX = { hub: 0.15, n2: 0.3, h0: 0.0, s0: 0.2, h1: 0.5, s1: 0.45, post: 0.65, n3: 0.9, h2: 1.0, elite: 0.35, boss: 0.85 };
   function placeView(pid) {
     if (pid === 'hub') return { zoom: 1.0, ox: 0.5 };
     return { zoom: pid === 'boss' || pid === 'elite' ? 1.3 : 1.18, ox: VIEW_OX[pid] === undefined ? 0.5 : VIEW_OX[pid] };
@@ -118,6 +118,30 @@ const Scene = (() => {
       return { zoom: 1.35, ox: S.walk.dir > 0 ? p : 1 - p };
     }
     return placeView(S.loc.p);
+  }
+  // Sammelplatz: der gesuchte Gegenstand liegt im Bild, darunter füllt sich der Balken bis zum nächsten Fund.
+  function drawGather(draws) {
+    const g = gatherInfo();
+    if (!g) return;
+    const y = A.hero.y;
+    draws.push({ y: y + 1, fn: () => {
+      const cx = 190;
+      [-34, 0, 34].forEach((dx, i) => {
+        const bob = Math.sin(t * 2.2 + i * 1.7) * 1.5;
+        shadow(cx + dx, y + 2, 14);
+        ctx.globalAlpha = 0.55 + 0.45 * g.frac;
+        drawIcon(g.icon, cx + dx, y - 14 + bob, 24);
+        ctx.globalAlpha = 1;
+      });
+      const bw = 96, bh = 7, bx = cx - bw / 2, by = y + 3; // H = 160: der Balken muss noch im Bild liegen
+      ctx.fillStyle = 'rgba(0,0,0,0.75)'; ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
+      ctx.fillStyle = '#4a3a18'; ctx.fillRect(bx, by, bw, bh);
+      ctx.fillStyle = g.frac > 0.85 ? '#ffe070' : '#e0a830'; ctx.fillRect(bx, by, bw * g.frac, bh);
+      ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(bx, by, bw * g.frac, 2);
+      ctx.font = '700 8px "Alegreya Sans", sans-serif'; ctx.textAlign = 'center'; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(0,0,0,0.9)';
+      const label = `${g.item} ${g.p}/${g.need}`;
+      ctx.strokeText(label, cx, y - 36); ctx.fillStyle = '#ffe680'; ctx.fillText(label, cx, y - 36);
+    } });
   }
   function drawNpcs(draws) {
     const pl = here();
@@ -180,7 +204,7 @@ const Scene = (() => {
       if (target === 'enemy') {
         const ex = A.enemy.x, ey = A.enemy.y - spriteHeight(A.enemy.sprite) * 0.5;
         const show = () => {
-          A.enemy.flash = 0.12;
+          A.enemy.flash = 0.16; A.enemy.recoil = 0.16;
           text(fmt(amount) + (crit ? '!' : ''), ex, enemyTop(), { color: crit ? '#ffb020' : kind === 'dot' ? '#e0a0ff' : kind === 'tap' ? '#ffffff' : '#fff36a', size: crit ? 13 : kind === 'tap' ? 7 : 9 });
           if (crit) shake = Math.max(shake, 0.12);
         };
@@ -193,9 +217,9 @@ const Scene = (() => {
         else if (kind === 'tap') { show(); }
         else { show(); if (kind === 'melee') effect('slash', ex, ey, { small: true }); }
       } else {
-        A.hero.flash = 0.12;
-        text('-' + fmt(amount), A.hero.x, heroTop(), { color: kind === 'special' ? '#ff4040' : '#ff6a5a', size: kind === 'special' ? 12 : 8 });
-        if (kind === 'special') { shake = 0.35; redFlash = 0.35; }
+        A.hero.flash = 0.16;
+        text('-' + fmt(amount), A.hero.x, heroTop(), { color: kind === 'special' ? '#ff4040' : '#ff6a5a', size: kind === 'special' ? 12 : 9 });
+        if (kind === 'special') { shake = 0.35; redFlash = 0.35; } else { shake = Math.max(shake, 0.14); effect('slash', A.hero.x, A.hero.y - 24, { small: true }); }
       }
     },
     heal(amount, src) {
@@ -203,7 +227,7 @@ const Scene = (() => {
       effect('ring', A.hero.x, A.hero.y - 22, { sprite: 'fx_ring_green', dur: 0.5 });
       for (let i = 0; i < 5; i++) parts.push({ x: A.hero.x + rnd(-10, 10), y: A.hero.y - rnd(4, 40), vx: 0, vy: -18, life: 0.7, col: '#90ff90', size: 1 });
     },
-    attack(who) { if (who === 'hero') A.hero.lunge = 0.2; else A.enemy.lunge = 0.2; },
+    attack(who) { if (who === 'hero') A.hero.lunge = 0.2; else A.enemy.lunge = 0.3; },
     cast(id, sk) {
       text(sk.name, A.hero.x, heroTop() - 8, { color: '#ffe8a0', size: 7, vy: -10, life: 0.9 });
       if (sk.fx === 'ring') effect('ring', A.hero.x, A.hero.y - 22, { sprite: 'fx_ring', dur: 0.6 });
@@ -225,7 +249,7 @@ const Scene = (() => {
       else { p.lunge = 0.2; show(); }
     },
     death(who) {
-      if (who === 'enemy') { A.enemy.dying = 0.6; }
+      if (who === 'enemy') { A.enemy.dying = 0.6; shake = Math.max(shake, 0.2); }
       else { A.hero.dead = 1; }
     },
     revive() { A.hero.dead = 0; A.hero.flash = 0.3; effect('ring', A.hero.x, A.hero.y - 22, { sprite: 'fx_ring', dur: 0.6 }); },
@@ -246,6 +270,11 @@ const Scene = (() => {
     },
     warn(str) { warnText = { str, t: 2.2 }; if (typeof Snd !== 'undefined') Snd.play('warn'); },
     special() { shake = 0.4; redFlash = 0.4; },
+    dodge() { text('Ausgewichen!', A.hero.x, heroTop(), { color: '#9fe8ff', size: 9 }); A.hero.lunge = 0.0; },
+    synergy(str) {
+      text(str, A.hero.x + 8, heroTop() - 20, { color: '#ffb8ff', size: 7, vy: -10, life: 1.1 });
+      effect('ring', A.hero.x, A.hero.y - 22, { sprite: 'fx_ring', dur: 0.45 });
+    },
     levelUp(level) {
       effect('pillar', A.hero.x, A.hero.y, { dur: 1.6 });
       banner = { str: `Stufe ${level}!`, sub: 'Stufenaufstieg', t: 2.4, col: '#ffd84a' };
@@ -337,25 +366,34 @@ const Scene = (() => {
     const heroDead = b && b.h.dead > 0;
     const walking = S && S.walk && (!b || b.mode === 'adventure');
     if (walking && Math.random() < dt * 9) parts.push({ x: hero.x - 8 * S.walk.dir + rnd(-4, 4), y: hero.y - 1, vx: -S.walk.dir * rnd(6, 14), vy: -rnd(2, 6), life: rnd(0.4, 0.8), col: 'rgba(210,190,150,0.55)', size: 2 });
+    // Begleiter spiegeln sich mit dem Helden, wenn er nach links läuft, und hüpfen beim Reisen mit
+    const mirTarget = walking && S.walk.dir < 0 ? -1 : 1;
+    A.mir = (A.mir === undefined ? 1 : A.mir) + (mirTarget - (A.mir === undefined ? 1 : A.mir)) * Math.min(1, dt * 7);
+    const mir = A.mir;
+    const mx = (x) => hero.x + (x - hero.x) * mir;
+    const walkBob = (ph) => -Math.abs(Math.sin(t * 9 + ph)) * 2.2;
     if (S) {
       const bob = heroDead ? 0 : walking ? -Math.abs(Math.sin(t * 9)) * 2.4 : Math.sin(t * 2.4) * 1.1;
       const lx = hero.lunge > 0 ? Math.sin(Math.PI * (1 - hero.lunge / 0.2)) * 7 : 0;
       const tilt = walking ? 0.05 * S.walk.dir : 0;
       draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(heroSprite(), hero.x + lx, hero.y + bob, { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : tilt, grey: heroDead, flip: walking && S.walk.dir < 0 }); } });
       if (!walking && b && b.mode === 'adventure' && here().kind === 'hub') drawNpcs(draws);
+      if (!walking && b && b.mode === 'adventure') drawGather(draws);
       if (S.cls === 'jaeger' && !(ATLAS.sprites.painted || []).includes(heroSprite())) {
         const pet = A.pet;
         pet.lunge = Math.max(0, pet.lunge - dt);
-        const px2 = (S.comp.thorga ? 88 : 100) + (pet.lunge > 0 ? Math.sin(Math.PI * (1 - pet.lunge / 0.25)) * 18 : 0);
-        draws.push({ y: pet.y, fn: () => { shadow(px2, pet.y, 22); drawSprite('waldwolf', px2, pet.y + Math.sin(t * 3) * 0.6, { flip: true, scale: 0.8 }); } });
+        const px2 = mx((compOn('thorga') ? 88 : 100) + (pet.lunge > 0 ? Math.sin(Math.PI * (1 - pet.lunge / 0.25)) * 18 : 0));
+        const pbob = walking ? walkBob(1.3) : Math.sin(t * 3) * 0.6;
+        draws.push({ y: pet.y, fn: () => { shadow(px2, pet.y, 22); drawSprite('waldwolf', px2, pet.y + pbob, { flip: mirTarget > 0, scale: 0.8 }); } });
       }
       for (const c of COMPANIONS) {
-        if (!S.comp[c.id]) continue;
+        if (!compOn(c.id)) continue;
         const p = A.comps[c.id] || (A.comps[c.id] = { x: COMP_POS[c.id][0], y: COMP_POS[c.id][1], lunge: 0 });
         p.lunge = Math.max(0, p.lunge - dt);
         const lx2 = p.lunge > 0 ? Math.sin(Math.PI * (1 - p.lunge / 0.2)) * 6 : 0;
-        const bob2 = Math.sin(t * 2.1 + p.x) * 1;
-        draws.push({ y: p.y, fn: () => { shadow(p.x, p.y, 20); drawSprite(COMP_SPRITE[c.id], p.x + lx2, p.y + bob2, {}); } });
+        const bob2 = walking ? walkBob(p.x * 0.07) : Math.sin(t * 2.1 + p.x) * 1;
+        const cx2 = mx(p.x) + lx2 * mirTarget;
+        draws.push({ y: p.y, fn: () => { shadow(cx2, p.y, 20); drawSprite(COMP_SPRITE[c.id], cx2, p.y + bob2, { flip: mirTarget < 0 }); } });
       }
     }
     const en = A.enemy;
@@ -367,7 +405,9 @@ const Scene = (() => {
       else if (!b.enemy.dead) en.alpha = 1;
       const big = spriteHeight(en.sprite) > 60;
       const bob = Math.sin(t * 2 + 1) * (big ? 1.6 : 1.1);
-      const lx = en.lunge > 0 ? -Math.sin(Math.PI * (1 - en.lunge / 0.2)) * 7 : 0;
+      en.recoil = Math.max(0, (en.recoil || 0) - dt);
+      const rec = en.recoil > 0 ? Math.sin(Math.PI * (1 - en.recoil / 0.16)) * 3 : 0;
+      const lx = (en.lunge > 0 ? -Math.sin(Math.PI * (1 - en.lunge / 0.3)) * 14 : 0) + rec;
       const sink = en.dying > 0 ? (1 - en.dying / 0.6) * 6 : 0;
       const drop = en.spawn > 0 ? -en.spawn * 20 : 0;
       if (en.alpha > 0.01) {
@@ -537,14 +577,22 @@ const Scene = (() => {
         ctx.globalAlpha = Math.min(1, banner.t / 0.4, age / 0.15);
         const s = age < 0.2 ? 1.4 - age * 2 : 1;
         bigText(banner.str, W / 2, 52, banner.col, Math.round(18 * s));
-        if (banner.sub) { ctx.font = '700 8px "Cinzel", Georgia, serif'; ctx.fillStyle = '#f0e6c8'; ctx.fillText(banner.sub, W / 2, 68); }
+        if (banner.sub) { const sub = fitText(banner.sub, 10, 7, 400, W - 28); ctx.textAlign = 'center'; ctx.fillStyle = '#f0e6c8'; ctx.fillText(sub, W / 2, 68); }
         ctx.globalAlpha = 1;
       }
     }
   }
 
+  // Schrift verkleinern (zuletzt mit Auslassungspunkten), bis der Text in die Breite passt.
+  function fitText(str, px, minPx, weight, maxW) {
+    let size = px;
+    ctx.font = `${weight} ${size}px "Pirata One", Georgia, serif`;
+    while (ctx.measureText(str).width > maxW && size > minPx) { size -= 0.5; ctx.font = `${weight} ${size}px "Pirata One", Georgia, serif`; }
+    while (ctx.measureText(str).width > maxW && str.length > 3) str = str.slice(0, -2).replace(/\s+$/, '') + '…';
+    return str;
+  }
   function bigText(str, x, y, col, size) {
-    ctx.font = `700 ${size}px "Cinzel", Georgia, serif`;
+    str = fitText(str, Math.round(size * 1.18), 9, 400, W - 28);
     ctx.textAlign = 'center';
     ctx.lineWidth = 3;
     ctx.strokeStyle = 'rgba(12,6,2,0.95)';
