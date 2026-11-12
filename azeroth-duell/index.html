@@ -130,7 +130,19 @@ svg{display:block}
 .xp i{display:block;height:100%;background:linear-gradient(#b27cff,#7b4ad8)}
 .row{display:flex;gap:10px;align-items:center}
 .slots{display:flex;gap:10px;justify-content:space-around;padding:10px 6px}
-.slot{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--mut)}
+.slot{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11.5px;color:var(--mut);width:31%;text-align:center}
+.slot .sn{font-size:11.5px;line-height:1.2;font-weight:600;min-height:28px}
+.slot small{font-size:10.5px;color:var(--gold2)}
+.slot:active .ico{transform:translateY(2px)}
+.irow{display:flex;gap:10px;align-items:center;padding:10px;border-radius:12px;background:linear-gradient(#2e2318,#1b140d);border:2px solid #4a3a1c}
+.irow.on{border-color:var(--gold);box-shadow:0 0 14px #ffd10044}
+.irow .ii{flex:1;min-width:0;font-size:12px;line-height:1.3}
+.irow .ii b{font-family:var(--disp);font-size:13.5px;display:block}
+.irow .ii small{display:block;color:var(--mut)}
+.irow .ii .tg{color:#7fe36a}.irow .up{color:#7fe36a;font-weight:700}.irow .dn{color:#ff7a6e;font-weight:700}
+.irow .bt2{display:flex;flex-direction:column;gap:6px}
+.irow .ib{width:auto;min-width:38px;padding:0 10px;font-size:13px;font-weight:700;height:34px}
+.cmp{display:flex;gap:14px;justify-content:center;font-size:13px;padding:8px}
 .item{--is:62px}
 .item.r0{border-color:#cfcfcf}.item.r1{border-color:#1eff00}.item.r2{border-color:#0070dd}.item.r3{border-color:#a335ee}
 .abrow{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:10px 6px;--is:56px}
@@ -746,7 +758,7 @@ function icoHTML(a,extra='',attrs=''){
 ================================================================ */
 const KEY='azeroth_duell_v1';
 let S=null,B=null,hero=null,busy=false,soundOn=true;
-function load(){try{const j=localStorage.getItem(KEY);return j?JSON.parse(j):null}catch(e){return null}}
+function load(){try{const j=localStorage.getItem(KEY);if(!j)return null;const o=JSON.parse(j);o.bag=o.bag||[];o.eq=o.eq||{};return o}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 try{soundOn=localStorage.getItem(KEY+'_snd')!=='0'}catch(e){}
 
@@ -922,8 +934,9 @@ function camp(){
   const info=stageInfo(S.cleared),foe=enemyFor(info,RACES[S.race].f);
   const R=RACES[S.race],C=CLASSES[S.cls];
   const slots=[['w','Waffe'],['a','Rüstung'],['t','Schmuck']];
-  const itemBtn=([k,nm])=>{const it=S.eq[k];
-    return`<div class="slot">${it?`<button class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}" data-tip="item:${k}"><span class="g">${it.ic}</span></button>`:`<button class="ico item empty" data-tip="item:${k}"><span class="g" style="opacity:.25">${{w:'🗡️',a:'🛡️',t:'💍'}[k]}</span></button>`}<span>${nm}</span></div>`};
+  const itemBtn=([k,nm])=>{const it=S.eq[k],n=S.bag.filter(x=>x.slot===k).length;
+    const ic=it?`<span class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></span>`:`<span class="ico item empty"><span class="g" style="opacity:.25">${{w:'🗡️',a:'🛡️',t:'💍'}[k]}</span></span>`;
+    return`<button class="slot" data-a="slot:${k}">${ic}<span class="sn" style="color:${it?RARC[it.rar]:'var(--mut)'}">${it?esc(it.name):nm}</span><small>${n?n+' im Rucksack':'Wechseln'}</small></button>`};
   const lvl=hero.lvl,typ=info.type==='boss'?'Boss':info.type==='race'?'Duell':'Monster';
   const foeIcon=foe.mon?monFig(foe,74):avatar(foe.race,foe.cls,74);
   mount(`<div class="scr"><div class="top"><h2>Heldenlager</h2><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button><button class="ib" data-a="menu">☰</button></div>
@@ -931,7 +944,7 @@ function camp(){
       <div class="panel hero">${avatar(S.race,S.cls,86)}<div class="hi"><h2>${esc(S.name)}</h2>
         <div class="sub mut"><span style="color:${R.f==='a'?'#5ea6ff':'#ff6b5e'}">${R.f==='a'?'Allianz':'Horde'}</span> · ${R.n} ${C.n}</div>
         <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.cleared}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div></div></div>
-      <div class="sec">Ausrüstung</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
+      <div class="sec">Ausrüstung · antippen zum Wechseln</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
       <div class="sec">Symbole</div><div class="panel abrow">${C.ab.map((id,i)=>{const lk=lvl<UNLOCK[i];return icoHTML(A[id],lk?'nr':'',`data-tip="pv:${id}"`).replace('</button>',lk?`<span class="lk"><span>🔒</span><small>Stufe ${UNLOCK[i]}</small></span></button>`:'</button>')}).join('')}${icoHTML(A['r_'+R.ab],'racial',`data-tip="pv:r_${R.ab}"`)}</div>
       <div class="hint" style="margin-top:-6px">Symbol gedrückt halten für Details</div>
       <div class="sec">Nächster Gegner · ${info.zone.n}</div>
@@ -1128,7 +1141,30 @@ function genItem(lvl,info){
   const SUF=[['der Rekruten','des Lehrlings','der Wache'],['des Spähers','der Jagd','des Hüters'],['des Kriegsfürsten','der Sturmwacht','des Zorns'],['des Drachentöters','der Titanen','des Weltenbrechers']];
   const base=slot==='w'?C.wp:slot==='a'?C.ar:pick(['Amulett','Ring','Talisman']);
   const ic=slot==='w'?{Schwert:'🗡️',Streitkolben:'🔨',Bogen:'🏹',Dolch:'🔪',Stab:'🪄'}[C.wp]:slot==='a'?'🛡️':pick(['📿','💍','🔮']);
-  return{slot,slotN:{w:'Waffe',a:'Rüstung',t:'Schmuck'}[slot],name:`${base} ${pick(SUF[rar])}`,ic,rar,lvl,v:itemVal(lvl,rar)};
+  return{id:Math.random().toString(36).slice(2,9),slot,slotN:{w:'Waffe',a:'Rüstung',t:'Schmuck'}[slot],name:`${base} ${pick(SUF[rar])}`,ic,rar,lvl,v:itemVal(lvl,rar)};
+}
+function bagTrim(slot){const l=S.bag.filter(x=>x.slot===slot);while(l.length>8){l.sort((a,b)=>a.v-b.v);const x=l.shift();S.bag=S.bag.filter(y=>y!==x)}}
+function equipItem(id){
+  const it=S.bag.find(x=>x.id===id);if(!it)return false;
+  const old=S.eq[it.slot];S.eq[it.slot]=it;S.bag=S.bag.filter(x=>x!==it);if(old)S.bag.push(old);save();return true;
+}
+let GS='w';
+function gear(k){
+  hero=heroUnit(S);GS=k;
+  const nm={w:'Waffe',a:'Rüstung',t:'Schmuck'}[k],cur=S.eq[k];
+  const row=(it,eq)=>{
+    const d=(!eq&&cur)?it.v-cur.v:0;
+    return`<div class="irow ${eq?'on':''}"><span class="ico item r${it.rar}" style="--sc:${RARC[it.rar]};--is:54px"><span class="g">${it.ic}</span></span>
+      <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · Stufe ${it.lvl}</small>${itemText(it).map(l=>`<span class="tg">${l}</span>`).join('<br>')}
+      ${!eq&&cur?`<br><span class="${d>0?'up':d<0?'dn':'mut'}">${d>0?'▲ +'+d:d<0?'▼ '+d:'= gleich'}</span>`:''}</div>
+      <div class="bt2">${eq?'<span class="new">Angelegt</span>':`<button class="ib" data-a="equip:${it.id}">Anlegen</button><button class="ib" data-a="drop:${it.id}">🗑</button>`}</div></div>`;
+  };
+  const bag=S.bag.filter(x=>x.slot===k).sort((a,b)=>b.v-a.v);
+  mount(`<div class="scr"><div class="top"><button class="ib" data-a="camp">‹</button><h2>${nm} wechseln</h2></div>
+    <div class="scroll"><div class="panel cmp"><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div>
+    <div class="sec">Angelegt</div>${cur?row(cur,true):'<div class="hint">Nichts angelegt.</div>'}
+    <div class="sec">Rucksack (${bag.length}/8)</div>${bag.length?bag.map(i=>row(i,false)).join(''):'<div class="hint">Keine weiteren Teile dieser Art.<br>Besiege Gegner, um Beute zu finden.</div>'}
+    </div></div>`);
 }
 function itemScore(it){if(!it)return 0;return it.v*(it.slot==='w'?1.4:it.slot==='a'?1:.8)}
 
@@ -1138,14 +1174,15 @@ function result(win){
     SFX.win();
     const oldLvl=1+S.cleared;S.cleared++;
     const it=genItem(info.lvl,info);let eq=false;
-    if(itemScore(it)>itemScore(S.eq[it.slot])){S.eq[it.slot]=it;eq=true}
+    if(!S.eq[it.slot]){S.eq[it.slot]=it;eq=true}else{S.bag.push(it);bagTrim(it.slot)}
     save();
     const newAb=CLASSES[S.cls].ab.filter((_,i)=>UNLOCK[i]===oldLvl+1);
     html=`<div class="ovl"><h1>SIEG!</h1>
       <div class="box panel"><div class="lv">Stufe ${oldLvl+1} erreicht</div>
         ${newAb.map(id=>`<div class="new">Neues Symbol: ${A[id].ic} ${A[id].n}</div>`).join('')}
         <div class="rw"><button class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
-        <div class="${eq?'new':'mut'}">${eq?'✔ Automatisch angelegt':'Schlechter als deine aktuelle Ausrüstung'}</div></div>
+        <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':(()=>{const d=it.v-S.eq[it.slot].v;return d>0?`<span class="new">▲ Besser als dein aktuelles Teil (+${d})</span>`:`Im Rucksack · ${d<0?d:'gleichwertig'} zum aktuellen Teil`})()}</div></div>
+      ${eq?'':`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`}
       <button class="btn" data-a="camp">Weiter</button></div>`;
   }else{
     SFX.lose();
@@ -1171,7 +1208,11 @@ function onAct(a,el){
     case 'cnext':{
       if(CR.step<2){CR.step++;crHero();creation();break}
       const nm=($$('nm').value||'').trim()||'Held';
-      S={name:nm,race:CR.race,cls:CR.cls,cleared:0,eq:{}};save();camp();break}
+      S={name:nm,race:CR.race,cls:CR.cls,cleared:0,eq:{},bag:[]};save();camp();break}
+    case 'slot':gear(v);break;
+    case 'equip':if(equipItem(v)){SFX.heal();gear(GS)}break;
+    case 'drop':S.bag=S.bag.filter(x=>x.id!==v);save();gear(GS);break;
+    case 'eqnow':if(equipItem(v)){SFX.heal();const n=$$('eqnote');if(n){n.className='new';n.textContent='✔ Angelegt'}const b=$$('eqbtn');if(b)b.style.display='none'}break;
     case 'fight':startBattle();break;
     case 'retry':startBattle();break;
     case 'camp':B=null;camp();break;

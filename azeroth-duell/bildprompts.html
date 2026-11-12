@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Azeroth Duell – Bildprompts</title>
+<style>
+:root{--ink:#2b1d0e;--gold:#8a5a00;--red:#a3201a}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  background:radial-gradient(120% 60% at 50% 0%,#f6e7c0,#e6cf99 70%,#d2b676);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 80px}
+h1{font:800 28px Georgia,serif;margin:6px 0 2px;color:#5a3a06}
+h2{font:800 20px Georgia,serif;margin:26px 0 8px;color:var(--red);border-bottom:2px solid #8a5a0066;padding-bottom:4px}
+.lead{color:#5b4220;margin:0 0 12px}
+.bar{position:sticky;top:0;z-index:5;background:#e6cf99ee;padding:8px 0;backdrop-filter:blur(4px)}
+input{width:100%;padding:11px 12px;border-radius:8px;border:2px solid #8a5a00;background:#fff8e6;font-size:16px;color:var(--ink)}
+.style{background:#fff8e6;border:2px solid #8a5a0088;border-radius:10px;padding:10px 12px;margin:8px 0}
+.style b{color:var(--gold)}
+.style p{margin:4px 0 8px;font-size:13px;-webkit-user-select:text;user-select:text}
+ol{list-style:none;margin:0;padding:0;counter-reset:n}
+li{counter-increment:n;display:flex;gap:10px;align-items:flex-start;background:#fff8e6cc;border:1px solid #8a5a0055;border-radius:10px;padding:9px 10px;margin:7px 0}
+li::before{content:counter(n);flex:none;min-width:24px;height:24px;border-radius:12px;background:#5a3a06;color:#fff3cf;font:700 12px/24px system-ui;text-align:center}
+li .t{flex:1;min-width:0}
+li .t b{display:block;font-size:14px}
+li .t span{display:block;font-size:12.5px;color:#4a371c;-webkit-user-select:text;user-select:text;word-break:break-word}
+button{font:700 13px system-ui;color:#fff;background:linear-gradient(#d23a30,#8f1812);border:2px solid #5e0f0b;border-radius:4px;padding:8px 12px;cursor:pointer;box-shadow:0 2px 0 #4a0b08;flex:none}
+button:active{transform:translateY(2px);box-shadow:none}
+button.ok{background:linear-gradient(#3da04a,#1f6a2a);border-color:#124a1a}
+button.all{margin-bottom:4px}
+.hide{display:none!important}
+.tips li::before{content:"✦";background:none;color:var(--red);font-size:16px}
+.tips li{display:list-item;list-style:none;display:block}
+.tips li::before{display:inline;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Azeroth Duell – Bildprompts</h1>
+<p class="lead">Jeder Eintrag ist ein fertiger Prompt (Stil-Block + Motiv). „Kopieren“ legt ihn in die Zwischenablage. Klappt das nicht, den Text lange gedrückt halten und markieren.</p>
+<div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Orc, Button, Feuerball …"></div>
+
+<h2>Stil-Blöcke</h2>
+<div id="styles"></div>
+<div id="out"></div>
+
+<h2>Tipps</h2>
+<ol class="tips">
+<li>Erst 3–4 Icons erzeugen, das beste als Stil-Referenzbild für alle weiteren verwenden.</li>
+<li>Echtes SVG liefert z. B. Recraft; sonst PNG erzeugen und mit Inkscape/Vectorizer nachzeichnen.</li>
+<li>Größen fürs Spiel: Icons 256×256, Porträts 512×512, Hintergründe 1080×1920. Buttons als 9-Slice anlegen.</li>
+</ol>
+</div>
+<script>
+const ST={
+ icon:"flat vector game icon, bold clean shapes, thick dark brown outline, limited warm palette with one strong accent color, subtle cel-shaded highlights, centered single subject, high contrast, fantasy MMO style inspired by classic World of Warcraft icons, no text, no watermark, transparent background, square 1:1, SVG-friendly, 512x512",
+ portrait:"stylized vector character portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, expressive glowing eyes, shoulder armor visible, circular composition, transparent background, no text, SVG-friendly, 1024x1024",
+ monster:"stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, menacing expression, circular composition, transparent background, no text, SVG-friendly, 1024x1024",
+ ui:"vector game UI asset, hand-painted fantasy MMO interface style like classic World of Warcraft, worn aged materials, crisp edges, no text, no characters, SVG-friendly"
+};
+const SC={Physisch:'steel gray',Feuer:'orange',Frost:'ice blue',Arkan:'violet',Natur:'green',Schatten:'dark purple',Heilig:'gold'};
+const G=[];
+const add=(title,style,items)=>G.push({title,style,items:items.map(([n,p])=>({n,p:(style?ST[style]+', ':'')+p}))});
+
+add('1. UI: Hintergrund (Pergament)','ui',[
+ ['Pergament hell (Menüs)','seamless-looking aged parchment paper background, portrait 9:19, light cream and warm beige tones, subtle fibers and stains, darker burnt and torn edges with soft vignette, faint ink splatters in the corners, a very faint compass-rose watermark in the center, plenty of calm empty space for UI on top, 1080x2280'],
+ ['Pergament dunkel (Kampfleiste)','aged parchment paper background, portrait 9:19, dark weathered brown parchment, leather-stained, candle-lit scorched edges, subtle fibers, soft vignette, calm empty center for UI, 1080x2280'],
+ ['Pergamentrolle (Tooltip-Panel)','small parchment scroll panel with curled top and bottom edges, flat empty center, thin wax-seal-red border line, 4:3, transparent outside']
+]);
+add('2. UI: Buttons (rot, eckig)','ui',[
+ ['Button Standard – normal','rectangular game button, deep crimson red with a subtle vertical gradient, squared angular corners with small chamfered corners, thin gold-bronze metal frame with tiny rivets in the corners, inner dark red bevel, slight glossy top highlight, empty center for text, default state, 3:1 ratio, 960x320'],
+ ['Button Standard – gedrückt','rectangular game button, deep crimson red, squared angular chamfered corners, thin gold-bronze metal frame with rivets, pressed state, darker red, inner shadow, frame slightly sunk, empty center for text, 3:1, 960x320'],
+ ['Button Standard – deaktiviert','rectangular game button, squared angular chamfered corners, bronze frame with rivets, disabled state, desaturated gray-red face, dull frame, empty center for text, 3:1, 960x320'],
+ ['Button Standard – aktiv/Hover','rectangular game button, bright crimson red, squared angular chamfered corners, gold-bronze frame with rivets, highlighted state with soft golden glow around the frame, empty center for text, 3:1, 960x320'],
+ ['Button klein, quadratisch (Menü, Ton, Zurück)','small square game button, crimson red face, chamfered corners, gold-bronze frame with rivets, empty center, 1:1, 256x256'],
+ ['Button golden (Hauptaktion „Kampf beginnen“)','wide rectangular call-to-action button, polished gold and amber metal plate, angular chamfered corners, engraved border line, red gem at each end, empty center, 3:1, 960x320']
+]);
+add('3. UI: Rahmen, Plaketten, Balken','ui',[
+ ['Symbol-Rahmen (Fähigkeit)','square ability slot frame, thick bronze-gold border with beveled edges and four corner studs, dark empty inner field, slightly rounded corners, 1:1, 512x512'],
+ ['Symbol-Rahmen Völkerfähigkeit','square ability slot frame, thick bronze border with green glowing inner edge, beveled, four corner studs, dark empty inner field, 1:1, 512x512'],
+ ['Symbol-Rahmen Gegenstand/Trank','square ability slot frame, thick bronze border with red glowing inner edge, beveled, four corner studs, dark empty inner field, 1:1, 512x512'],
+ ['Symbol-Rahmen gesperrt','square ability slot frame, dull gray iron border, small padlock on the lower edge, dark empty inner field, 1:1, 512x512'],
+ ['Seltenheit Gewöhnlich','square item frame, silver-white border, beveled, corner studs, dark empty inner field, 1:1, 512x512'],
+ ['Seltenheit Selten','square item frame, bright green border, beveled, corner studs, dark empty inner field, 1:1, 512x512'],
+ ['Seltenheit Hervorragend','square item frame, rich blue border, beveled, corner studs, dark empty inner field, 1:1, 512x512'],
+ ['Seltenheit Episch','square item frame, violet border with soft purple glow, beveled, corner studs, dark empty inner field, 1:1, 512x512'],
+ ['Einheitenrahmen / Namensplakette','horizontal unit nameplate, dark leather and bronze frame, empty long health bar slot and thinner resource bar slot beneath, small level badge at the right end, 4:1, 1200x300'],
+ ['Lebensbalken','horizontal health bar fill, glossy green gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
+ ['Manabalken','horizontal resource bar fill, glossy blue gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
+ ['Wutbalken','horizontal resource bar fill, glossy red gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
+ ['Energiebalken','horizontal resource bar fill, glossy yellow gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
+ ['Fokusbalken','horizontal resource bar fill, glossy orange gradient with small top highlight, plus empty dark trough with metal rim, 10:1']
+]);
+add('4. UI: Logo, Banner','ui',[
+ ['Titel-Logo','game logo lettering "AZEROTH DUELL", chiseled gold metallic serif letters with dark bronze outline and warm glow, crossed sword and axe behind the text, transparent background, 3:1, 1500x500'],
+ ['Siegbanner','victory banner, golden laurel wreath and radiating sunburst behind an empty gold plaque, 3:2'],
+ ['Niederlage-Banner','defeat banner, cracked gray stone plaque, broken sword, dark smoke, 3:2']
+]);
+const zone=(n,t)=>[n,'painterly vector battle arena background, portrait 9:16, flat ground plane in the lower third for two fighters, atmospheric depth layers (foreground, midground, far background), soft fog, no characters, no text, empty center, '+t+', 1080x1920'];
+add('5. Kampf-Hintergründe (5 Zonen)','ui',[
+ zone('Wald der Nebel','misty ancient forest, tall dark green pines and oaks, golden light rays through the fog, mossy stone path'),
+ zone('Die Rote Wüste','red desert canyon, sandstone arches, cacti, orange-red sky with two suns low, dust haze'),
+ zone('Düsterfenn','gloomy swamp graveyard, crooked tombstones, dead trees, purple-blue night, will-o-wisps, ruined chapel'),
+ zone('Eiskronengletscher','frozen glacier plateau, jagged ice peaks, blowing snow, cold blue light, ancient frozen ruins'),
+ zone('Brennende Steppe','volcanic wasteland, rivers of lava, black basalt spires, ember sky with floating sparks, demonic banners')
+]);
+add('6. Rassen-Porträts (8)','portrait',[
+ ['Mensch','young human adventurer, short brown hair, warm friendly face, light skin, kingdom-blue background glow, steel pauldrons'],
+ ['Zwerg','stocky dwarf, huge braided copper-orange beard with gold rings, bushy eyebrows, round nose, sturdy plate shoulders, blue background with forge glow'],
+ ['Nachtelf','night elf, violet-blue skin, long pointed upturned ears, long teal-white hair, glowing silver eyes without pupils, subtle facial markings, moonlit blue background'],
+ ['Gnom','tiny gnome inventor, oversized head, wild bubblegum-pink hair puffs, brass goggles on forehead, cheeky grin, gear and cog details, blue workshop background'],
+ ['Orc','muscular orc warrior, green skin, strong jaw with two upward tusks, black topknot ponytail, heavy brow, yellow-red eyes, spiked iron pauldrons, ember-red background'],
+ ['Untoter','undead Forsaken, gray-green decaying skin, sunken cheeks, exposed teeth and jawbone, glowing yellow eyes, thin dark ragged hair, tattered cloth shoulders, sickly violet mist, red-tinted background'],
+ ['Taure','tauren, brown bull face with wide snout and gold nose ring, curved ivory horns, black mane, large side ears, tribal totem shoulders, golden plains background with red tint'],
+ ['Troll','jungle troll, teal-blue skin, tall crimson mohawk, long curved tusks, long pointy ears, glowing yellow eyes, tribal bone shoulders, jungle green and red background']
+]);
+const badge=(n,col,m)=>[n,'circular class emblem badge, '+col+' as main color, '+m];
+add('7. Klassen-Wappen (9)','icon',[
+ badge('Krieger','sand brown #C79C6E','crossed sword and shield'),
+ badge('Paladin','pink #F58CBA','glowing warhammer with holy wings'),
+ badge('Jäger','light green #ABD473','bow with arrow and paw print'),
+ badge('Schurke','yellow #FFF569','two crossed daggers'),
+ badge('Priester','white #F0F0F0','radiant star burst with halo'),
+ badge('Schamane','blue #2B7DF0','lightning bolt over a totem'),
+ badge('Magier','light blue #69CCF0','arcane orb with swirling runes'),
+ badge('Hexenmeister','violet #9482C9','purple flame skull with demon eye'),
+ badge('Druide','orange #FF7D0A','oak leaf with moon crescent and claw marks')
+]);
+const ab=(n,s,m)=>[n,SC[s]+' accent color, '+m];
+add('8. Klassenfähigkeiten: Krieger, Paladin, Jäger','icon',[
+ ab('Krieger: Heldenhafter Stoß','Physisch','sword slash arc with spark'),
+ ab('Krieger: Zerschmettern','Physisch','heavy hammer smashing the ground, cracks'),
+ ab('Krieger: Schildschlag','Physisch','shield with impact burst and stars'),
+ ab('Krieger: Schlachtruf','Physisch','war horn with red sound waves'),
+ ab('Krieger: Hinrichten','Physisch','executioner axe above a skull'),
+ ab('Paladin: Kreuzfahrerstoß','Physisch','glowing cross-shaped sword strike'),
+ ab('Paladin: Richturteil','Heilig','golden scales of justice with light beam'),
+ ab('Paladin: Heiliges Licht','Heilig','soft golden light cascading from above'),
+ ab('Paladin: Segen der Macht','Heilig','praying hands with golden aura'),
+ ab('Paladin: Göttlicher Schutz','Heilig','golden shield bubble with wings'),
+ ab('Jäger: Schuss','Physisch','single arrow in flight'),
+ ab('Jäger: Zielschuss','Physisch','crosshair over a bullseye with arrow'),
+ ab('Jäger: Schlangenbiss','Natur','green viper with fangs and poison drops'),
+ ab('Jäger: Mehrfachschuss','Physisch','three arrows raining down'),
+ ab('Jäger: Frostfalle','Frost','steel trap with ice crystals')
+]);
+add('9. Klassenfähigkeiten: Schurke, Priester, Schamane','icon',[
+ ab('Schurke: Boshafter Stich','Physisch','dagger stabbing with blood spark'),
+ ab('Schurke: Blutung','Physisch','red blood drop with dripping blade'),
+ ab('Schurke: Nierenhieb','Physisch','clenched fist with impact lines'),
+ ab('Schurke: Entrinnen','Physisch','swirling smoke cloud with fading silhouette'),
+ ab('Schurke: Meucheln','Physisch','dagger and skull, deadly red glint'),
+ ab('Priester: Strafe','Heilig','bolt of holy light from a staff'),
+ ab('Priester: Schattenwort: Schmerz','Schatten','purple skull with dark tendrils'),
+ ab('Priester: Blitzheilung','Heilig','pink glowing heart with sparkles'),
+ ab('Priester: Machtwort: Schild','Heilig','translucent blue-gold shield with runes'),
+ ab('Priester: Heiliges Feuer','Heilig','white-gold flame descending'),
+ ab('Schamane: Blitzschlag','Natur','crackling blue-green lightning bolt'),
+ ab('Schamane: Flammenschock','Feuer','fire burst from a stone totem'),
+ ab('Schamane: Erdschock','Natur','erupting earth with cracked stone shards'),
+ ab('Schamane: Welle der Heilung','Natur','curling teal wave with green sparkles'),
+ ab('Schamane: Kampfrausch','Natur','swirling wind vortex with red streaks')
+]);
+add('10. Klassenfähigkeiten: Magier, Hexenmeister, Druide','icon',[
+ ab('Magier: Frostblitz','Frost','ice shard bolt with snow trail'),
+ ab('Magier: Feuerball','Feuer','blazing fireball comet'),
+ ab('Magier: Arkane Geschosse','Arkan','three purple magic missiles'),
+ ab('Magier: Frostnova','Frost','expanding ring of ice spikes'),
+ ab('Magier: Manaschild','Arkan','violet-blue arcane shield bubble with runes'),
+ ab('Hexenmeister: Schattenblitz','Schatten','dark purple bolt with black smoke'),
+ ab('Hexenmeister: Verderbnis','Schatten','wilting rose with dark mist'),
+ ab('Hexenmeister: Lebensentzug','Schatten','red drops flowing from a victim into a hand'),
+ ab('Hexenmeister: Furcht','Schatten','terrified screaming ghost face'),
+ ab('Hexenmeister: Seelenfeuer','Feuer','green-orange fel fire explosion with skull'),
+ ab('Druide: Zorn','Natur','green leaf bolt with wooden thorn'),
+ ab('Druide: Mondfeuer','Arkan','glowing moon crescent with falling silver sparks'),
+ ab('Druide: Verjüngung','Natur','sprouting seedling with green glow'),
+ ab('Druide: Wurzeln','Natur','thick tree roots coiling upward'),
+ ab('Druide: Sternenfall','Arkan','big falling star comet with arcane trail')
+]);
+const rc=(n,m)=>[n,'bright green accent color and green border glow, '+m];
+add('11. Völkerfähigkeiten (8)','icon',[
+ rc('Mensch: Wille der Menschheit','raised determined fist with white aura'),
+ rc('Zwerg: Steingestalt','body turned to gray granite skin, rock shards'),
+ rc('Nachtelf: Schattenhuschen','translucent elf silhouette dissolving into purple mist'),
+ rc('Gnom: Entfesselungskünstler','broken chain and glowing cogs'),
+ rc('Orc: Blutrausch','red rage aura around a roaring orc face'),
+ rc('Untoter: Kannibalismus','bone and bitten ribs with green glow'),
+ rc('Taure: Kriegsdonner','hoof stomping the ground with shockwave'),
+ rc('Troll: Berserker','twin axes with red frenzy swirls')
+]);
+const it=(n,m)=>[n,m+', rarity color rim glow (generate in white, green, blue and purple variants)'];
+add('12. Gegenstände','icon',[
+ it('Schwert','ornate longsword with crossguard'),
+ it('Streitkolben','flanged mace with studded head'),
+ it('Bogen','recurve longbow with carved limbs'),
+ it('Dolch','slender curved dagger'),
+ it('Stab','wooden staff with glowing crystal tip'),
+ it('Brustplatte','plate chestpiece with shoulder guards'),
+ it('Lederwams','studded leather jerkin'),
+ it('Robe','embroidered cloth robe with hood'),
+ it('Amulett','pendant necklace with gemstone'),
+ it('Ring','gold ring with a gem'),
+ it('Talisman','carved rune talisman on a cord'),
+ ['Heiltrank','red health potion in a round glass flask with cork, glowing liquid, gold label rune, ' ],
+ ['Abwarten','hourglass with golden sand, ']
+].map(([n,p])=>[n,p.replace(/, $/,'')]));
+add('13. Status-Symbole (klein)','icon',[
+ ['Betäubung','circling stars around a dizzy head'],
+ ['Blutung','red blood drop'],
+ ['Gift','green poison cloud'],
+ ['Schild','blue shield'],
+ ['Verlangsamt','ice crystal with snowflake'],
+ ['Heilung über Zeit','green plus sign with leaf'],
+ ['Wut-Buff','red aura flame around a fist']
+]);
+const mo=(n,m)=>[n,m];
+add('14. Monster (20)','monster',[
+ mo('Wolf','snarling gray wolf'),mo('Wilder Eber','tusked wild boar with bristly mane'),mo('Murloc','blue-teal murloc with wide mouth and bulging eyes'),
+ mo('Riesenspinne','large purple-black spider with red eyes'),mo('Skorpid','armored desert scorpion'),mo('Harpyie','screeching harpy with feathered wings and talons'),
+ mo('Giftschlange','coiled green cobra, hood flared'),mo('Krokilisk','armored swamp crocolisk with jaws open'),mo('Zombie','rotting zombie, torn clothes, green skin'),
+ mo('Skelettkrieger','skeleton with rusted sword and cracked shield'),mo('Blutfledermaus','giant red-eyed bat with fangs'),mo('Rastloser Geist','pale blue ghost with wailing face'),
+ mo('Gletscher-Yeti','white-furred yeti roaring'),mo('Eiselementar','floating ice elemental with crystal body'),mo('Frostwyrm-Welpe','young blue frost drake'),
+ mo('Eisbär','polar bear with scarred face'),mo('Wichtel','small magenta imp with flames'),mo('Feuerelementar','living fire elemental with molten core'),
+ mo('Lavagolem','hulking lava golem with glowing cracks'),mo('Schwarzer Drachkin','dark dragonkin humanoid with horns and wings')
+]);
+const bo=(n,m)=>[n,'elite boss, glowing silver-gold frame, menacing aura, '+m];
+add('15. Bosse (6)','monster',[
+ bo('Hogger','huge muscular gnoll with brown fur and dog snout, brutal grin'),
+ bo('Edwin VanCleef','masked human rogue in red bandana, twin daggers'),
+ bo('Onyxia','giant black dragon with red eyes, spread wings'),
+ bo('Kel’Thuzad','pale lich in purple robes with frost crown and glowing blue eyes'),
+ bo('Ragnaros','fire lord of molten rock with flaming hair and hammer'),
+ bo('C’Thun','giant green eldritch eye with tentacles')
+]);
+const fx=(n,m)=>[n,'flat vector battle effect sprite, '+m+', transparent background, 512x512'];
+add('16. Effekte','',[
+ fx('Treffer-Funke','yellow-white impact spark burst'),
+ fx('Kritischer Treffer','large red star burst with speed lines'),
+ fx('Heil-Glitzer','green sparkles rising'),
+ fx('Schadenszahl-Rahmen','jagged spiky star frame, empty center'),
+ fx('Betäubungssterne','three yellow stars circling'),
+ fx('Level-Up-Strahlen','golden light rays bursting from the center')
+]);
+
+const out=document.getElementById('out'),styles=document.getElementById('styles');
+const names={icon:'STIL-ICON (Fähigkeiten, Items, Wappen)',portrait:'STIL-PORTRAIT (Rassen)',monster:'STIL-MONSTER (Monster, Bosse)',ui:'STIL-UI (Hintergründe, Buttons, Rahmen)'};
+function copy(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='Kopiert ✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1400)};
+  try{navigator.clipboard.writeText(text).then(done,()=>fallback(text,done))}catch(e){fallback(text,done)}
+}
+function fallback(text,done){
+  const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+  try{document.execCommand('copy');done()}catch(e){}t.remove();
+}
+for(const k in names){
+  const d=document.createElement('div');d.className='style';
+  d.innerHTML=`<b>${names[k]}</b><p>${ST[k]}</p>`;
+  const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(ST[k],b);d.appendChild(b);styles.appendChild(d);
+}
+for(const g of G){
+  const h=document.createElement('h2');h.textContent=g.title+` (${g.items.length})`;
+  const all=document.createElement('button');all.className='all';all.textContent='Alle dieser Gruppe kopieren';
+  all.onclick=()=>copy(g.items.map(i=>i.n+':\n'+i.p).join('\n\n'),all);
+  const ol=document.createElement('ol');
+  for(const i of g.items){
+    const li=document.createElement('li');li.dataset.s=(g.title+' '+i.n+' '+i.p).toLowerCase();
+    li.innerHTML=`<div class="t"><b></b><span></span></div>`;
+    li.querySelector('b').textContent=i.n;li.querySelector('span').textContent=i.p;
+    const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(i.p,b);li.appendChild(b);ol.appendChild(li);
+  }
+  const wrap=document.createElement('section');wrap.append(h,all,ol);out.appendChild(wrap);
+}
+document.getElementById('q').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#out li').forEach(li=>li.classList.toggle('hide',!!q&&!li.dataset.s.includes(q)));
+  document.querySelectorAll('#out section').forEach(s=>s.classList.toggle('hide',!!q&&![...s.querySelectorAll('li')].some(l=>!l.classList.contains('hide'))));
+});
+</script>
+</body>
+</html>
