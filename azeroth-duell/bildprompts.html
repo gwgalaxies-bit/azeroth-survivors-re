@@ -37,16 +37,14 @@ button.all{margin-bottom:4px}
 <body>
 <div class="wrap">
 <h1>Azeroth Duell – Bildprompts</h1>
-<p class="lead">Jeder Eintrag ist ein fertiger Prompt (Stil-Block + Motiv). „Kopieren“ legt ihn in die Zwischenablage. Klappt das nicht, den Text lange gedrückt halten und markieren.</p>
+<p class="lead">Jeder Eintrag ist ein <b>kompletter, einzeln nutzbarer Prompt</b>: einmal auf „Kopieren“ tippen, in den Bildgenerator einfügen, fertig. Nichts muss zusammengesetzt werden. Klappt das Kopieren nicht, den Text lange gedrückt halten und markieren.</p>
 <div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Orc, Button, Feuerball …"></div>
 
-<h2>Stil-Blöcke</h2>
-<div id="styles"></div>
 <div id="out"></div>
 
 <h2>Tipps</h2>
 <ol class="tips">
-<li>Erst 3–4 Icons erzeugen, das beste als Stil-Referenzbild für alle weiteren verwenden.</li>
+<li>Optional für noch einheitlichere Ergebnisse: das beste erzeugte Bild als Stil-Referenz im Generator hinterlegen.</li>
 <li>Echtes SVG liefert z. B. Recraft; sonst PNG erzeugen und mit Inkscape/Vectorizer nachzeichnen.</li>
 <li>Größen fürs Spiel: Icons 256×256, Porträts 512×512, Hintergründe 1080×1920. Buttons als 9-Slice anlegen.</li>
 </ol>
@@ -85,11 +83,11 @@ add('3. UI: Rahmen, Plaketten, Balken','ui',[
  ['Seltenheit Hervorragend','square item frame, rich blue border, beveled, corner studs, dark empty inner field, 1:1, 512x512'],
  ['Seltenheit Episch','square item frame, violet border with soft purple glow, beveled, corner studs, dark empty inner field, 1:1, 512x512'],
  ['Einheitenrahmen / Namensplakette','horizontal unit nameplate, dark leather and bronze frame, empty long health bar slot and thinner resource bar slot beneath, small level badge at the right end, 4:1, 1200x300'],
- ['Lebensbalken','horizontal health bar fill, glossy green gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
- ['Manabalken','horizontal resource bar fill, glossy blue gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
- ['Wutbalken','horizontal resource bar fill, glossy red gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
- ['Energiebalken','horizontal resource bar fill, glossy yellow gradient with small top highlight, plus empty dark trough with metal rim, 10:1'],
- ['Fokusbalken','horizontal resource bar fill, glossy orange gradient with small top highlight, plus empty dark trough with metal rim, 10:1']
+ ['Lebensbalken','complete horizontal health bar, dark metal rim with an empty dark trough, filled about 70% with a glossy green gradient and a small top highlight, 10:1, 1000x100'],
+ ['Manabalken','complete horizontal resource bar, dark metal rim with an empty dark trough, filled about 70% with a glossy blue gradient and a small top highlight, 10:1, 1000x100'],
+ ['Wutbalken','complete horizontal resource bar, dark metal rim with an empty dark trough, filled about 70% with a glossy red gradient and a small top highlight, 10:1, 1000x100'],
+ ['Energiebalken','complete horizontal resource bar, dark metal rim with an empty dark trough, filled about 70% with a glossy yellow gradient and a small top highlight, 10:1, 1000x100'],
+ ['Fokusbalken','complete horizontal resource bar, dark metal rim with an empty dark trough, filled about 70% with a glossy orange gradient and a small top highlight, 10:1, 1000x100'],
 ]);
 add('4. UI: Logo, Banner','ui',[
  ['Titel-Logo','game logo lettering "AZEROTH DUELL", chiseled gold metallic serif letters with dark bronze outline and warm glow, crossed sword and axe behind the text, transparent background, 3:1, 1500x500'],
@@ -189,22 +187,14 @@ add('11. Völkerfähigkeiten (8)','icon',[
  rc('Taure: Kriegsdonner','hoof stomping the ground with shockwave'),
  rc('Troll: Berserker','twin axes with red frenzy swirls')
 ]);
-const it=(n,m)=>[n,m+', rarity color rim glow (generate in white, green, blue and purple variants)'];
-add('12. Gegenstände','icon',[
- it('Schwert','ornate longsword with crossguard'),
- it('Streitkolben','flanged mace with studded head'),
- it('Bogen','recurve longbow with carved limbs'),
- it('Dolch','slender curved dagger'),
- it('Stab','wooden staff with glowing crystal tip'),
- it('Brustplatte','plate chestpiece with shoulder guards'),
- it('Lederwams','studded leather jerkin'),
- it('Robe','embroidered cloth robe with hood'),
- it('Amulett','pendant necklace with gemstone'),
- it('Ring','gold ring with a gem'),
- it('Talisman','carved rune talisman on a cord'),
- ['Heiltrank','red health potion in a round glass flask with cork, glowing liquid, gold label rune, ' ],
- ['Abwarten','hourglass with golden sand, ']
-].map(([n,p])=>[n,p.replace(/, $/,'')]));
+const RARS=[['Gewöhnlich','plain silver-white rim, no glow'],['Selten','bright green rim with a faint green glow'],['Hervorragend','rich blue rim with a faint blue glow'],['Episch','violet rim with a strong purple glow and tiny sparks']];
+const gear=[['Schwert','ornate longsword with crossguard'],['Streitkolben','flanged mace with studded head'],['Bogen','recurve longbow with carved limbs'],['Dolch','slender curved dagger'],['Stab','wooden staff with glowing crystal tip'],
+ ['Brustplatte','plate chestpiece with shoulder guards'],['Lederwams','studded leather jerkin'],['Robe','embroidered cloth robe with hood'],['Amulett','pendant necklace with gemstone'],['Ring','gold ring with a gem'],['Talisman','carved rune talisman on a cord']];
+const gi=[];
+for(const [n,m] of gear)for(const [r,rm] of RARS)gi.push([n+' – '+r,m+', '+rm]);
+gi.push(['Heiltrank','red health potion in a round glass flask with cork, glowing liquid, gold label rune']);
+gi.push(['Abwarten','hourglass with golden sand']);
+add('12. Gegenstände (jede Seltenheit einzeln)','icon',gi);
 add('13. Status-Symbole (klein)','icon',[
  ['Betäubung','circling stars around a dizzy head'],
  ['Blutung','red blood drop'],
@@ -252,11 +242,6 @@ function copy(text,btn){
 function fallback(text,done){
   const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
   try{document.execCommand('copy');done()}catch(e){}t.remove();
-}
-for(const k in names){
-  const d=document.createElement('div');d.className='style';
-  d.innerHTML=`<b>${names[k]}</b><p>${ST[k]}</p>`;
-  const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(ST[k],b);d.appendChild(b);styles.appendChild(d);
 }
 for(const g of G){
   const h=document.createElement('h2');h.textContent=g.title+` (${g.items.length})`;
