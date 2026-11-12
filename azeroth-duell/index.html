@@ -248,7 +248,7 @@ svg{display:block}
 .acts{display:grid;grid-template-columns:repeat(4,1fr);gap:9px 6px;max-width:372px;margin:0 auto;justify-items:center;--is:min(18.5vw,80px)}
 .ico.pot{--fr:var(--i-fr-red)}
 .ico.pass{--fr:var(--i-fr-bronze)}
-.acts.lock{pointer-events:none;opacity:.7}
+.acts.lock{opacity:.7}
 .hintbar{text-align:center;font-size:11.5px;color:var(--mut);margin-bottom:6px}
 
 /* Ergebnis */
@@ -376,14 +376,14 @@ const RACES={
   troll:{n:'Troll',f:'h',skin:'#3f93a6',hair:'#d12f2f',regen:.03,pas:'Regeneration: heilt jeden Zug 3 % des max. Lebens.',d:'Die Dunkelspeer-Trolle, schnell und zäh.',ab:'troll',cls:['krieger','jaeger','schurke','priester','schamane','magier']}
 };
 const CLASSES={
-  krieger:{n:'Krieger',ic:'⚔️',col:'#C79C6E',hp:1.25,ap:1.05,arm:1.6,res:.6,spd:10,rk:'rage',wp:'Schwert',ar:'Brustplatte',d:'Zäher Frontkämpfer. Baut Wut auf und schmettert den Feind nieder.',ab:['stoss','zerschm','schildschlag','schlachtruf','hinrichten']},
-  paladin:{n:'Paladin',ic:'🔨',col:'#F58CBA',hp:1.2,ap:1.02,arm:1.4,res:1.0,spd:9,rk:'mana',wp:'Streitkolben',ar:'Brustplatte',d:'Heiliger Streiter. Schlägt zu, heilt und schützt sich.',ab:['kreuz','richt','heillicht','segen','gottschutz']},
+  krieger:{n:'Krieger',ic:'⚔️',col:'#C79C6E',hp:1.3,ap:1.12,arm:1.6,res:.6,spd:10,rk:'rage',wp:'Schwert',ar:'Brustplatte',d:'Zäher Frontkämpfer. Baut Wut auf und schmettert den Feind nieder.',ab:['stoss','zerschm','schildschlag','schlachtruf','hinrichten']},
+  paladin:{n:'Paladin',ic:'🔨',col:'#F58CBA',hp:1.2,ap:1.03,arm:1.4,res:1.0,spd:10,rk:'mana',wp:'Streitkolben',ar:'Brustplatte',d:'Heiliger Streiter. Schlägt zu, heilt und schützt sich.',ab:['kreuz','richt','heillicht','segen','gottschutz']},
   jaeger:{n:'Jäger',ic:'🏹',col:'#ABD473',hp:1.0,ap:1.05,arm:.9,res:.8,spd:12,rk:'focus',wp:'Bogen',ar:'Lederwams',d:'Fernkämpfer mit Giften und Fallen.',ab:['schuss','zielschuss','schlangenbiss','mehrfach','frostfalle']},
   schurke:{n:'Schurke',ic:'🗡️',col:'#FFF569',hp:.95,ap:1.1,arm:.9,res:.7,spd:13,rk:'energy',wp:'Dolch',ar:'Lederwams',d:'Blitzschnell, tödlich und schwer zu treffen.',ab:['stich','blutung','nierenhieb','entrinnen','meucheln']},
   priester:{n:'Priester',ic:'✨',col:'#F0F0F0',hp:.9,ap:.95,arm:.5,res:1.3,spd:10,rk:'mana',wp:'Stab',ar:'Robe',d:'Heiler und Schattenmagier. Hält länger durch.',ab:['strafe','swp','blitzheil','pwschild','heilfeuer']},
-  schamane:{n:'Schamane',ic:'🌩️',col:'#2B7DF0',hp:1.05,ap:1.0,arm:1.0,res:1.1,spd:10,rk:'mana',wp:'Streitkolben',ar:'Lederwams',d:'Meister der Elemente: Blitz, Flammen und Heilwellen.',ab:['blitz','flammen','erdschock','welle','rausch']},
+  schamane:{n:'Schamane',ic:'🌩️',col:'#2B7DF0',hp:1.0,ap:1.0,arm:1.0,res:1.1,spd:10,rk:'mana',wp:'Streitkolben',ar:'Lederwams',d:'Meister der Elemente: Blitz, Flammen und Heilwellen.',ab:['blitz','flammen','erdschock','welle','rausch']},
   magier:{n:'Magier',ic:'🔮',col:'#69CCF0',hp:.85,ap:1.15,arm:.4,res:1.2,spd:10,rk:'mana',wp:'Stab',ar:'Robe',d:'Glaskanone: hoher Schaden, wenig Rüstung.',ab:['frostblitz','feuerball','arkan','nova','manaschild']},
-  hexer:{n:'Hexenmeister',ic:'👁️',col:'#9482C9',hp:1.0,ap:1.2,arm:.5,res:1.1,spd:9,rk:'mana',wp:'Stab',ar:'Robe',d:'Gift, Verderbnis und Lebensentzug.',ab:['schattenblitz','verderbnis','aderlass','furcht','seelenfeuer']},
+  hexer:{n:'Hexenmeister',ic:'👁️',col:'#9482C9',hp:1.1,ap:1.2,arm:.7,res:1.1,spd:10,rk:'mana',wp:'Stab',ar:'Robe',d:'Gift, Verderbnis und Lebensentzug.',ab:['schattenblitz','verderbnis','aderlass','furcht','seelenfeuer']},
   druide:{n:'Druide',ic:'🌿',col:'#FF7D0A',hp:1.1,ap:.95,arm:.8,res:1.1,spd:10,rk:'mana',wp:'Stab',ar:'Lederwams',d:'Naturmagie: Zorn, Mondlicht und Verjüngung.',ab:['zorn','mondfeuer','verjuengung','wurzeln','sternenfall']}
 };
 const UNLOCK=[1,1,2,4,6];
@@ -394,29 +394,29 @@ const DOT=(id,n,ic,t,p)=>({k:'dot',id,n,ic,t,p});
 const ab=(n,ic,s,cost,cd,...fx)=>({n,ic,s,cost,cd,fx});
 const A={
   /* Krieger */
-  stoss:ab('Heldenhafter Stoß','⚔️','phys',0,0,D(1.0),{k:'gain',v:14}),
-  zerschm:ab('Zerschmettern','🔨','phys',30,0,D(1.9)),
-  schildschlag:ab('Schildschlag','🛡️','phys',20,4,D(.7),{k:'stun',t:1}),
-  schlachtruf:ab('Schlachtruf','📯','phys',25,5,ST('self','schlachtruf','Schlachtruf','📯',3,{out:.4,inn:-.25})),
+  stoss:ab('Heldenhafter Stoß','⚔️','phys',0,0,D(1.0),{k:'gain',v:18}),
+  zerschm:ab('Zerschmettern','🔨','phys',30,0,D(2.2)),
+  schildschlag:ab('Schildschlag','🛡️','phys',20,4,D(.9),{k:'stun',t:1}),
+  schlachtruf:ab('Schlachtruf','📯','phys',25,5,ST('self','schlachtruf','Schlachtruf','📯',3,{out:.4,inn:-.3})),
   hinrichten:ab('Hinrichten','☠️','phys',40,2,D(2.2,{ex:1})),
   /* Paladin */
   kreuz:ab('Kreuzfahrerstoß','✝️','phys',0,0,D(1.0)),
-  richt:ab('Richturteil','⚖️','holy',25,0,D(1.7)),
-  heillicht:ab('Heiliges Licht','✨','holy',35,3,{k:'heal',p:2.4}),
+  richt:ab('Richturteil','⚖️','holy',25,0,D(1.9)),
+  heillicht:ab('Heiliges Licht','✨','holy',35,3,{k:'heal',p:2.3}),
   segen:ab('Segen der Macht','🙏','holy',20,5,ST('self','segen','Segen der Macht','🙏',4,{out:.35})),
   gottschutz:ab('Göttlicher Schutz','🔰','holy',40,7,ST('self','gottschutz','Göttlicher Schutz','🔰',2,{inn:-.8})),
   /* Jäger */
   schuss:ab('Schuss','🏹','phys',0,0,D(1.0)),
-  zielschuss:ab('Zielschuss','🎯','phys',30,0,D(1.9,{crit:.15})),
+  zielschuss:ab('Zielschuss','🎯','phys',30,0,D(2.0,{crit:.15})),
   schlangenbiss:ab('Schlangenbiss','🐍','nat',20,0,DOT('schlangenbiss','Schlangenbiss','🐍',4,.45)),
   mehrfach:ab('Mehrfachschuss','🌧️','phys',35,3,D(.7,{hits:3})),
   frostfalle:ab('Frostfalle','🧊','frost',25,5,D(.5),{k:'stun',t:1}),
   /* Schurke */
-  stich:ab('Boshafter Stich','🗡️','phys',20,0,D(1.15)),
+  stich:ab('Boshafter Stich','🗡️','phys',20,0,D(1.1)),
   blutung:ab('Blutung','🩸','phys',30,0,DOT('blutung','Blutung','🩸',4,.5)),
   nierenhieb:ab('Nierenhieb','👊','phys',40,4,D(.6),{k:'stun',t:1}),
   entrinnen:ab('Entrinnen','💨','phys',30,5,ST('self','entrinnen','Entrinnen','💨',2,{dodge:.6})),
-  meucheln:ab('Meucheln','☠️','phys',50,3,D(2.4,{crit:.3})),
+  meucheln:ab('Meucheln','☠️','phys',50,3,D(2.2,{crit:.3})),
   /* Priester */
   strafe:ab('Strafe','⚡','holy',0,0,D(1.0)),
   swp:ab('Schattenwort: Schmerz','💀','shd',20,0,DOT('swp','Schattenwort: Schmerz','💀',5,.4)),
@@ -425,28 +425,28 @@ const A={
   heilfeuer:ab('Heiliges Feuer','🔥','holy',40,3,D(1.6),DOT('heilfeuer','Heiliges Feuer','🔥',3,.35)),
   /* Schamane */
   blitz:ab('Blitzschlag','⚡','nat',0,0,D(1.0)),
-  flammen:ab('Flammenschock','🔥','fire',25,0,D(1.3),DOT('flammen','Flammenschock','🔥',3,.4)),
+  flammen:ab('Flammenschock','🔥','fire',25,0,D(1.2),DOT('flammen','Flammenschock','🔥',3,.4)),
   erdschock:ab('Erdschock','🌋','nat',20,3,D(.9),ST('foe','erdschock','Erdschock','🌋',3,{spd:-.45})),
-  welle:ab('Welle der Heilung','🌊','nat',30,2,{k:'heal',p:2.1}),
-  rausch:ab('Kampfrausch','🌀','nat',35,6,ST('self','rausch','Kampfrausch','🌀',4,{out:.3,spd:.4})),
+  welle:ab('Welle der Heilung','🌊','nat',30,3,{k:'heal',p:1.7}),
+  rausch:ab('Kampfrausch','🌀','nat',35,6,ST('self','rausch','Kampfrausch','🌀',4,{out:.2,spd:.3})),
   /* Magier */
   frostblitz:ab('Frostblitz','🧊','frost',0,0,D(1.0)),
-  feuerball:ab('Feuerball','☄️','fire',25,0,D(1.7),DOT('feuerball','Brennen','🔥',2,.3)),
+  feuerball:ab('Feuerball','☄️','fire',25,0,D(1.8),DOT('feuerball','Brennen','🔥',2,.3)),
   arkan:ab('Arkane Geschosse','🔮','arc',30,3,D(.7,{hits:3})),
   nova:ab('Frostnova','❄️','frost',25,5,D(.6),{k:'stun',t:1}),
   manaschild:ab('Manaschild','🧿','arc',30,6,{k:'shield',id:'manaschild',n:'Manaschild',ic:'🧿',t:4,p:3.0}),
   /* Hexenmeister */
-  schattenblitz:ab('Schattenblitz','🌑','shd',0,0,D(1.05)),
-  verderbnis:ab('Verderbnis','🥀','shd',20,0,DOT('verderbnis','Verderbnis','🥀',5,.38)),
-  aderlass:ab('Lebensentzug','🩸','shd',25,2,D(1.3),{k:'life',f:.6}),
+  schattenblitz:ab('Schattenblitz','🌑','shd',0,0,D(1.15)),
+  verderbnis:ab('Verderbnis','🥀','shd',20,0,DOT('verderbnis','Verderbnis','🥀',5,.5)),
+  aderlass:ab('Lebensentzug','🩸','shd',25,1,D(1.5),{k:'life',f:.8}),
   furcht:ab('Furcht','😱','shd',30,5,{k:'stun',t:1},ST('foe','furcht','Furcht','😱',3,{out:-.3})),
-  seelenfeuer:ab('Seelenfeuer','💥','fire',40,3,D(2.4)),
+  seelenfeuer:ab('Seelenfeuer','💥','fire',40,3,D(2.6)),
   /* Druide */
   zorn:ab('Zorn','🌿','nat',0,0,D(1.0)),
   mondfeuer:ab('Mondfeuer','🌙','arc',20,0,D(1.1),DOT('mondfeuer','Mondfeuer','🌙',3,.35)),
-  verjuengung:ab('Verjüngung','🌱','nat',25,3,{k:'hot',id:'verjuengung',n:'Verjüngung',ic:'🌱',t:4,p:.6}),
+  verjuengung:ab('Verjüngung','🌱','nat',25,3,{k:'hot',id:'verjuengung',n:'Verjüngung',ic:'🌱',t:4,p:.7}),
   wurzeln:ab('Wurzeln','🌳','nat',25,5,D(.5),{k:'stun',t:1}),
-  sternenfall:ab('Sternenfall','⭐','arc',40,3,D(2.3)),
+  sternenfall:ab('Sternenfall','⭐','arc',40,3,D(2.6)),
   /* Völkerfähigkeiten */
   r_mensch:ab('Wille der Menschheit','✊','phys',0,6,{k:'cleanse'},{k:'heal',p:.8}),
   r_zwerg:ab('Steingestalt','🪨','phys',0,6,{k:'cleanse'},ST('self','steingestalt','Steingestalt','🪨',3,{inn:-.35})),
@@ -834,7 +834,7 @@ function abTip(u,id,opts={}){
   const racial=id.startsWith('r_'),mon=id.startsWith('m_');
   const rs=RES[u.rk];
   const cost=a.cost?`${a.cost} ${rs.n}`:'Kostenlos';
-  const cd=a.cd?`${a.cd} Züge Abklingzeit`:'Sofort wirkbar';
+  const cd=a.cd?`${a.cd} ${a.cd===1?'Zug':'Züge'} Abklingzeit`:'Sofort wirkbar';
   let h=`<div class="tn" style="color:${racial?'#2a6a1a':'#2a1608'}">${a.ic} ${a.n}</div>`;
   h+=`<div class="tl"><span>${cost}</span><i>${cd}</i></div>`;
   h+=`<div class="tl"><span style="color:${SCHD[a.s]}">${SCH[a.s][0]}</span><i>${racial?'Völkerfähigkeit':mon?'':'Klassenfähigkeit'}</i></div>`;
@@ -1004,6 +1004,7 @@ function resolveTip(el){
     }
     case 'pot':return`<div class="tn">🧪 Heiltrank</div><div class="tl"><span>Gegenstand</span><i>Verbraucht deinen Zug</i></div><div class="td w">Stellt <b>40 %</b> deines maximalen Lebens wieder her.</div><div class="tf">Pro Kampf ${B?B.p.potions:2} übrig.</div>`;
     case 'pass':return`<div class="tn">⏳ Abwarten</div><div class="td w">Du überspringst deinen Zug${B&&B.p.rk==='mana'?' und erhältst 10 Mana':''}.</div>`;
+    case 'it':{const it=[...Object.values(S.eq),...S.bag].find(x=>x&&x.id===a);return it?itemTip(it):null}
     case 'item':{const it=S.eq[a];return it?itemTip(it):`<div class="tn mut">Leerer Platz</div><div class="td w">Besiege Gegner, um Beute zu erhalten.</div>`}
     case 'st':{const u=a==='p'?B.p:B.e,s=u.st.find(x=>x.id===b);return s?stTip(s):null}
     case 'unit':{const u=a==='p'?B.p:B.e;return unitTip(u)}
@@ -1025,22 +1026,39 @@ function unitTip(u){
 function raceTip(r){const R=RACES[r];return`<div class="tn">${R.n}</div><div class="td w">${R.d}</div><div class="td tg">${R.pas}</div>`}
 
 document.addEventListener('contextmenu',e=>e.preventDefault());
+let hoverEl=null,pressMouse=false;
+const tipGo=el=>{const h=resolveTip(el);if(h){showTip(h,el);return true}return false};
+// Maus: Details erscheinen beim Darüberfahren
+document.addEventListener('pointerover',e=>{
+  if(e.pointerType!=='mouse')return;
+  const el=e.target.closest('[data-tip]');
+  if(el===hoverEl)return;
+  hoverEl=el;
+  if(el)tipGo(el);else if(!pressEl)hideTip();
+});
+document.addEventListener('pointerleave',()=>{hoverEl=null;hideTip()});
+// Finger: Details beim Gedrückthalten
 document.addEventListener('pointerdown',e=>{
+  suppressClick=false;
   const el=e.target.closest('[data-tip]');if(!el)return;
-  pressEl=el;tipShown=false;clearTimeout(tipTimer);
-  const action=el.hasAttribute('data-do');
-  const go=()=>{const h=resolveTip(el);if(h){showTip(h,el);el.classList.add('hold');if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}}};
-  if(action)tipTimer=setTimeout(go,330);else{go()}
+  pressEl=el;clearTimeout(tipTimer);
+  pressMouse=e.pointerType==='mouse';
+  if(pressMouse)return;
+  tipShown=false;
+  const action=el.hasAttribute('data-do')||el.hasAttribute('data-a');
+  const go=()=>{if(tipGo(el)){el.classList.add('hold');if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}}};
+  if(action)tipTimer=setTimeout(go,330);else go();
 });
 const release=e=>{
   clearTimeout(tipTimer);
   const el=pressEl;pressEl=null;if(!el)return;
   el.classList.remove('hold');
-  const wasTip=tipShown;
-  if(wasTip){setTimeout(hideTip,el.hasAttribute('data-do')?0:900)}
+  const action=el.hasAttribute('data-do')||el.hasAttribute('data-a');
+  const wasTip=!pressMouse&&tipShown;
+  if(wasTip){setTimeout(hideTip,action?0:900);if(el.hasAttribute('data-a'))suppressClick=true}
   if(e.type==='pointerup'&&!wasTip&&el.hasAttribute('data-do')&&!el.classList.contains('dis')){
     const r=el.getBoundingClientRect();
-    if(e.clientX>=r.left-6&&e.clientX<=r.right+6&&e.clientY>=r.top-6&&e.clientY<=r.bottom+6)onDo(el.dataset.do,el);
+    if(e.clientX>=r.left-6&&e.clientX<=r.right+6&&e.clientY>=r.top-6&&e.clientY<=r.bottom+6){if(pressMouse){hideTip();hoverEl=null}onDo(el.dataset.do,el)}
   }
 };
 let suppressClick=false;
@@ -1116,16 +1134,16 @@ function camp(){
   const slots=[['w','Waffe'],['a','Rüstung'],['t','Schmuck']];
   const itemBtn=([k,nm])=>{const it=S.eq[k],n=S.bag.filter(x=>x.slot===k).length;
     const ic=it?`<span class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></span>`:`<span class="ico item empty"><span class="g" style="opacity:.25">${{w:'🗡️',a:'🛡️',t:'💍'}[k]}</span></span>`;
-    return`<button class="slot" data-a="slot:${k}">${ic}<span class="sn" style="color:${it?RARD[it.rar]:'var(--mut)'}">${it?esc(it.name):nm}</span><small>${n?n+' im Rucksack':'Wechseln'}</small></button>`};
+    return`<button class="slot" data-a="slot:${k}" data-tip="item:${k}">${ic}<span class="sn" style="color:${it?RARD[it.rar]:'var(--mut)'}">${it?esc(it.name):nm}</span><small>${n?n+' im Rucksack':'Wechseln'}</small></button>`};
   const lvl=hero.lvl;
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>Mein Held</h2><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button><button class="ib" data-a="menu">☰</button></div>
     <div class="scroll">
       <div class="panel hero">${avatar(S.race,S.cls,86)}<div class="hi"><h2>${esc(S.name)}</h2>
         <div class="sub mut"><span style="color:${R.f==='a'?'#5ea6ff':'#ff6b5e'}">${R.f==='a'?'Allianz':'Horde'}</span> · ${R.n} ${C.n}</div>
         <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.kills||0}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div></div></div>
-      <div class="sec">Ausrüstung · antippen zum Wechseln</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
+      <div class="sec">Ausrüstung · antippen zum Wechseln, halten für Details</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
       <div class="sec">Symbole</div><div class="panel abrow">${C.ab.map((id,i)=>{const lk=lvl<UNLOCK[i];return icoHTML(A[id],lk?'nr':'',`data-tip="pv:${id}"`).replace('</button>',lk?`<span class="lk"><span>🔒</span><small>Stufe ${UNLOCK[i]}</small></span></button>`:'</button>')}).join('')}${icoHTML(A['r_'+R.ab],'racial',`data-tip="pv:r_${R.ab}"`)}</div>
-      <div class="hint" style="margin-top:-6px">Symbol gedrückt halten für Details</div>
+      <div class="hint" style="margin-top:-6px">Details: mit der Maus darüberfahren oder gedrückt halten</div>
       ${xpBar()}
       <button class="btn prime" data-a="map">Zur Weltkarte</button>
     </div></div>`,'lite');
@@ -1148,7 +1166,7 @@ function startBattle(){
       <div class="fxl" id="fxl"></div>
     </div>
     <div class="log" id="log">${foe.quote?esc(foe.quote):`Ein ${esc(foe.name)} (Stufe ${foe.lvl}) tritt dir entgegen!`}</div>
-    <div class="actbar"><div class="hintbar">Tippen = Einsatz · Gedrückt halten = Details</div><div class="acts lock" id="acts"></div></div>
+    <div class="actbar"><div class="hintbar">Tippen = Einsatz · Details: darüberfahren oder halten</div><div class="acts lock" id="acts"></div></div>
   </div></div>`);
   UI={arena:$$('arena'),fx:$$('fxl'),log:$$('log'),acts:$$('acts'),order:$$('order'),ue:$$('ue'),up:$$('up')};
   refreshAll();renderActs();renderOrder();
@@ -1333,7 +1351,7 @@ function gear(k){
   const nm={w:'Waffe',a:'Rüstung',t:'Schmuck'}[k],cur=S.eq[k];
   const row=(it,eq)=>{
     const d=(!eq&&cur)?it.v-cur.v:0;
-    return`<div class="irow ${eq?'on':''}"><span class="ico item r${it.rar}" style="--sc:${RARC[it.rar]};--is:54px"><span class="g">${it.ic}</span></span>
+    return`<div class="irow ${eq?'on':''}"><span class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]};--is:54px"><span class="g">${it.ic}</span></span>
       <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · Stufe ${it.lvl}</small>${itemText(it).map(l=>`<span class="tg">${l}</span>`).join('<br>')}
       ${!eq&&cur?`<br><span class="${d>0?'up':d<0?'dn':'mut'}">${d>0?'▲ +'+d:d<0?'▼ '+d:'= gleich'}</span>`:''}</div>
       <div class="bt2">${eq?'<span class="new">Angelegt</span>':`<button class="ib" data-a="equip:${it.id}">Anlegen</button><button class="ib" data-a="drop:${it.id}">🗑</button>`}</div></div>`;
@@ -1379,7 +1397,7 @@ function rewardHTML(xp,lv,it,eq){
     h+=CLASSES[S.cls].ab.filter((_,i)=>UNLOCK[i]===l).map(id=>`<div class="newab">${icoHTML(A[id],'',`data-tip="pv:${id}"`)}<div><b>NEUES SYMBOL!</b><span>${A[id].n}</span><small>${abDesc(hero,A[id])[0]||''}</small></div></div>`).join('');
   }
   if(it){
-    h+=`<div class="rw"><button class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
+    h+=`<div class="rw"><button class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
       <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':(()=>{const d=it.v-S.eq[it.slot].v;return d>0?`<span class="new">▲ Besser als dein aktuelles Teil (+${d})</span>`:`Im Rucksack · ${d<0?d:'gleichwertig'} zum aktuellen Teil`})()}</div>`;
   }
   return h;
