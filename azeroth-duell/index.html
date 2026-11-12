@@ -212,13 +212,13 @@ svg{display:block}
 .u.e{top:8px;left:8px;right:8px;align-items:center}
 .u.p{bottom:30px;left:8px;right:8px;align-items:center}
 .u .fig{position:relative;flex:none;transition:filter .2s}
-.u.act .fig{filter:drop-shadow(0 0 12px #ffd100)}
-.pt{position:absolute;left:2.6%;top:53%;width:21%;aspect-ratio:1;transform:translateY(-50%)}
-.pt .fig{display:block;width:100%;height:100%;border-radius:50%}
+.u.act .plate{filter:drop-shadow(0 0 9px #ffd100cc) drop-shadow(0 3px 5px #000a)}
+.pt{position:absolute;left:2.6%;top:50.3%;width:20%;aspect-ratio:1;transform:translateY(-50%)}
+.pt .fig{display:block;width:100%;height:100%;border-radius:50%;overflow:hidden;transform:translateZ(0)}
+.pt>.cb{position:absolute;right:-5%;bottom:-5%;width:34%;height:34%;border-radius:50%;display:grid;place-items:center;font-style:normal;background:var(--c);border:2px solid #000;font-size:calc(var(--s)*.17);box-shadow:0 2px 4px #000a;z-index:2}
 .pt .av,.pt .mon{width:100%!important;height:100%!important}
 .pt .av svg{border:0;box-shadow:none}.pt .mon{border:0;box-shadow:none}
-.pt .av .cb{right:-2px;bottom:-2px}
-.u.dead .fig{filter:grayscale(1) brightness(.5);transform:rotate(-14deg) translateY(10px);transition:all .6s}
+.u.dead .pt .fig{filter:grayscale(1) brightness(.45);transition:filter .6s}
 .plate{position:relative;width:min(100%,380px);aspect-ratio:621/154;flex:none;background:var(--i-plate) center/100% 100% no-repeat;filter:drop-shadow(0 3px 5px #000a);touch-action:none}
 .sl{position:absolute;overflow:hidden;border-radius:4px}
 .sl1{left:26.1%;width:56.7%;top:24%;height:30%}
@@ -825,14 +825,14 @@ function raceSvg(key,cls){
   }
   return`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
 }
-function avatar(race,cls,s=64){
+function avatar(race,cls,s=64,badge=true){
   const C=CLASSES[cls];
-  return`<span class="av" style="width:${s}px;height:${s}px;--s:${s}px">${raceSvg(race,cls)}<i class="cb" style="--c:${C.col}">${C.ic}</i></span>`;
+  return`<span class="av" style="width:${s}px;height:${s}px;--s:${s}px">${raceSvg(race,cls)}${badge?`<i class="cb" style="--c:${C.col}">${C.ic}</i>`:''}</span>`;
 }
 function monFig(u,s=64){
   return`<span class="mon ${u.boss?'boss':''}" style="width:${s}px;height:${s}px;--g:${u.col}"><span style="font-size:${s*.58}px">${u.ic}</span></span>`;
 }
-function fig(u,s){return u.mon?monFig(u,s):avatar(u.race,u.cls,s)}
+function fig(u,s,badge=true){return u.mon?monFig(u,s):avatar(u.race,u.cls,s,badge)}
 function icoHTML(a,extra='',attrs=''){
   return`<button class="ico ${extra}" style="--sc:${SCH[a.s][1]}" ${attrs}><span class="g">${a.ic}</span></button>`;
 }
@@ -1062,8 +1062,8 @@ function startBattle(){
 }
 const $$=id=>document.getElementById(id);
 function plate(u,side){
-  const ps=Math.round(Math.min(380,Math.min(innerWidth,480)-32)*.21);
-  return`<div class="plate" data-tip="unit:${side}" id="pl${side}"><span class="pt" style="--s:${ps}px"><span class="fig">${fig(u,ps)}</span></span>
+  const ps=Math.round(Math.min(380,Math.min(innerWidth,480)-32)*.2);
+  return`<div class="plate" data-tip="unit:${side}" id="pl${side}"><span class="pt" style="--s:${ps}px"><span class="fig">${fig(u,ps,false)}</span>${u.mon?'':`<i class="cb" style="--c:${CLASSES[u.cls].col}">${CLASSES[u.cls].ic}</i>`}</span>
     <div class="sl sl1"><i id="hp${side}"></i><div class="sh" id="sh${side}" style="width:0"></div><span class="nn">${esc(u.name)}</span><b id="hpt${side}"></b></div>
     ${side==='p'||!u.mon?`<div class="sl sl2"><i id="rs${side}" style="background:linear-gradient(${RES[u.rk].c},${RES[u.rk].c}cc)"></i><b id="rst${side}"></b></div>`:`<div class="sl sl2"><b style="color:#ffd9a0;letter-spacing:1.5px;text-transform:uppercase">${esc(u.title||'Monster')}</b></div>`}
     <div class="lvl"><small>STUFE</small><span>${u.lvl}</span></div>
@@ -1124,7 +1124,7 @@ function flashEl(el){el.animate([{transform:'translateX(-4px)'},{transform:'tran
 
 /* ----- Animationen ----- */
 function pos(u){
-  const side=u===B.p?'up':'ue',f=(side==='up'?UI.up:UI.ue).querySelector('.fig'),a=UI.arena.getBoundingClientRect(),r=f.getBoundingClientRect();
+  const side=u===B.p?'up':'ue',f=(side==='up'?UI.up:UI.ue).querySelector('.fig').firstElementChild,a=UI.arena.getBoundingClientRect(),r=f.getBoundingClientRect();
   return{x:r.left-a.left+r.width/2,y:r.top-a.top+r.height/2,el:f};
 }
 function floatText(u,txt,col,cls=''){
@@ -1134,13 +1134,13 @@ function floatText(u,txt,col,cls=''){
   e.animate([{transform:'translate(-50%,-50%) scale(.6)',opacity:0},{transform:'translate(-50%,-90%) scale(1.15)',opacity:1,offset:.2},{transform:'translate(-50%,-190%) scale(1)',opacity:1,offset:.7},{transform:'translate(-50%,-230%)',opacity:0}],{duration:1100,easing:'ease-out'}).onfinish=()=>e.remove();
 }
 function shakeEl(el,big){
-  const d=big?10:6;
+  const d=big?5:3;
   el.animate([{transform:'translate(0,0)'},{transform:`translate(${-d}px,${d/3}px)`},{transform:`translate(${d}px,${-d/3}px)`},{transform:`translate(${-d/2}px,0)`},{transform:'translate(0,0)'}],{duration:320});
   el.animate([{filter:'brightness(2.2) saturate(0)'},{filter:'none'}],{duration:300});
 }
 async function lunge(u){
   const p=pos(u),dir=u===B.p?1:-1;
-  const a=p.el.animate([{transform:'translate(0,0)'},{transform:`translate(${dir*34}px,${-dir*34}px) scale(1.08)`,offset:.45},{transform:'translate(0,0)'}],{duration:380,easing:'ease-in-out'});
+  const a=p.el.animate([{transform:'translate(0,0)'},{transform:`translate(${dir*7}px,${-dir*7}px) scale(1.22)`,offset:.45},{transform:'translate(0,0)'}],{duration:380,easing:'ease-in-out'});
   await sleep(200);return a;
 }
 async function projectile(src,tgt,a){
@@ -1176,7 +1176,7 @@ async function play(evs,token){
         shakeEl(pos(t).el,ev.crit);ev.crit?SFX.crit():SFX.hit();
         setHp(t,ev.hp);refreshUnit(t);
         await sleep(ev.dot?300:330);break}
-      case 'miss':floatText(ev.tgt,'Ausgewichen!','#c8e8ff');SFX.miss();await sleep(300);break;
+      case 'miss':floatText(ev.tgt,'Ausgewichen!','#c8e8ff','sm');SFX.miss();await sleep(300);break;
       case 'heal':if(ev.amt>0){floatText(ev.tgt,'+'+ev.amt,'#5fe07a');SFX.heal();setHp(ev.tgt,ev.hp);aura(ev.tgt,{ic:'✨'},true);await sleep(380)}break;
       case 'st':floatText(ev.tgt,ev.n,ev.good?'#ffd100':'#ff9a8c','sm');if(ev.n==='Betäubt!')SFX.stun();await sleep(160);break;
       case 'sync':refreshAll();renderOrder();break;
