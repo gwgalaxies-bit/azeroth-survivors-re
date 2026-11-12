@@ -37,7 +37,7 @@ button.all{margin-bottom:4px}
 <body>
 <div class="wrap">
 <h1>Azeroth Duell – Bildprompts</h1>
-<p class="lead">Jeder Eintrag ist ein <b>kompletter, einzeln nutzbarer Prompt</b>: einmal auf „Kopieren“ tippen, in den Bildgenerator einfügen, fertig. Nichts muss zusammengesetzt werden. Klappt das Kopieren nicht, den Text lange gedrückt halten und markieren.</p>
+<p class="lead">Alle Prompts verlangen einen <b>einfarbig schwarzen Hintergrund</b> (Gemini kann keine Transparenz). Jeder Eintrag ist ein <b>kompletter, einzeln nutzbarer Prompt</b>: einmal auf „Kopieren“ tippen, in den Bildgenerator einfügen, fertig. Nichts muss zusammengesetzt werden. Klappt das Kopieren nicht, den Text lange gedrückt halten und markieren.</p>
 <div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Orc, Button, Feuerball …"></div>
 
 <div id="out"></div>
@@ -46,24 +46,25 @@ button.all{margin-bottom:4px}
 <ol class="tips">
 <li>Optional für noch einheitlichere Ergebnisse: das beste erzeugte Bild als Stil-Referenz im Generator hinterlegen.</li>
 <li>Echtes SVG liefert z. B. Recraft; sonst PNG erzeugen und mit Inkscape/Vectorizer nachzeichnen.</li>
-<li>Größen fürs Spiel: Icons 256×256, Porträts 512×512, Hintergründe 1080×1920. Buttons als 9-Slice anlegen.</li>
+<li>Schwarzen Hintergrund später freistellen (z. B. in Photoshop/Photopea „Farbbereich“ oder remove.bg). Größen fürs Spiel: Icons 256×256, Porträts 512×512, Hintergründe 1080×1920. Buttons als 9-Slice anlegen.</li>
 </ol>
 </div>
 <script>
 const ST={
- icon:"flat vector game icon, bold clean shapes, thick dark brown outline, limited warm palette with one strong accent color, subtle cel-shaded highlights, centered single subject, high contrast, fantasy MMO style inspired by classic World of Warcraft icons, no text, no watermark, transparent background, square 1:1, SVG-friendly, 512x512",
- portrait:"stylized vector character portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, expressive glowing eyes, shoulder armor visible, circular composition, transparent background, no text, SVG-friendly, 1024x1024",
- monster:"stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, menacing expression, circular composition, transparent background, no text, SVG-friendly, 1024x1024",
+ icon:"flat vector game icon, bold clean shapes, thick dark brown outline, limited warm palette with one strong accent color, subtle cel-shaded highlights, centered single subject, high contrast, fantasy MMO style inspired by classic World of Warcraft icons, no text, no watermark, solid pure black background (#000000), nothing else in the background, square 1:1, SVG-friendly, 512x512",
+ portrait:"stylized vector character portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, expressive glowing eyes, shoulder armor visible, circular composition, solid pure black background (#000000), nothing else in the background, no text, SVG-friendly, 1024x1024",
+ monster:"stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, menacing expression, circular composition, solid pure black background (#000000), nothing else in the background, no text, SVG-friendly, 1024x1024",
  ui:"vector game UI asset, hand-painted fantasy MMO interface style like classic World of Warcraft, worn aged materials, crisp edges, no text, no characters, SVG-friendly"
 };
 const SC={Physisch:'steel gray',Feuer:'orange',Frost:'ice blue',Arkan:'violet',Natur:'green',Schatten:'dark purple',Heilig:'gold'};
 const G=[];
-const add=(title,style,items)=>G.push({title,style,items:items.map(([n,p])=>({n,p:(style?ST[style]+', ':'')+p}))});
+const BLK=', solid pure black background (#000000), nothing else in the background';
+const add=(title,style,items)=>G.push({title,style,items:items.map(([n,p])=>({n,p:(style?ST[style]+', ':'')+p+(/^[234]\./.test(title)&&!/black/.test(p)?BLK:'')}))});
 
 add('1. UI: Hintergrund (Pergament)','ui',[
  ['Pergament hell (Menüs)','seamless-looking aged parchment paper background, portrait 9:19, light cream and warm beige tones, subtle fibers and stains, darker burnt and torn edges with soft vignette, faint ink splatters in the corners, a very faint compass-rose watermark in the center, plenty of calm empty space for UI on top, 1080x2280'],
  ['Pergament dunkel (Kampfleiste)','aged parchment paper background, portrait 9:19, dark weathered brown parchment, leather-stained, candle-lit scorched edges, subtle fibers, soft vignette, calm empty center for UI, 1080x2280'],
- ['Pergamentrolle (Tooltip-Panel)','small parchment scroll panel with curled top and bottom edges, flat empty center, thin wax-seal-red border line, 4:3, transparent outside']
+ ['Pergamentrolle (Tooltip-Panel)','small parchment scroll panel with curled top and bottom edges, flat empty center, thin wax-seal-red border line, 4:3, solid pure black background (#000000) outside the scroll']
 ]);
 add('2. UI: Buttons (rot, eckig)','ui',[
  ['Button Standard – normal','rectangular game button, deep crimson red with a subtle vertical gradient, squared angular corners with small chamfered corners, thin gold-bronze metal frame with tiny rivets in the corners, inner dark red bevel, slight glossy top highlight, empty center for text, default state, 3:1 ratio, 960x320'],
@@ -90,7 +91,7 @@ add('3. UI: Rahmen, Plaketten, Balken','ui',[
  ['Fokusbalken','complete horizontal resource bar, dark metal rim with an empty dark trough, filled about 70% with a glossy orange gradient and a small top highlight, 10:1, 1000x100'],
 ]);
 add('4. UI: Logo, Banner','ui',[
- ['Titel-Logo','game logo lettering "AZEROTH DUELL", chiseled gold metallic serif letters with dark bronze outline and warm glow, crossed sword and axe behind the text, transparent background, 3:1, 1500x500'],
+ ['Titel-Logo','game logo lettering "AZEROTH DUELL", chiseled gold metallic serif letters with dark bronze outline and warm glow, crossed sword and axe behind the text, solid pure black background (#000000), nothing else in the background, 3:1, 1500x500'],
  ['Siegbanner','victory banner, golden laurel wreath and radiating sunburst behind an empty gold plaque, 3:2'],
  ['Niederlage-Banner','defeat banner, cracked gray stone plaque, broken sword, dark smoke, 3:2']
 ]);
@@ -223,7 +224,7 @@ add('15. Bosse (6)','monster',[
  bo('Ragnaros','fire lord of molten rock with flaming hair and hammer'),
  bo('C’Thun','giant green eldritch eye with tentacles')
 ]);
-const fx=(n,m)=>[n,'flat vector battle effect sprite, '+m+', transparent background, 512x512'];
+const fx=(n,m)=>[n,'flat vector battle effect sprite, '+m+', solid pure black background (#000000), nothing else in the background, 512x512'];
 add('16. Effekte','',[
  fx('Treffer-Funke','yellow-white impact spark burst'),
  fx('Kritischer Treffer','large red star burst with speed lines'),
