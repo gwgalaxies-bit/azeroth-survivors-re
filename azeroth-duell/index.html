@@ -276,6 +276,51 @@ svg{display:block}
 @media (prefers-reduced-motion:reduce){*{animation:none!important}}
 @media (max-height:700px){.logo{font-size:46px}.acts{--is:min(16.5vw,68px)}}
 
+/* ---- Welt ---- */
+.xpb{position:relative;height:16px;border-radius:8px;background:#1a1024;border:1px solid #000;overflow:hidden;margin-top:4px;width:100%;flex:none}
+.xpb i{display:block;height:100%;background:linear-gradient(#c79cff,#7b4ad8);transition:width .5s}
+.xpb b{position:absolute;inset:0;font:700 10px/15px var(--body);color:#fff;text-align:center;text-shadow:0 1px 2px #000}
+.hstrip{display:flex;align-items:center;gap:10px;padding:7px 10px;width:100%;text-align:left}
+.hstrip .hi{flex:1;min-width:0}.hstrip .hi>b{font-family:var(--disp);font-size:15px}
+.go{font-size:20px;opacity:.7;flex:none}
+.map{flex:1;min-height:0;position:relative;margin:8px 10px 10px;border:3px solid #7a5420;border-radius:10px;overflow:hidden;box-shadow:inset 0 0 30px #3a241066,0 3px 8px #3a241066;
+  background:var(--i-worldmap,radial-gradient(circle at 24% 86%,#4a8a4a77,#0000 24%),radial-gradient(circle at 64% 76%,#c8663a77,#0000 24%),radial-gradient(circle at 28% 58%,#5a4a8a77,#0000 24%),radial-gradient(circle at 66% 38%,#6aa8d877,#0000 24%),radial-gradient(circle at 30% 34%,#a83a1a77,#0000 24%)) center/100% 100%}
+.map.busy{pointer-events:none}
+.route{position:absolute;inset:0;width:100%;height:100%;opacity:.55;pointer-events:none}
+.pin{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:1px;width:104px;text-align:center}
+.pin b{font-family:var(--disp);font-size:11px;line-height:1.1;color:#2a1608;margin-top:7px;text-shadow:0 0 4px #f4e6bf,0 0 4px #f4e6bf,0 0 2px #f4e6bf}
+.pin small{font-size:9.5px;color:#4a2a10;font-weight:700;text-shadow:0 0 3px #f4e6bf,0 0 3px #f4e6bf}
+.pin.lock .ico{filter:grayscale(1) brightness(.75)}.pin.lock b{color:#6a5a48}
+.pin:active .ico{transform:scale(.92)}
+.qm{position:absolute;top:-16px;left:50%;margin-left:14px;font:800 28px/1 var(--disp);font-style:normal;color:#ffd100;text-shadow:0 0 3px #000,0 2px 0 #7a4a00,0 0 8px #ffb02e;animation:qbob 1.2s ease-in-out infinite;z-index:2;pointer-events:none}
+.qm.off{color:#b8b8b8;text-shadow:0 0 3px #000,0 2px 0 #444;animation:none}
+@keyframes qbob{50%{transform:translateY(-4px)}}
+.hm{position:absolute;transform:translate(-135%,-95%);transition:left .7s ease-in-out,top .7s ease-in-out;z-index:3;filter:drop-shadow(0 3px 3px #000a);pointer-events:none}
+.hm .av svg{border:2px solid #ffd100;box-shadow:0 0 0 1px #000}
+.mapmsg{position:absolute;left:8px;right:8px;bottom:6px;text-align:center;font-size:12px;font-weight:600;color:#3a2410;background:#f4e6bfcc;border-radius:8px;padding:4px 8px}
+.mapmsg.warn{color:#a3201a}
+.zhead{height:88px;border-radius:12px;border:2px solid #7a5420;background-size:cover;background-position:center 35%;display:flex;align-items:flex-end;padding:6px 10px;box-shadow:0 3px 8px #3a241066}
+.zhead span{font-family:var(--disp);font-weight:800;color:#ffe9a8;text-shadow:0 2px 3px #000}
+.qbox{padding:12px;display:flex;flex-direction:column;gap:8px}
+.npc{display:flex;gap:12px;align-items:center;position:relative}
+.npc .qm{left:28px;margin-left:0;top:-14px}
+.npc b{font-family:var(--disp);font-size:16px;display:block}.npc small{display:block}
+.qt{font-family:var(--disp);font-weight:800;font-size:16px;color:#7a1f12}
+.qt small{font:600 11px var(--body);color:#6a4f2e;margin-left:4px}
+.qtx{font-style:italic;font-size:13.5px}
+.qgoal{font-weight:700;font-size:13.5px}.qgoal.ok{color:#1f7a14}
+.qrw{font-size:12.5px}.qdone{font-weight:700;color:#1f7a14}
+.mrow{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:12px;background:linear-gradient(#efdcab,#d8be84);border:2px solid #8a6a30;box-shadow:0 3px 0 #5a3a10aa;width:100%;text-align:left}
+button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
+.mi{flex:1;min-width:0}.mi b{font-family:var(--disp);font-size:14.5px;display:block}.mi small{display:block;font-size:11.5px;color:#6a4f2e}
+.mi em{font-style:normal;font-size:11.5px;font-weight:700;color:#7a1f12}
+.dcard{display:flex;gap:12px;align-items:center;padding:10px}
+.qline{font-size:13px;font-weight:700}.qline.ok{color:#1f7a14}
+.ink .lv.up{color:#7a1f12}.ovl .lv{font-size:17px}
+.ovl{overflow-y:auto;justify-content:flex-start;padding-top:max(12px,4vh)}
+.ovl>*{flex-shrink:0}
+.ovl .bnr.win{width:min(62vw,250px)}.ovl .bnr.lose{width:min(60vw,240px)}
+.bnr.win span{font-size:clamp(22px,7.5vw,32px)}
 /* ---- Pergament-Theme (Menüs) ---- */
 #app.lite{--txt:#3a2410;--mut:#6a4f2e;--parch:#3a2410;--gold:#7a1f12;--gold2:#8a5a1c;--gold3:#7a5420;color:var(--txt)}
 .lite .top h2{color:#7a1f12;text-shadow:0 1px 0 #fff8}
@@ -475,6 +520,51 @@ const ZONES=[
   {n:'Eiskronengletscher',bg:'linear-gradient(#5a88b0,#2c4a68 55%,#142030)',fl:['#bcd8ee','#4a6a88'],deco:'🏔️❄️🏔️❄️🌨️',mon:['eisbaer','yeti','eiself','wyrm']},
   {n:'Brennende Steppe',bg:'linear-gradient(#5a1a10,#2a0c08 55%,#140604)',fl:['#7a2a14','#220a06'],deco:'🌋🔥🌋🔥🌋',mon:['wichtel','feuerel','golem','drache']}
 ];
+const ZL=[1,6,11,16,21],ZREQ=[1,5,10,15,20],ZCOL=['#4a8a4a','#c8663a','#5a4a8a','#6aa8d8','#a83a1a'];
+const WORLD=[
+  {x:24,y:86,ic:'🌲',npc:{n:'Hüterin Elara',ic:'🧝‍♀️',t:'Waldhüterin'},
+   dg:{n:'Die Todesminen',ic:'⛏️',trash:['spinne','murloc'],boss:BOSSES[1]},
+   q:[['Wölfe am Wegesrand','Die Wölfe reißen unser Vieh. Erlege zwei von ihnen, bevor sie das Dorf erreichen.'],
+      ['Wildschweinplage','Wilde Eber verwüsten die Felder. Zwei weniger wären ein Anfang.'],
+      ['Mrglglgl!','Murlocs sammeln sich am Fluss. Vertreibe zwei von ihnen.'],
+      ['Gesucht: Hogger','Der Gnoll Hogger terrorisiert den Wald. Bring ihn zur Strecke!'],
+      ['Die Bruderschaft der Defias','Edwin VanCleef versteckt sich in den Todesminen. Beende sein Treiben.']]},
+  {x:64,y:76,ic:'🌵',npc:{n:'Karawanenführer Rashid',ic:'👳',t:'Händler der Wüste'},
+   dg:{n:'Hügel der Klingenhauer',ic:'🐗',trash:['skorpion','schlange'],boss:{n:'Charlga Klingenflanke',ic:'🐗',c:'#a8683a',hp:1.05,ap:1.1,arm:1.0,res:.9,spd:11,mv:['m_pranke','m_schatten','m_heulen','m_regen'],q:'„Ihr stört die Ahnen!“'}},
+   q:[['Stachel im Sand','Skorpide überfallen meine Karawane. Erledige zwei davon.'],
+      ['Kreischende Schwingen','Die Harpyien stehlen unsere Vorräte. Hol zwei vom Himmel.'],
+      ['Zähne im Wasserloch','Am Wasserloch lauern Krokilisken. Mach zwei unschädlich.'],
+      ['Der Rivale',''],
+      ['Dornen und Hauer','Charlga Klingenflanke hetzt die Stacheleber auf. Besiege sie in ihrem Hügel.']]},
+  {x:28,y:58,ic:'🪦',npc:{n:'Totengräber Morten',ic:'🧙',t:'Hüter des Friedhofs'},
+   dg:{n:'Scholomance',ic:'🕯️',trash:['skelett','geist'],boss:{n:'Dunkelmeister Gandling',ic:'🧙‍♂️',c:'#6a4a9a',hp:1.0,ap:1.2,arm:.7,res:1.3,spd:11,mv:['m_schatten','m_saugen','m_kreischen','m_tod'],weak:'holy',q:'„Der Unterricht beginnt!“'}},
+   q:[['Die Toten ruhen nicht','Zombies kriechen aus den Gräbern. Schick zwei zurück in die Erde.'],
+      ['Klappernde Knochen','Skelettkrieger bewachen die alte Gruft. Zerschlage zwei.'],
+      ['Rastlose Seelen','Zwei Geister finden keine Ruhe. Erlöse sie.'],
+      ['Grabräuber',''],
+      ['Schule der Schatten','In Scholomance lehrt Gandling dunkle Künste. Beende den Unterricht.']]},
+  {x:66,y:38,ic:'🏔️',npc:{n:'Kundschafterin Ysra',ic:'🧕',t:'Späherin des Nordens'},
+   dg:{n:'Feste Frostgrimm',ic:'🏰',trash:['yeti','eiself'],boss:{n:'Fürst Frostgrimm',ic:'🧊',c:'#7fd6ff',hp:1.15,ap:1.15,arm:1.2,res:1.1,spd:10,mv:['m_frost','m_nova','m_zerschm','m_stein'],weak:'fire',resist:'frost',q:'„Erstarrt!“'}},
+   q:[['Pelze für den Winter','Wir brauchen Felle. Erlege zwei Eisbären.'],
+      ['Schrecken vom Gletscher','Yetis blockieren den Pass. Vertreibe zwei.'],
+      ['Junge Wyrms','Frostwyrm-Welpen wachsen schnell. Erlege zwei, solange sie klein sind.'],
+      ['Duell im Schnee',''],
+      ['Der kalte Thron','Fürst Frostgrimm lässt den Winter nie enden. Stürze ihn in seiner Feste.']]},
+  {x:30,y:34,ic:'🌋',npc:{n:'Schmiedemeister Borin',ic:'🧑‍🏭',t:'Schmied der Dunkeleisen'},
+   dg:{n:'Schwarzfelsspitze',ic:'🗻',trash:['golem','drache'],boss:{n:'General Drakkisath',ic:'🐲',c:'#6a4a8a',hp:1.2,ap:1.2,arm:1.1,res:1.0,spd:11,mv:['m_feuer','m_schwanz','m_zerschm','m_heulen'],q:'„Für den Schwarzen Drachenschwarm!“'}},
+   q:[['Kleine Teufel','Wichtel stehlen mein Werkzeug. Erwische zwei.'],
+      ['Lodernde Kerne','Ich brauche Glut von zwei Feuerelementaren.'],
+      ['Drachenbrut','Der schwarze Drachkin rückt näher. Schlage zwei zurück.'],
+      ['Feuerprobe',''],
+      ['Der General','General Drakkisath befehligt die Spitze. Fordere ihn heraus.']]}
+];
+const QMON=[0,1,3]; // Monsterindex der drei Jagdquests
+const RAIDS=[
+  {n:'Onyxias Hort',ic:'🐉',x:82,y:58,req:13,lvl:14,zone:1,d:'Die Brutmutter des Schwarzen Drachenschwarms.',enc:[['Hortwächter','drache','🛡️'],['Brutwächterin Flammenschuppe','wyrm','🐲']],boss:2},
+  {n:'Geschmolzener Kern',ic:'🔥',x:16,y:14,req:18,lvl:19,zone:4,d:'Tief unter dem Schwarzfels wartet der Feuerfürst.',enc:[['Lucifron','wichtel','😈'],['Magmadar','eber','🐕‍🦺'],['Golemagg','golem','🗿']],boss:4},
+  {n:'Naxxramas',ic:'☠️',x:84,y:18,req:22,lvl:23,zone:3,d:'Die schwebende Nekropole des Lichkönigs.',enc:[['Anub’Rekhan','spinne','🕷️'],['Flickwerk','zombie','🧟'],['Saphiron','wyrm','🐲']],boss:3},
+  {n:'Ahn’Qiraj',ic:'👁️',x:52,y:12,req:25,lvl:26,zone:1,d:'Der Tempel des Alten Gottes.',enc:[['Prophet Skeram','geist','🧞'],['Fankriss','skorpion','🦂'],['Prinzessin Huhuran','spinne','🐝']],boss:5}
+];
 const NAMES={mensch:['Aldric','Tomas','Lorenna','Garrick'],zwerg:['Bromm','Thorgrim','Hilda','Durnik'],nachtelf:['Shaelara','Tyrande','Malorn','Ilyria'],gnom:['Fizzwick','Tüftel','Nixie','Zappel'],orc:['Grommak','Durgha','Thrall Jr.','Mog’rath'],untot:['Morbus','Vessa','Kalt-Gerd','Salazar'],taure:['Kar Wildhorn','Mulgor','Aponi','Baine'],troll:['Vol’jek','Zanja','Rokhan','Zul’mar']};
 
 /* ================================================================
@@ -530,29 +620,36 @@ function classUnit(o){
     abs:[...C.ab.filter((_,i)=>o.lvl>=UNLOCK[i]||!o.player),R.ab?'r_'+R.ab:null].filter(Boolean)});
 }
 function heroUnit(S){
-  return classUnit({name:S.name,lvl:1+S.cleared,player:true,race:S.race,cls:S.cls,eq:S.eq});
+  return classUnit({name:S.name,lvl:S.lvl,player:true,race:S.race,cls:S.cls,eq:S.eq});
 }
-function stageInfo(i){
-  const zone=ZONES[Math.floor(i/5)%ZONES.length],k=i%5,rng=mulberry(i*7919+13);
-  let lvl=i+1,type='mon',def;
-  if(k===4){type='boss';def=BOSSES[Math.floor(i/5)%BOSSES.length];lvl+=1}
-  else if(k===2){type='race'}
-  else def=MONS[zone.mon[(k+Math.floor(i/5))%zone.mon.length]];
-  return{i,zone,k,type,lvl,def,rng};
+function mkMon(d,lvl,o={}){
+  const u=mkUnit({name:o.n||d.n,lvl,tm:{hp:d.hp*(o.hp||1),ap:d.ap*(o.ap||1),arm:d.arm,res:d.res,spd:d.spd},ic:o.ic||d.ic,col:d.c,mon:true,boss:!!o.boss,
+    weak:d.weak,resist:d.resist,sc:o.sc||.86,abs:d.mv,rk:'energy'});
+  u.rv=0;u.title=o.title||'Monster';u.quote=o.n?null:d.q;return u;
 }
-function enemyFor(info,heroFaction){
-  const sc=(info.type==='race'?1.0:info.type==='boss'?.92:.84)+Math.min(info.i,30)*.005;
-  if(info.type==='race'){
-    const keys=Object.keys(RACES).filter(r=>RACES[r].f!==heroFaction),race=keys[Math.floor(info.rng()*keys.length)];
-    const cls=RACES[race].cls[Math.floor(info.rng()*RACES[race].cls.length)];
-    const nm=NAMES[race][Math.floor(info.rng()*4)];
-    const u=classUnit({name:nm,lvl:info.lvl,race,cls,sc});
-    u.foeRace=true;u.title=`${RACES[race].n} ${CLASSES[cls].n}`;return u;
-  }
-  const d=info.def,boss=info.type==='boss';
-  const u=mkUnit({name:d.n,lvl:info.lvl,tm:{hp:d.hp*(boss?1.5:1),ap:d.ap*(boss?1.05:1),arm:d.arm,res:d.res,spd:d.spd},ic:d.ic,col:d.c,mon:true,boss,
-    weak:d.weak,resist:d.resist,sc,abs:d.mv,rk:'energy'});
-  u.rv=0;u.title=boss?'Boss':'Monster';u.quote=d.q;return u;
+function rival(z,faction){
+  const keys=Object.keys(RACES).filter(r=>RACES[r].f!==faction),race=keys[(z+3)%4],cl=RACES[race].cls,cls=cl[(z*2+1)%cl.length];
+  const u=classUnit({name:NAMES[race][z%4],lvl:ZL[z]+3,race,cls,sc:1});
+  u.title=`${RACES[race].n} ${CLASSES[cls].n}`;return u;
+}
+function namedFoe(z,faction){
+  return z===0?mkMon(BOSSES[0],ZL[0]+3,{hp:1.5,ap:1.05,sc:.92,boss:true,title:'Elite'}):rival(z,faction);
+}
+function dungeonList(z){
+  const W=WORLD[z];
+  return[...W.dg.trash.map(k=>()=>mkMon(MONS[k],ZL[z]+3,{hp:1.25,sc:.9,title:'Elite'})),
+    ()=>mkMon(W.dg.boss,ZL[z]+4,{hp:1.5,ap:1.05,sc:.92,boss:true,title:'Dungeonboss'})];
+}
+function raidList(r){
+  const R=RAIDS[r];
+  return[...R.enc.map(([n,k,ic])=>()=>mkMon(MONS[k],R.lvl,{n,ic,hp:1.4,sc:.95,boss:true,title:'Raidboss'})),
+    ()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:1.7,ap:1.1,sc:1,boss:true,title:'Raidboss'})];
+}
+const xpNeed=l=>60+40*l;
+const XPK={hunt:1,named:1.6,dtrash:1.3,dboss:2.2,rmini:2,rboss:3};
+function fightXp(elvl,lvl,kind){
+  const d=elvl-lvl,f=d>=0?Math.min(1.5,1+.1*d):Math.max(.1,1+.2*d);
+  return Math.round((18+7*elvl)*XPK[kind]*f);
 }
 
 /* ================================================================
@@ -842,7 +939,7 @@ function icoHTML(a,extra='',attrs=''){
 ================================================================ */
 const KEY='azeroth_duell_v1';
 let S=null,B=null,hero=null,busy=false,soundOn=true;
-function load(){try{const j=localStorage.getItem(KEY);if(!j)return null;const o=JSON.parse(j);o.bag=o.bag||[];o.eq=o.eq||{};return o}catch(e){return null}}
+function load(){try{const j=localStorage.getItem(KEY);if(!j)return null;const o=JSON.parse(j);o.bag=o.bag||[];o.eq=o.eq||{};if(!o.lvl){o.lvl=Math.min(30,1+(o.cleared||0));o.xp=0}o.q=o.q||{};o.done=o.done||{};if(o.loc==null)o.loc='z'+Math.max(0,ZREQ.filter(r=>r<=o.lvl).length-1);return o}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 try{soundOn=localStorage.getItem(KEY+'_snd')!=='0'}catch(e){}
 
@@ -970,7 +1067,7 @@ function title(){
     <div class="logoimg" role="img" aria-label="Azeroth Duell"></div>
     <div class="duo">${avatar('mensch','paladin',84)}<span class="vs">⚔</span>${avatar('orc','krieger',84)}</div>
     <div class="tag">Ein Held. Ein Gegner. Ein Sieg.<br>Wähle Rasse und Klasse und besiege Monster, Bosse und die Helden der anderen Fraktion.</div>
-    ${sv?`<button class="btn prime" data-a="cont">Abenteuer fortsetzen</button><div class="hint">${esc(sv.name)} · ${RACES[sv.race].n} ${CLASSES[sv.cls].n} · Stufe ${1+sv.cleared}</div>`:''}
+    ${sv?`<button class="btn prime" data-a="cont">Abenteuer fortsetzen</button><div class="hint">${esc(sv.name)} · ${RACES[sv.race].n} ${CLASSES[sv.cls].n} · Stufe ${sv.lvl}</div>`:''}
     <button class="btn ${sv?'dark':'prime'}" data-a="new">${sv?'Neuen Helden erschaffen':'Neues Abenteuer'}</button>
     <button class="btn dark" style="font-size:14px" data-a="snd">${soundOn?'🔊 Ton an':'🔇 Ton aus'}</button>
   </div></div>`,'lite');
@@ -1015,26 +1112,22 @@ function crHero(){ // Hilfseinheit für Tooltips in der Erstellung
 /* ----- Lager ----- */
 function camp(){
   hero=heroUnit(S);
-  const info=stageInfo(S.cleared),foe=enemyFor(info,RACES[S.race].f);
   const R=RACES[S.race],C=CLASSES[S.cls];
   const slots=[['w','Waffe'],['a','Rüstung'],['t','Schmuck']];
   const itemBtn=([k,nm])=>{const it=S.eq[k],n=S.bag.filter(x=>x.slot===k).length;
     const ic=it?`<span class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></span>`:`<span class="ico item empty"><span class="g" style="opacity:.25">${{w:'🗡️',a:'🛡️',t:'💍'}[k]}</span></span>`;
     return`<button class="slot" data-a="slot:${k}">${ic}<span class="sn" style="color:${it?RARD[it.rar]:'var(--mut)'}">${it?esc(it.name):nm}</span><small>${n?n+' im Rucksack':'Wechseln'}</small></button>`};
-  const lvl=hero.lvl,typ=info.type==='boss'?'Boss':info.type==='race'?'Duell':'Monster';
-  const foeIcon=foe.mon?monFig(foe,74):avatar(foe.race,foe.cls,74);
-  mount(`<div class="scr"><div class="top"><h2>Heldenlager</h2><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button><button class="ib" data-a="menu">☰</button></div>
+  const lvl=hero.lvl;
+  mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>Mein Held</h2><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button><button class="ib" data-a="menu">☰</button></div>
     <div class="scroll">
       <div class="panel hero">${avatar(S.race,S.cls,86)}<div class="hi"><h2>${esc(S.name)}</h2>
         <div class="sub mut"><span style="color:${R.f==='a'?'#5ea6ff':'#ff6b5e'}">${R.f==='a'?'Allianz':'Horde'}</span> · ${R.n} ${C.n}</div>
-        <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.cleared}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div></div></div>
+        <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.kills||0}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div></div></div>
       <div class="sec">Ausrüstung · antippen zum Wechseln</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
       <div class="sec">Symbole</div><div class="panel abrow">${C.ab.map((id,i)=>{const lk=lvl<UNLOCK[i];return icoHTML(A[id],lk?'nr':'',`data-tip="pv:${id}"`).replace('</button>',lk?`<span class="lk"><span>🔒</span><small>Stufe ${UNLOCK[i]}</small></span></button>`:'</button>')}).join('')}${icoHTML(A['r_'+R.ab],'racial',`data-tip="pv:r_${R.ab}"`)}</div>
       <div class="hint" style="margin-top:-6px">Symbol gedrückt halten für Details</div>
-      <div class="sec">Nächster Gegner · ${info.zone.n}</div>
-      <div class="panel foe">${foeIcon}<div class="fi"><span class="ty ${info.type==='boss'?'boss':''}">${typ} · Kampf ${S.cleared+1}</span><h3>${esc(foe.name)}</h3>
-        <div class="zone">Stufe ${foe.lvl} · ${foe.title||''}${foe.weak?` · Schwäche <span style="color:${SCHD[foe.weak]}">${SCH[foe.weak][0]}</span>`:''}</div></div></div>
-      <button class="btn prime" data-a="fight">${info.type==='boss'?'Zum Bosskampf':'Kampf beginnen'}</button>
+      ${xpBar()}
+      <button class="btn prime" data-a="map">Zur Weltkarte</button>
     </div></div>`,'lite');
 }
 
@@ -1042,11 +1135,12 @@ function camp(){
 let UI={};
 function startBattle(){
   hero=heroUnit(S);
-  const info=stageInfo(S.cleared),foe=enemyFor(info,RACES[S.race].f);
-  B=newBattle(hero,foe);B.info=info;B.token=Math.random();
-  const Z=info.zone;
+  const E=ENC,run=E.run,foe=run?run.list[run.step]():E.make();
+  if(run){E.kind=run.type+(run.step===run.list.length-1?'boss':(run.type==='d'?'trash':'mini'));hero.hp=Math.max(1,Math.round(hero.hpMax*run.hp));hero.potions=run.potions}
+  B=newBattle(hero,foe);B.token=Math.random();
+  const Z=ZONES[E.zone],sub=run?`${esc(run.name)} · Gegner ${run.step+1}/${run.list.length}`:E.kind==='named'?'Questziel':'Jagd';
   mount(`<div class="scr"><div class="bt">
-    <div class="bhd"><button class="ib" data-a="flee">✕</button><div class="t"><b>${esc(Z.n)}</b><small>Kampf ${S.cleared+1} · ${info.type==='boss'?'Boss':info.type==='race'?'Duell':'Monster'}</small></div><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button></div>
+    <div class="bhd"><button class="ib" data-a="flee">✕</button><div class="t"><b>${esc(Z.n)}</b><small>${sub}</small></div><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button></div>
     <div class="order" id="order"></div>
     <div class="arena" style="background:var(--i-zone-${ZONES.indexOf(Z)}) center 58%/cover,${Z.bg}" id="arena">
       <div class="u e" id="ue">${plate(foe,'e')}</div>
@@ -1219,10 +1313,10 @@ async function battleLoop(token){
 }
 
 /* ----- Beute ----- */
-function genItem(lvl,info){
-  const slot=pick(['w','a','t']),C=CLASSES[S.cls];
+function genItem(lvl,minRar=0,slot){
+  slot=slot||pick(['w','a','t']);const C=CLASSES[S.cls];
   let r=Math.random(),rar=r<.60?0:r<.88?1:r<.98?2:3;
-  if(info.type==='boss')rar=Math.max(rar,2);else if(info.type==='race')rar=Math.max(rar,1);
+  rar=Math.max(rar,minRar);
   const SUF=[['der Rekruten','des Lehrlings','der Wache'],['des Spähers','der Jagd','des Hüters'],['des Kriegsfürsten','der Sturmwacht','des Zorns'],['des Drachentöters','der Titanen','des Weltenbrechers']];
   const base=slot==='w'?C.wp:slot==='a'?C.ar:pick(['Amulett','Ring','Talisman']);
   const ic=slot==='w'?{Schwert:'🗡️',Streitkolben:'🔨',Bogen:'🏹',Dolch:'🔪',Stab:'🪄'}[C.wp]:slot==='a'?'🛡️':pick(['📿','💍','🔮']);
@@ -1253,29 +1347,178 @@ function gear(k){
 }
 function itemScore(it){if(!it)return 0;return it.v*(it.slot==='w'?1.4:it.slot==='a'?1:.8)}
 
+/* ----- Fortschritt ----- */
+let ENC=null;
+const qs=z=>S.q[z]||(S.q[z]={i:0,st:'new',n:0});
+function questDef(z,i){
+  const W=WORLD[z];if(i>4)return null;
+  const [t,x]=W.q[i],lv=ZL[z]+i;
+  const base={i,t,x,xp:Math.round(xpNeed(lv)*.7),lvl:lv,slot:['w','a','t'][i%3],rar:i===4?2:1};
+  if(i<3){const k=ZONES[z].mon[QMON[i]],m=MONS[k];return{...base,type:'kill',mon:k,need:2,goal:`${m.n} besiegen`}}
+  if(i===3){const f=namedFoe(z,RACES[S.race].f);
+    return{...base,type:'named',need:1,goal:`${f.name} besiegen`,foeName:f.name,
+      x:x||`${f.name} fordert jeden heraus, der durch dieses Gebiet zieht. Stelle dich dem Duell!`}}
+  return{...base,type:'dungeon',need:1,goal:`${W.dg.boss.n} besiegen (Dungeon: ${W.dg.n})`};
+}
+function qMark(z){const st=qs(z);if(st.i>4||S.lvl<ZREQ[z])return'';return st.st==='new'?'<i class="qm">!</i>':st.st==='ready'?'<i class="qm">?</i>':'<i class="qm off">?</i>'}
+function applyXp(x){
+  S.xp+=x;const lv=[];
+  while(S.lvl<30&&S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;lv.push(S.lvl)}
+  if(S.lvl>=30)S.xp=0;return lv;
+}
+function giveItem(it){if(!S.eq[it.slot]){S.eq[it.slot]=it;return true}S.bag.push(it);bagTrim(it.slot);return false}
+function xpBar(){
+  const n=xpNeed(S.lvl),pc=S.lvl>=30?100:Math.min(100,S.xp/n*100);
+  return`<div class="xpb"><i style="width:${pc}%"></i><b>${S.lvl>=30?'Maximalstufe':`Stufe ${S.lvl} · ${S.xp} / ${n} EP`}</b></div>`;
+}
+function rewardHTML(xp,lv,it,eq){
+  hero=heroUnit(S);
+  let h=`<div class="lv">+${xp} Erfahrung</div>${xpBar()}`;
+  for(const l of lv){
+    h+=`<div class="lv up">⭐ Stufe ${l} erreicht!</div>`;
+    h+=CLASSES[S.cls].ab.filter((_,i)=>UNLOCK[i]===l).map(id=>`<div class="newab">${icoHTML(A[id],'',`data-tip="pv:${id}"`)}<div><b>NEUES SYMBOL!</b><span>${A[id].n}</span><small>${abDesc(hero,A[id])[0]||''}</small></div></div>`).join('');
+  }
+  if(it){
+    h+=`<div class="rw"><button class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
+      <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':(()=>{const d=it.v-S.eq[it.slot].v;return d>0?`<span class="new">▲ Besser als dein aktuelles Teil (+${d})</span>`:`Im Rucksack · ${d<0?d:'gleichwertig'} zum aktuellen Teil`})()}</div>`;
+  }
+  return h;
+}
+const eqBtn=(it,eq)=>it&&!eq?`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`:'';
+const backAct=()=>ENC&&ENC.raid!=null?'map':'zone:'+(ENC?ENC.z:0);
+
 function result(win){
-  const info=B.info;let html;
+  const E=ENC,run=E.run,foe=B.e;let html;
   if(win){
     SFX.win();
-    const oldLvl=1+S.cleared;S.cleared++;
-    const it=genItem(info.lvl,info);let eq=false;
-    if(!S.eq[it.slot]){S.eq[it.slot]=it;eq=true}else{S.bag.push(it);bagTrim(it.slot)}
+    S.kills=(S.kills||0)+1;
+    const xp=fightXp(foe.lvl,S.lvl,E.kind),lv=applyXp(xp);
+    const LT={hunt:[.3,0],named:[1,1],dtrash:[.35,0],dboss:[1,2],rmini:[.6,2],rboss:[1,3]}[E.kind];
+    let it=null,eq=false;
+    if(Math.random()<LT[0]){it=genItem(foe.lvl,LT[1]);eq=giveItem(it)}
+    // Questfortschritt
+    let qline='';
+    if(E.z!=null&&E.raid==null){
+      const st=qs(E.z),def=questDef(E.z,st.i);
+      if(def&&st.st==='active'){
+        const hit=(def.type==='kill'&&E.kind==='hunt'&&E.key===def.mon)||(def.type==='named'&&E.kind==='named')||(def.type==='dungeon'&&E.kind==='dboss');
+        if(hit){st.n++;if(st.n>=def.need){st.st='ready';qline=`<div class="qline ok">❓ „${def.t}“ erfüllt – kehre zu ${WORLD[E.z].npc.n} zurück!</div>`}
+          else qline=`<div class="qline">📜 ${def.t}: ${st.n} / ${def.need}</div>`}
+      }
+    }
+    // Dungeon / Raid
+    let next='',fin='';
+    if(run){
+      if(run.step<run.list.length-1){
+        run.hp=Math.min(1,B.p.hp/B.p.hpMax+.35);run.potions=B.p.potions;run.step++;
+        next=`<button class="btn prime" data-a="next">Nächster Gegner (${run.step+1}/${run.list.length})</button>`;
+        fin=`<div class="qline">Du erholst dich etwas (+35 % Leben). Tränke übrig: ${run.potions}</div>`;
+      }else{
+        const k=run.type+(run.type==='d'?E.z:E.raid);S.done[k]=(S.done[k]||0)+1;
+        fin=`<div class="qline ok">🏆 ${esc(run.name)} abgeschlossen!</div>`;
+      }
+    }
     save();
-    const newAb=CLASSES[S.cls].ab.filter((_,i)=>UNLOCK[i]===oldLvl+1);
-    hero=heroUnit(S);
     html=`<div class="ovl"><div class="bnr win"><span>SIEG!</span></div>
-      <div class="box scb ink"><div class="lv">Stufe ${oldLvl+1} erreicht</div>
-        ${newAb.map(id=>`<div class="newab">${icoHTML(A[id],'',`data-tip="pv:${id}"`)}<div><b>NEUES SYMBOL!</b><span>${A[id].n}</span><small>${abDesc(hero,A[id])[0]||''}</small></div></div>`).join('')}
-        <div class="rw"><button class="ico item r${it.rar}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
-        <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':(()=>{const d=it.v-S.eq[it.slot].v;return d>0?`<span class="new">▲ Besser als dein aktuelles Teil (+${d})</span>`:`Im Rucksack · ${d<0?d:'gleichwertig'} zum aktuellen Teil`})()}</div></div>
-      ${eq?'':`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`}
-      <button class="btn prime" data-a="camp">Weiter</button></div>`;
+      <div class="box scb ink">${rewardHTML(xp,lv,it,eq)}${qline}${fin}</div>
+      ${eqBtn(it,eq)}
+      ${next||`<button class="btn prime" data-a="${backAct()}">Weiter</button>${E.kind==='hunt'?'<button class="btn dark" data-a="retry">Nochmal jagen</button>':''}`}</div>`;
   }else{
     SFX.lose();
-    html=`<div class="ovl"><div class="bnr lose"><span>NIEDERLAGE</span></div><div class="box scb ink"><div>${esc(B.e.name)} war zu stark.</div><div class="mut">Tipp: Achte auf Schwächen, Abklingzeiten und nutze deinen Heiltrank.</div></div>
-      <button class="btn" data-a="retry">Erneut versuchen</button><button class="btn dark" data-a="camp">Zurück ins Lager</button></div>`;
+    if(run){run.step=0;run.hp=1;run.potions=run.type==='d'?3:4}
+    html=`<div class="ovl"><div class="bnr lose"><span>NIEDERLAGE</span></div><div class="box scb ink"><div>${esc(foe.name)} war zu stark.</div><div class="mut">${run?'Der Lauf beginnt von vorn. ':''}Tipp: Achte auf Schwächen, Abklingzeiten und nutze deinen Heiltrank.</div></div>
+      <button class="btn" data-a="retry">Erneut versuchen</button><button class="btn dark" data-a="${backAct()}">Zurück</button></div>`;
   }
   document.querySelector('.scr').insertAdjacentHTML('beforeend',html);
+}
+
+/* ================================================================
+   WELT: Karte, Gebiete, Quests, Dungeons, Raids
+================================================================ */
+const lvlCol=l=>{const d=l-S.lvl;return d>=3?'#b3261b':d>=1?'#c2660c':d>=-2?'#8a6a00':d>=-5?'#2a7a1a':'#777'};
+function heroStrip(){
+  return`<button class="panel hstrip" data-a="camp">${avatar(S.race,S.cls,46)}<div class="hi"><b>${esc(S.name)}</b>${xpBar()}</div><span class="go">›</span></button>`;
+}
+function pinPos(id){const o=id[0]==='z'?WORLD[+id.slice(1)]:RAIDS[+id.slice(1)];return o}
+function worldMap(){
+  hero=heroUnit(S);B=null;
+  const pts=WORLD.map(w=>`${w.x},${w.y}`).join(' ');
+  const zp=WORLD.map((w,z)=>{const lock=S.lvl<ZREQ[z];
+    return`<button class="pin ${lock?'lock':''}" style="left:${w.x}%;top:${w.y}%" data-a="go:z${z}"><span class="ico" style="--is:50px;--sc:${ZCOL[z]}"><span class="g">${lock?'🔒':w.ic}</span></span>${qMark(z)}<b>${ZONES[z].n}</b><small>${lock?'Ab Stufe '+ZREQ[z]:`Stufe ${ZL[z]}–${ZL[z]+4}`}</small></button>`}).join('');
+  const rp=RAIDS.map((r,i)=>{const lock=S.lvl<r.req;
+    return`<button class="pin raid ${lock?'lock':''}" style="left:${r.x}%;top:${r.y}%" data-a="go:r${i}"><span class="ico item r3" style="--is:44px;--sc:#a335ee"><span class="g">${lock?'🔒':r.ic}</span></span><b>${r.n}</b><small>${lock?'Ab Stufe '+r.req:'Raid · Stufe '+r.lvl}${S.done['r'+i]?' ✔':''}</small></button>`}).join('');
+  const hp=pinPos(S.loc);
+  mount(`<div class="scr"><div class="top"><h2>Weltkarte</h2><button class="ib" data-a="qlog">📜</button><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button><button class="ib" data-a="menu">☰</button></div>
+    <div style="padding:0 10px">${heroStrip()}</div>
+    <div class="map" id="map">
+      <svg class="route" viewBox="0 0 100 100" preserveAspectRatio="none"><polyline points="${pts}" fill="none" stroke="#5a3a10" stroke-width=".7" stroke-dasharray="1.6 1.6" vector-effect="non-scaling-stroke" style="stroke-width:3px"/></svg>
+      ${zp}${rp}
+      <span class="hm" id="hm" style="left:${hp.x}%;top:${hp.y}%">${avatar(S.race,S.cls,34,false)}</span>
+      <div class="mapmsg" id="mapmsg">Tippe auf einen Ort, um dorthin zu reisen.</div>
+    </div></div>`,'lite');
+}
+function travel(id){
+  const lock=id[0]==='z'?S.lvl<ZREQ[+id.slice(1)]:S.lvl<RAIDS[+id.slice(1)].req;
+  if(lock){const m=$$('mapmsg');m.textContent=`Dieser Ort ist noch zu gefährlich – erreiche zuerst Stufe ${id[0]==='z'?ZREQ[+id.slice(1)]:RAIDS[+id.slice(1)].req}.`;m.classList.add('warn');SFX.miss();return}
+  const open=()=>id[0]==='z'?zoneScreen(+id.slice(1)):raidScreen(+id.slice(1));
+  if(S.loc===id)return open();
+  const o=pinPos(id),hm=$$('hm');hm.style.left=o.x+'%';hm.style.top=o.y+'%';
+  $$('mapmsg').textContent='Du reist nach '+(id[0]==='z'?ZONES[+id.slice(1)].n:o.n)+' …';
+  $$('map').classList.add('busy');S.loc=id;save();setTimeout(open,750);
+}
+function zoneScreen(z){
+  hero=heroUnit(S);B=null;
+  const W=WORLD[z],Z=ZONES[z],st=qs(z),def=questDef(z,st.i),f=RACES[S.race].f;
+  let qb;
+  if(!def)qb=`<div class="qtx">„Du hast alles getan, was ich mir erhoffen konnte. ${Z.n} steht in deiner Schuld.“</div><div class="qdone">✔ Alle Aufgaben in diesem Gebiet erfüllt</div>`;
+  else{
+    const rw=`<div class="qrw">Belohnung: <b>${def.xp} EP</b> · <b class="r${def.rar}t">${RAR[def.rar]}${def.rar<3?' oder besser':''}: ${{w:'Waffe',a:'Rüstung',t:'Schmuck'}[def.slot]}</b></div>`;
+    const goal=`<div class="qgoal ${st.st==='ready'?'ok':''}">${st.st==='ready'?'✔':'◻'} ${def.goal}${st.st!=='new'?` · ${Math.min(st.n,def.need)} / ${def.need}`:` (${def.need}×)`}</div>`;
+    const btn=st.st==='new'?`<button class="btn prime" data-a="qacc:${z}">Quest annehmen</button>`
+      :st.st==='ready'?`<button class="btn prime" data-a="qfin:${z}">Quest abschließen</button>`
+      :def.type==='named'?`<button class="btn" data-a="named:${z}">⚔ ${esc(def.foeName)} herausfordern</button>`
+      :def.type==='dungeon'?`<div class="hint">Betritt den Dungeon weiter unten.</div>`:`<div class="hint">Jage die Gegner weiter unten.</div>`;
+    qb=`<div class="qt">${st.st==='new'?'❗':st.st==='ready'?'❓':'📜'} ${def.t} <small>Quest ${def.i+1}/5</small></div><div class="qtx">„${def.x}“</div>${goal}${rw}${btn}`;
+  }
+  const mons=Z.mon.map((k,i)=>{const m=MONS[k],lv=ZL[z]+i,isQ=def&&st.st==='active'&&def.type==='kill'&&def.mon===k,u={mon:true,ic:m.ic,col:m.c};
+    return`<button class="mrow" data-a="hunt:${z}:${i}">${monFig(u,46)}<div class="mi"><b>${m.n}</b><small><span style="color:${lvlCol(lv)};font-weight:700">Stufe ${lv}</span>${m.weak?` · Schwäche ${SCH[m.weak][0]}`:''}${m.resist?` · Resistent ${SCH[m.resist][0]}`:''}</small>${isQ?`<em>📜 Quest ${st.n}/${def.need}</em>`:''}</div><span class="go">⚔</span></button>`}).join('');
+  const dlock=S.lvl<ZL[z]+2,db=W.dg.boss;
+  mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${Z.n}</h2><button class="ib" data-a="camp">👤</button></div>
+    <div class="scroll">
+      <div class="zhead" style="background-image:linear-gradient(#0000 40%,#000a),var(--i-zone-${z})"><span>Stufe ${ZL[z]}–${ZL[z]+4}</span></div>
+      <div class="sec">Questgeber</div>
+      <div class="panel qbox"><div class="npc"><span class="ico" style="--is:56px;--sc:#c9a227"><span class="g">${W.npc.ic}</span></span>${qMark(z)}<div><b>${W.npc.n}</b><small>${W.npc.t}</small></div></div>${qb}</div>
+      <div class="sec">Gegner in diesem Gebiet</div>${mons}
+      <div class="sec">Dungeon</div>
+      <div class="panel dcard"><span class="ico" style="--is:56px;--sc:#6a4a9a"><span class="g">${W.dg.ic}</span></span><div class="mi"><b>${W.dg.n}</b><small>3 Gegner am Stück · Boss: ${db.n}</small><small>Stufe ${ZL[z]+3}–${ZL[z]+4} · Leben bleibt zwischen den Kämpfen${S.done['d'+z]?` · ✔ ${S.done['d'+z]}× geschafft`:''}</small></div></div>
+      <button class="btn ${dlock?'':'prime'}" data-a="dungeon:${z}" ${dlock?'disabled':''}>${dlock?`Dungeon ab Stufe ${ZL[z]+2}`:'Dungeon betreten'}</button>
+    </div></div>`,'lite');
+}
+function raidScreen(r){
+  hero=heroUnit(S);B=null;
+  const R=RAIDS[r],bs=[...R.enc.map(([n,k,ic])=>({n,ic,c:MONS[k].c})),{n:BOSSES[R.boss].n,ic:BOSSES[R.boss].ic,c:BOSSES[R.boss].c,fin:1}];
+  mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${R.n}</h2><button class="ib" data-a="camp">👤</button></div>
+    <div class="scroll">
+      <div class="zhead" style="background-image:linear-gradient(#0000 40%,#000a),var(--i-zone-${R.zone})"><span>Raid · Stufe ${R.lvl}</span></div>
+      <div class="panel infobox"><h3>${R.ic} ${R.n}</h3>${R.d}<br>${bs.length} Bosse am Stück. Dein Leben bleibt zwischen den Kämpfen erhalten (+35 % Erholung), du hast 4 Heiltränke für den ganzen Raid. Der Endboss lässt <b class="r3t">epische</b> Beute fallen.${S.done['r'+r]?`<div class="pas">✔ ${S.done['r'+r]}× bezwungen</div>`:''}</div>
+      <div class="sec">Bosse</div>
+      ${bs.map((b,i)=>`<div class="mrow">${monFig({mon:true,boss:true,ic:b.ic,col:b.c},46)}<div class="mi"><b>${b.n}</b><small>${b.fin?'Endboss':'Boss '+(i+1)} · <span style="color:${lvlCol(R.lvl+(b.fin?1:0))};font-weight:700">Stufe ${R.lvl+(b.fin?1:0)}</span></small></div></div>`).join('')}
+      <button class="btn prime" data-a="raid:${r}">Raid betreten</button>
+    </div></div>`,'lite');
+}
+function questLog(){
+  const rows=WORLD.map((W,z)=>{const st=qs(z),def=questDef(z,st.i);
+    if(S.lvl<ZREQ[z])return'';
+    if(!def)return`<div class="mrow"><div class="mi"><b>${ZONES[z].n}</b><small>✔ Alle Quests erfüllt</small></div></div>`;
+    return`<button class="mrow" data-a="go2:z${z}"><div class="mi"><b>${st.st==='new'?'❗':st.st==='ready'?'❓':'📜'} ${def.t}</b><small>${ZONES[z].n} · ${W.npc.n}</small><small>${st.st==='new'?'Noch nicht angenommen':st.st==='ready'?'Bereit zur Abgabe':`${def.goal}: ${st.n} / ${def.need}`}</small></div><span class="go">›</span></button>`}).join('');
+  mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>Questlog</h2></div><div class="scroll">${rows}<div class="hint">❗ neue Quest · 📜 läuft · ❓ bereit zur Abgabe</div></div></div>`,'lite');
+}
+function questFinish(z){
+  const st=qs(z),def=questDef(z,st.i);if(!def||st.st!=='ready')return;
+  const lv=applyXp(def.xp),it=genItem(Math.max(def.lvl,S.lvl-1),def.rar,def.slot),eq=giveItem(it);
+  st.i++;st.st='new';st.n=0;save();SFX.win();
+  document.querySelector('.scr').insertAdjacentHTML('beforeend',`<div class="ovl"><div class="bnr win"><span style="font-size:clamp(14px,4.4vw,18px);white-space:nowrap">QUEST ERFÜLLT</span></div>
+    <div class="box scb ink"><div class="new" style="font-size:15px">${def.t}</div>${rewardHTML(def.xp,lv,it,eq)}</div>${eqBtn(it,eq)}<button class="btn prime" data-a="zone:${z}">Weiter</button></div>`);
 }
 
 /* ================================================================
@@ -1287,25 +1530,35 @@ function onAct(a,el){
     case 'snd':soundOn=!soundOn;try{localStorage.setItem(KEY+'_snd',soundOn?'1':'0')}catch(e){}
       document.querySelectorAll('[data-a="snd"]').forEach(b=>b.textContent=b.classList.contains('btn')?(soundOn?'🔊 Ton an':'🔇 Ton aus'):(soundOn?'🔊':'🔇'));break;
     case 'new':CR={step:0,race:null,cls:null,name:''};creation();break;
-    case 'cont':S=load();camp();break;
+    case 'cont':S=load();worldMap();break;
     case 'race':CR.race=v;if(CR.cls&&!RACES[v].cls.includes(CR.cls))CR.cls=null;crHero();creation();break;
     case 'cls':CR.cls=v;crHero();creation();break;
     case 'cback':if(CR.step===0){S=load();title()}else{CR.step--;crHero();creation()}break;
     case 'cnext':{
       if(CR.step<2){CR.step++;crHero();creation();break}
       const nm=($$('nm').value||'').trim()||'Held';
-      S={name:nm,race:CR.race,cls:CR.cls,cleared:0,eq:{},bag:[]};save();camp();break}
+      S={name:nm,race:CR.race,cls:CR.cls,lvl:1,xp:0,eq:{},bag:[],q:{},done:{},loc:'z0'};save();worldMap();break}
     case 'slot':gear(v);break;
     case 'equip':if(equipItem(v)){SFX.heal();gear(GS)}break;
     case 'drop':S.bag=S.bag.filter(x=>x.id!==v);save();gear(GS);break;
     case 'eqnow':if(equipItem(v)){SFX.heal();const n=$$('eqnote');if(n){n.className='new';n.textContent='✔ Angelegt'}const b=$$('eqbtn');if(b)b.style.display='none'}break;
-    case 'fight':startBattle();break;
-    case 'retry':startBattle();break;
+    case 'retry':case 'next':startBattle();break;
     case 'camp':B=null;camp();break;
+    case 'map':worldMap();break;
+    case 'qlog':questLog();break;
+    case 'go':travel(v);break;
+    case 'go2':S.loc=v;save();zoneScreen(+v.slice(1));break;
+    case 'zone':zoneScreen(+v);break;
+    case 'qacc':{const st=qs(+v);st.st='active';st.n=0;save();zoneScreen(+v);break}
+    case 'qfin':questFinish(+v);break;
+    case 'hunt':{const z=+v,i=+a.split(':')[2],key=ZONES[z].mon[i];ENC={kind:'hunt',z,zone:z,key,make:()=>mkMon(MONS[key],ZL[z]+i)};startBattle();break}
+    case 'named':{const z=+v;ENC={kind:'named',z,zone:z,make:()=>namedFoe(z,RACES[S.race].f)};startBattle();break}
+    case 'dungeon':{const z=+v;ENC={z,zone:z,run:{type:'d',name:WORLD[z].dg.n,step:0,list:dungeonList(z),hp:1,potions:3}};startBattle();break}
+    case 'raid':{const r=+v;ENC={raid:r,zone:RAIDS[r].zone,run:{type:'r',name:RAIDS[r].n,step:0,list:raidList(r),hp:1,potions:4}};startBattle();break}
     case 'flee':{
       if(!B)break;
       if(document.querySelector('.ovl'))break;
-      B.token=null;camp();break}
+      B.token=null;onAct(backAct());break}
     case 'menu':{
       title();break}
   }

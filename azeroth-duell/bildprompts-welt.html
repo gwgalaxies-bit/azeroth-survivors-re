@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Azeroth Duell – Bildprompts Welt</title>
+<style>
+:root{--ink:#2b1d0e;--gold:#8a5a00;--red:#a3201a}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  background:radial-gradient(120% 60% at 50% 0%,#f6e7c0,#e6cf99 70%,#d2b676);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 80px}
+h1{font:800 28px Georgia,serif;margin:6px 0 2px;color:#5a3a06}
+h2{font:800 20px Georgia,serif;margin:26px 0 8px;color:var(--red);border-bottom:2px solid #8a5a0066;padding-bottom:4px}
+.lead{color:#5b4220;margin:0 0 12px}
+.bar{position:sticky;top:0;z-index:5;background:#e6cf99ee;padding:8px 0;backdrop-filter:blur(4px)}
+input{width:100%;padding:11px 12px;border-radius:8px;border:2px solid #8a5a00;background:#fff8e6;font-size:16px;color:var(--ink)}
+.style{background:#fff8e6;border:2px solid #8a5a0088;border-radius:10px;padding:10px 12px;margin:8px 0}
+.style b{color:var(--gold)}
+.style p{margin:4px 0 8px;font-size:13px;-webkit-user-select:text;user-select:text}
+ol{list-style:none;margin:0;padding:0;counter-reset:n}
+li{counter-increment:n;display:flex;gap:10px;align-items:flex-start;background:#fff8e6cc;border:1px solid #8a5a0055;border-radius:10px;padding:9px 10px;margin:7px 0}
+li::before{content:counter(n);flex:none;min-width:24px;height:24px;border-radius:12px;background:#5a3a06;color:#fff3cf;font:700 12px/24px system-ui;text-align:center}
+li .t{flex:1;min-width:0}
+li .t b{display:block;font-size:14px}
+li .t span{display:block;font-size:12.5px;color:#4a371c;-webkit-user-select:text;user-select:text;word-break:break-word}
+button{font:700 13px system-ui;color:#fff;background:linear-gradient(#d23a30,#8f1812);border:2px solid #5e0f0b;border-radius:4px;padding:8px 12px;cursor:pointer;box-shadow:0 2px 0 #4a0b08;flex:none}
+button:active{transform:translateY(2px);box-shadow:none}
+button.ok{background:linear-gradient(#3da04a,#1f6a2a);border-color:#124a1a}
+button.all{margin-bottom:4px}
+.hide{display:none!important}
+.tips li::before{content:"✦";background:none;color:var(--red);font-size:16px}
+.tips li{display:list-item;list-style:none;display:block}
+.tips li::before{display:inline;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Azeroth Duell – Bildprompts: Weltkarte, Quests, Dungeons, Raids</h1>
+<p class="lead">Einzelne Elemente (Pins, Marker, Porträts, Bosse, UI) verlangen einen <b>einfarbig schwarzen Hintergrund</b> (Gemini kann keine Transparenz). Weltkarte, Dungeon-Eingänge und Raid-Banner sind vollflächige Bilder. Jeder Eintrag ist ein <b>kompletter, einzeln nutzbarer Prompt</b>: einmal auf „Kopieren“ tippen, in den Bildgenerator einfügen, fertig. Nichts muss zusammengesetzt werden. Klappt das Kopieren nicht, den Text lange gedrückt halten und markieren.</p>
+<div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Karte, Pin, Raid, Quest …"></div>
+
+<div id="out"></div>
+
+<h2>Tipps</h2>
+<ol class="tips">
+<li>Optional für noch einheitlichere Ergebnisse: das beste erzeugte Bild als Stil-Referenz im Generator hinterlegen.</li>
+<li>Echtes SVG liefert z. B. Recraft; sonst PNG erzeugen und mit Inkscape/Vectorizer nachzeichnen.</li>
+<li>Schwarzen Hintergrund später freistellen (z. B. in Photoshop/Photopea „Farbbereich“ oder remove.bg). Größen fürs Spiel: Icons 256×256, Porträts 512×512, Hintergründe 1080×1920. Buttons als 9-Slice anlegen.</li>
+</ol>
+</div>
+<script>
+const ST={
+ icon:"flat vector game icon, bold clean shapes, thick dark brown outline, limited warm palette with one strong accent color, subtle cel-shaded highlights, centered single subject, high contrast, fantasy MMO style inspired by classic World of Warcraft icons, no text, no watermark, solid pure black background (#000000), nothing else in the background, square 1:1, SVG-friendly, 512x512",
+ portrait:"stylized vector character portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, expressive glowing eyes, shoulder armor visible, circular composition, solid pure black background (#000000), nothing else in the background, no text, SVG-friendly, 1024x1024",
+ monster:"stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, menacing expression, circular composition, solid pure black background (#000000), nothing else in the background, no text, SVG-friendly, 1024x1024",
+ ui:"vector game UI asset, hand-painted fantasy MMO interface style like classic World of Warcraft, worn aged materials, crisp edges, no text, no characters, SVG-friendly"
+};
+const SC={Physisch:'steel gray',Feuer:'orange',Frost:'ice blue',Arkan:'violet',Natur:'green',Schatten:'dark purple',Heilig:'gold'};
+const G=[];
+const BLK=', solid pure black background (#000000), nothing else in the background';
+const add=(title,style,items)=>G.push({title,style,items:items.map(([n,p])=>({n,p:(style?ST[style]+', ':'')+p+(/^[23]\./.test(title)&&!/black/.test(p)?BLK:'')}))});
+
+const FULL=', full-bleed image filling the whole frame, no border, no text, no labels, no UI';
+add('1. Weltkarte',null,[
+ ['Weltkarte (Hochformat, ohne Beschriftung)','hand-painted fantasy world map in the style of the classic World of Warcraft world map, portrait 9:16, aged parchment paper with burnt edges, one large continent surrounded by pale sea, five clearly different regions: a misty green forest in the bottom left, a red desert canyon in the bottom right, a dark purple swamp graveyard in the middle left, a snowy ice glacier with jagged peaks in the middle right, a black volcanic wasteland with lava rivers in the upper left, three small ominous landmarks in the far north (a volcano crater, a floating dark citadel, a sand temple) and a dragon lair cave on the east coast, thin dotted travel paths connecting the regions from south to north, small compass rose in a corner, sea monsters and tiny ships as decoration, muted ink and watercolor colors, no text, no labels, no icons, no pins, 1080x1920'],
+ ['Kartenrahmen','vector game UI asset, ornate rectangular map frame in classic World of Warcraft interface style, dark carved wood and bronze corners with small dragon head ornaments, empty transparent-looking center painted solid pure black (#000000), portrait 9:16, solid pure black background (#000000) outside the frame, no text, 1080x1920']
+]);
+const pin=(n,m)=>[n,'round map pin medallion game icon, thick bronze ring with rivets, small pointed tip at the bottom, '+m+', flat vector style with bold shapes and thick dark outline, classic World of Warcraft map icon look, centered, no text, 512x512'];
+add('2. Karten-Pins',null,[
+ pin('Pin: Wald der Nebel','inside: dark green pine trees in mist'),
+ pin('Pin: Die Rote Wüste','inside: red sandstone arch with a cactus'),
+ pin('Pin: Düsterfenn','inside: crooked tombstone under a purple night sky'),
+ pin('Pin: Eiskronengletscher','inside: jagged blue ice peak with snow'),
+ pin('Pin: Brennende Steppe','inside: erupting volcano with lava'),
+ pin('Pin: Dungeon','inside: stone dungeon portal with a swirling green vortex'),
+ pin('Pin: Raid','inside: horned skull with glowing purple eyes, purple ring instead of bronze'),
+ pin('Pin: Raid Onyxias Hort','inside: black dragon head with red eyes, purple ring instead of bronze'),
+ pin('Pin: Raid Geschmolzener Kern','inside: burning molten rock core with flames, purple ring instead of bronze'),
+ pin('Pin: Raid Naxxramas','inside: floating dark necropolis citadel with green glow, purple ring instead of bronze'),
+ pin('Pin: Raid Ahn’Qiraj','inside: giant green eye with tentacles over sand, purple ring instead of bronze'),
+ pin('Pin: gesperrt','inside: iron padlock, dull gray iron ring instead of bronze'),
+ ['Spieler-Marker auf der Karte','game map marker icon, golden downward-pointing arrow with a small waving red banner on top, glowing outline, flat vector style with thick dark outline, centered, no text, 512x512'],
+ ['Reiseweg-Punkte','game map path sprite, a short row of five dark brown ink dots like dotted travel route on a treasure map, flat vector, centered, no text, 512x128']
+]);
+const mk=(n,m)=>[n,'game quest marker icon in the style of classic World of Warcraft, '+m+', bold chunky 3D-looking symbol with dark outline and soft glow, flat vector style, centered, no text other than the symbol itself, 512x512'];
+add('3. Quest-Marker und Quest-Symbole',null,[
+ mk('Quest verfügbar (gelbes !)','a big bright yellow exclamation mark'),
+ mk('Quest bereit zur Abgabe (gelbes ?)','a big bright yellow question mark'),
+ mk('Quest läuft (graues ?)','a big dull silver-gray question mark, no glow'),
+ mk('Quest noch nicht verfügbar (graues !)','a big dull silver-gray exclamation mark, no glow'),
+ ['Questlog-Symbol','flat vector game icon, rolled parchment quest scroll with red wax seal and quill, thick dark brown outline, warm palette, centered, no text, 512x512'],
+ ['Questziel-Haken','flat vector game icon, bold green check mark on a small parchment square, thick dark outline, centered, no text, 512x512'],
+ ['Erfahrungs-Symbol','flat vector game icon, glowing purple star with small sparkles, thick dark outline, centered, no text, 512x512'],
+ ['Beutetruhe','flat vector game icon, open wooden treasure chest with gold coins and a glowing blue item inside, thick dark outline, centered, no text, 512x512'],
+ ['Stufenaufstieg','flat vector battle effect sprite, golden light pillar with rising sparkles and a small crown of rays, centered, no text, 512x512']
+]);
+add('4. Questgeber-Porträts','portrait',[
+ ['Hüterin Elara (Wald der Nebel)','friendly female elf forest warden, silver-white braided hair, green hooded cloak with leaf brooch, wooden staff, gentle smile, misty green forest glow behind her'],
+ ['Karawanenführer Rashid (Die Rote Wüste)','weathered human caravan leader, white turban and sand-colored scarf, short dark beard, sun-tanned skin, leather satchel straps, warm orange desert glow behind him'],
+ ['Totengräber Morten (Düsterfenn)','old hunched human gravedigger, long gray beard, tattered dark hood, lantern in hand, tired kind eyes, purple-blue night fog behind him'],
+ ['Kundschafterin Ysra (Eiskronengletscher)','tough female human scout, fur-lined hood and thick wool scarf, frost on her eyebrows, determined look, bow on her back, cold blue snowy glow behind her'],
+ ['Schmiedemeister Borin (Brennende Steppe)','stocky dark iron dwarf blacksmith, ash-gray skin, fiery orange braided beard, soot-stained leather apron, forge hammer on shoulder, glowing ember light behind him']
+]);
+const card=(n,m)=>[n,'painterly vector game location banner illustration, wide 16:9, dramatic entrance view, atmospheric depth and fog, classic World of Warcraft dungeon loading screen mood, '+m+FULL+', 1280x720'];
+add('5. Dungeon-Eingänge',null,[
+ card('Die Todesminen','entrance to an abandoned gold mine in a forest hillside, wooden support beams, mine cart rails, torches, red bandana flag of bandits'),
+ card('Hügel der Klingenhauer','giant thorny bramble hill in a red desert, entrance tunnel made of huge twisted thorns, tribal boar skull totems'),
+ card('Scholomance','ruined dark academy on an island in a foggy swamp lake, broken bridge, green ghostly light in the windows, crows'),
+ card('Feste Frostgrimm','frozen stone fortress carved into a glacier, huge ice-covered gate, blue braziers, blowing snow'),
+ card('Schwarzfelsspitze','black volcanic mountain fortress with chained bridges over lava, dragon banners, glowing red windows')
+]);
+add('6. Raid-Banner',null,[
+ card('Onyxias Hort','huge dragon lair cave with lava cracks, piles of bones and dragon eggs, silhouette of a black dragon in the dark'),
+ card('Geschmolzener Kern','vast molten cavern deep under a volcano, rivers of lava, giant rune-covered stone bridge leading to a lake of fire'),
+ card('Naxxramas','colossal floating necropolis citadel above a frozen wasteland, green death magic glow, chains hanging down, storm clouds'),
+ card('Ahn’Qiraj','ancient sand-covered temple city with giant obelisks and scarab gate, eerie green light from inside, swarming insects in the sky')
+]);
+const bs=(n,m)=>[n,'elite boss, glowing silver-gold frame, menacing aura, '+m];
+add('7. Neue Dungeon-Bosse','monster',[
+ bs('Charlga Klingenflanke','old quilboar crone shaman with tusks, bone necklace, tribal staff with feathers, purple shadow magic'),
+ bs('Dunkelmeister Gandling','sinister undead headmaster necromancer in dark purple robes, skull-topped staff, glowing violet eyes'),
+ bs('Fürst Frostgrimm','towering frost giant lord with ice crystal crown and frozen beard, armor made of glacier ice'),
+ bs('General Drakkisath','black dragonkin general in heavy spiked plate armor, horned helmet, burning eyes, huge halberd')
+]);
+add('8. Raid-Bosse','monster',[
+ bs('Hortwächter (Onyxias Hort)','armored black dragonkin guard with tower shield and spear'),
+ bs('Brutwächterin Flammenschuppe (Onyxias Hort)','young red-black drake with flame-colored scales protecting eggs'),
+ bs('Lucifron (Geschmolzener Kern)','flamewaker demon, serpent-like lower body, burning red skin, cursed green magic in his hands'),
+ bs('Magmadar (Geschmolzener Kern)','gigantic molten core hound with two heads, lava dripping from its jaws'),
+ bs('Golemagg (Geschmolzener Kern)','colossal molten rock giant with glowing magma cracks'),
+ bs('Anub’Rekhan (Naxxramas)','giant undead crypt lord beetle with spiked carapace and glowing green eyes'),
+ bs('Flickwerk (Naxxramas)','huge stitched-together abomination with three arms, hooks and chains, oozing green slime'),
+ bs('Saphiron (Naxxramas)','skeletal frost wyrm with icy blue glow between its bones'),
+ bs('Prophet Skeram (Ahn’Qiraj)','insectoid qiraji prophet with ornate golden headdress and arcane purple energy'),
+ bs('Fankriss (Ahn’Qiraj)','enormous armored sand worm scorpion hybrid with pincers bursting from sand'),
+ bs('Prinzessin Huhuran (Ahn’Qiraj)','giant poisonous wasp queen with glowing green stinger and translucent wings')
+]);
+add('9. Welt-UI',null,[
+ ['EP-Balken','vector game UI asset in classic World of Warcraft interface style, complete horizontal experience bar, dark metal rim with small notches, filled about 60% with a glossy purple gradient, empty dark trough for the rest, 12:1, solid pure black background (#000000), no text, 1200x100'],
+ ['Questfenster','vector game UI asset in classic World of Warcraft interface style, tall quest dialog window, aged parchment page inside a dark carved wood and bronze frame, round empty portrait ring in the top left corner, empty parchment area for text, portrait 3:4, solid pure black background (#000000), no text, 900x1200'],
+ ['Gegner-Zeile','vector game UI asset in classic World of Warcraft interface style, wide list row plate, light parchment strip with bronze end caps and a round empty portrait ring on the left, 5:1, solid pure black background (#000000), no text, 1000x200'],
+ ['Banner „Quest erfüllt“','vector game UI asset, golden ribbon banner with a large yellow question mark emblem above it and laurel leaves, empty ribbon center for text, 3:2, solid pure black background (#000000), no text, 900x600'],
+ ['Dungeon-Fortschritt (Schädelkette)','vector game UI asset, horizontal row of four small round stone medallions connected by a chain, three with dark skull icons and the last one larger with a crowned skull, 6:1, solid pure black background (#000000), no text, 1200x200']
+]);
+const out=document.getElementById('out'),styles=document.getElementById('styles');
+const names={icon:'STIL-ICON (Fähigkeiten, Items, Wappen)',portrait:'STIL-PORTRAIT (Rassen)',monster:'STIL-MONSTER (Monster, Bosse)',ui:'STIL-UI (Hintergründe, Buttons, Rahmen)'};
+function copy(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='Kopiert ✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1400)};
+  try{navigator.clipboard.writeText(text).then(done,()=>fallback(text,done))}catch(e){fallback(text,done)}
+}
+function fallback(text,done){
+  const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+  try{document.execCommand('copy');done()}catch(e){}t.remove();
+}
+for(const g of G){
+  const h=document.createElement('h2');h.textContent=g.title+` (${g.items.length})`;
+  const all=document.createElement('button');all.className='all';all.textContent='Alle dieser Gruppe kopieren';
+  all.onclick=()=>copy(g.items.map(i=>i.n+':\n'+i.p).join('\n\n'),all);
+  const ol=document.createElement('ol');
+  for(const i of g.items){
+    const li=document.createElement('li');li.dataset.s=(g.title+' '+i.n+' '+i.p).toLowerCase();
+    li.innerHTML=`<div class="t"><b></b><span></span></div>`;
+    li.querySelector('b').textContent=i.n;li.querySelector('span').textContent=i.p;
+    const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(i.p,b);li.appendChild(b);ol.appendChild(li);
+  }
+  const wrap=document.createElement('section');wrap.append(h,all,ol);out.appendChild(wrap);
+}
+document.getElementById('q').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#out li').forEach(li=>li.classList.toggle('hide',!!q&&!li.dataset.s.includes(q)));
+  document.querySelectorAll('#out section').forEach(s=>s.classList.toggle('hide',!!q&&![...s.querySelectorAll('li')].some(l=>!l.classList.contains('hide'))));
+});
+</script>
+</body>
+</html>
