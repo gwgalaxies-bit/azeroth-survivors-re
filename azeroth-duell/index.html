@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="theme-color" content="#120d08">
 <title>Azeroth Duell</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1180,7 +1180,7 @@ function onAct(a,el){
       if(document.querySelector('.ovl'))break;
       B.token=null;camp();break}
     case 'menu':{
-      if(confirm('Zurück zum Titelbildschirm?\n(Dein Fortschritt ist gespeichert.)')){title()}break}
+      title();break}
   }
 }
 document.addEventListener('input',e=>{if(e.target.id==='nm')CR.name=e.target.value});
