@@ -323,6 +323,10 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .ovl .bnr.win{width:min(62vw,250px)}.ovl .bnr.lose{width:min(60vw,240px)}
 .bnr.win span{font-size:clamp(22px,7.5vw,32px)}
 .pin.town b{color:#7a1f12}
+.lootbtn{animation:lootp 1.1s ease-in-out infinite}
+@keyframes lootp{50%{filter:drop-shadow(0 0 14px #ffd100) drop-shadow(0 4px 4px #0009);transform:scale(1.03)}}
+.lootacts{display:flex;flex-direction:column;gap:8px;width:100%}
+.lootacts .btn{font-size:15px}
 .bagwarn{font-size:13px;font-weight:700;color:#8a1a10;background:#f6d2c4;border:1px solid #b3261b;border-radius:8px;padding:7px 9px}
 .dn{color:#b3261b;font-weight:700}
 .resbar{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:8px 12px;font-size:12.5px}
@@ -1016,6 +1020,7 @@ function resolveTip(el){
     }
     case 'pot':return`<div class="tn">🧪 Heiltrank</div>${S.pots?`<div class="td tg">Dazu ${Math.min(S.pots,3)} gekaufte Tränke aus deinem Vorrat (${S.pots}).</div>`:''}<div class="tl"><span>Gegenstand</span><i>Verbraucht deinen Zug</i></div><div class="td w">Stellt <b>40 %</b> deines maximalen Lebens wieder her.</div><div class="tf">Pro Kampf ${B?B.p.potions:2} übrig.</div>`;
     case 'pass':return`<div class="tn">⏳ Abwarten</div><div class="td w">Du überspringst deinen Zug${B&&B.p.rk==='mana'?' und erhältst 10 Mana':''}.</div>`;
+    case 'loot':return LOOT?itemTip(LOOT):null;
     case 'it':{const it=[...Object.values(S.eq),...S.bag,...((S.shop&&S.shop.items)||[])].find(x=>x&&x.id===a);return it?itemTip(it):null}
     case 'item':{const it=S.eq[a];return it?itemTip(it):`<div class="tn mut">Leerer Platz</div><div class="td w">Besiege Gegner, um Beute zu erhalten.</div>`}
     case 'st':{const u=a==='p'?B.p:B.e,s=u.st.find(x=>x.id===b);return s?stTip(s):null}
@@ -1416,6 +1421,26 @@ function rewardHTML(xp,lv,it,eq,gold){
   }
   return h;
 }
+let LOOT=null;
+function lootOpen(){
+  const it=LOOT;if(!it)return;
+  const cur=S.eq[it.slot],full=cur&&bagFull(),d=cur?it.v-cur.v:0;
+  $$('lootbtn').style.display='none';$$('loothint').style.display='none';
+  $$('lootbox').innerHTML=`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
+    <div id="eqnote" class="${!cur||d>0?'new':'mut'}">${!cur?'Dein Platz dafür ist noch leer.':d>0?`▲ Besser als dein aktuelles Teil (+${d})`:d<0?`▼ Schwächer als dein aktuelles Teil (${d})`:'Gleichwertig zu deinem aktuellen Teil'}</div>
+    ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${S.bag.length}/${bagCap()}). Du kannst das Teil nur verkaufen oder liegen lassen.</div>`:''}
+    <div class="lootacts" id="lootacts"><button class="btn prime" data-a="loottake" ${full?'disabled':''}>Nehmen</button><button class="btn dark" data-a="lootsell">Verkaufen +${sellPrice(it)} 🪙</button><button class="btn dark" data-a="lootleave">Liegen lassen</button></div>`;
+}
+function lootDone(how){
+  const it=LOOT;if(!it)return;LOOT=null;
+  const n=$$('eqnote'),acts=$$('lootacts');let extra='';
+  if(how==='take'){const eq=giveItem(it);n.className='new';n.textContent=eq?'✔ Genommen und angelegt (Platz war leer)':'✔ Im Rucksack';if(!eq)extra=`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`;SFX.heal()}
+  else if(how==='sell'){S.gold+=sellPrice(it);n.className='mut';n.textContent=`Verkauft für ${sellPrice(it)} 🪙`;SFX.heal()}
+  else{n.className='mut';n.textContent='Liegen gelassen'}
+  acts.innerHTML=extra;if(!extra)acts.style.display='none';
+  const bw=document.querySelector('#lootbox .bagwarn');if(bw)bw.style.display='none';
+  $$('after').style.display='flex';save();
+}
 const eqBtn=(it,eq)=>it&&!eq&&!it.sold?`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`:'';
 const backAct=()=>ENC&&ENC.raid!=null?'map':'zone:'+(ENC?ENC.z:0);
 
@@ -1430,7 +1455,8 @@ function result(win){
     const gold=Math.round((3+foe.lvl*1.5)*XPK[E.kind]*rnd(.8,1.2));S.gold+=gold;
     const LT={hunt:[.3,0],named:[1,1],dtrash:[.35,0],dboss:[1,2],rmini:[.6,2],rboss:[1,3]}[E.kind];
     let it=null,eq=false;
-    if(Math.random()<LT[0]){it=genItem(foe.lvl,LT[1]);eq=giveItem(it)}
+    if(Math.random()<LT[0])it=genItem(foe.lvl,LT[1]);
+    LOOT=it;
     // Questfortschritt
     let qline='';
     if(E.z!=null&&E.raid==null){
@@ -1455,9 +1481,9 @@ function result(win){
     }
     save();
     html=`<div class="ovl"><div class="bnr win"><span>SIEG!</span></div>
-      <div class="box scb ink">${rewardHTML(xp,lv,it,eq,gold)}${qline}${fin}</div>
-      ${eqBtn(it,eq)}
-      ${next||`<button class="btn prime" data-a="${backAct()}">Weiter</button>${E.kind==='hunt'?'<button class="btn dark" data-a="retry">Nochmal jagen</button>':''}`}</div>`;
+      <div class="box scb ink">${rewardHTML(xp,lv,null,false,gold)}${qline}${fin}${it?`<div class="qline" id="loothint">🎁 ${esc(foe.name)} hat etwas fallen lassen!</div><div id="lootbox" style="width:100%;display:flex;flex-direction:column;gap:8px;align-items:center"></div>`:''}</div>
+      ${it?`<button class="btn prime lootbtn" id="lootbtn" data-a="loot">🎁 Beute</button>`:''}
+      <div id="after" style="width:100%;display:${it?'none':'flex'};flex-direction:column;gap:12px">${next||`<button class="btn prime" data-a="${backAct()}">Weiter</button>${E.kind==='hunt'?'<button class="btn dark" data-a="retry">Nochmal jagen</button>':''}`}</div></div>`;
   }else{
     SFX.lose();
     if(run){run.step=0;run.hp=1;run.potions=run.type==='d'?3:4}
@@ -1652,6 +1678,10 @@ function onAct(a,el){
     case 'slot':gear(v);break;
     case 'equip':if(equipItem(v)){SFX.heal();gear(GS)}break;
     case 'drop':S.bag=S.bag.filter(x=>x.id!==v);save();gear(GS);break;
+    case 'loot':lootOpen();break;
+    case 'loottake':lootDone('take');break;
+    case 'lootsell':lootDone('sell');break;
+    case 'lootleave':lootDone('leave');break;
     case 'eqnow':if(equipItem(v)){SFX.heal();const n=$$('eqnote');if(n){n.className='new';n.textContent='✔ Angelegt'}const b=$$('eqbtn');if(b)b.style.display='none'}break;
     case 'retry':case 'next':startBattle();break;
     case 'camp':B=null;camp();break;
