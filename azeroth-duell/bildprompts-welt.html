@@ -136,6 +136,28 @@ add('8. Raid-Bosse','monster',[
  bs('Fankriss (Ahn’Qiraj)','enormous armored sand worm scorpion hybrid with pincers bursting from sand'),
  bs('Prinzessin Huhuran (Ahn’Qiraj)','giant poisonous wasp queen with glowing green stinger and translucent wings')
 ]);
+const ic2=(n,m)=>[n,'flat vector game icon, bold clean shapes, thick dark brown outline, warm palette, subtle cel-shaded highlights, classic World of Warcraft icon look, '+m+', centered, solid pure black background (#000000), nothing else in the background, no text, 512x512'];
+add('10. Handelsposten: Händler, Schmied, Ressourcen',null,[
+ pin('Pin: Handelsposten','inside: small timber-framed trading post house with a hanging shop sign and smoke from the chimney').map((x,i)=>i?x+BLK:x),
+ ['Händlerin Mira','stylized vector character portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, cheerful female human merchant with freckles, auburn hair in a bun, green vest over a linen shirt, coin pouch and scales, market stall with goods behind her, circular composition, solid pure black background (#000000), no text, 1024x1024'],
+ ['Schmied Thargas','stylized vector character portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, burly dwarf blacksmith with thick black beard, bald head, leather apron, heavy hammer on shoulder, glowing forge and anvil behind him, circular composition, solid pure black background (#000000), no text, 1024x1024'],
+ ['Handelsposten (Kopfbild)','painterly vector game location banner illustration, wide 16:9, cozy fantasy trading post at a crossroads, timber-framed shop with awning and crates, open-air smithy with glowing forge and anvil next to it, lanterns, banners, warm evening light, classic World of Warcraft town mood, full-bleed image filling the whole frame, no border, no text, no labels, no UI, 1280x720'],
+ ic2('Gold','a small stack of shiny gold coins with one coin showing a crown emblem'),
+ ic2('Magiestaub','a small glass vial and a pile of sparkling violet-blue magic dust with tiny stars'),
+ ic2('Titanensplitter','a jagged glowing cyan-blue crystal shard with golden rune engravings and light rays'),
+ ic2('Zerlegen','an anvil with a hammer breaking a sword into glowing fragments'),
+ ic2('Verkaufen','a hand dropping gold coins into an open leather pouch'),
+ ic2('Tauschen','two curved arrows forming a circle around a vial of magic dust and a gift box'),
+ ic2('Heiltrank-Vorrat','three red health potion flasks in a small wooden rack'),
+ ['Rahmen: Legendär','vector game UI asset, hand-painted fantasy MMO interface style like classic World of Warcraft, square item frame, bright orange-gold border with flame-like glow and tiny sparks, beveled, corner studs, dark empty inner field, 1:1, solid pure black background (#000000), no text, 512x512'],
+ ic2('Legendär: Donnerzorn (Schwert)','legendary curved blade crackling with blue lightning, orange legendary glow around the rim'),
+ ic2('Legendär: Sulfuras (Streitkolben)','legendary massive molten hammer with a burning lava head, orange legendary glow around the rim'),
+ ic2('Legendär: Sternenzorn (Bogen)','legendary golden bow made of starlight with a glowing arrow, orange legendary glow around the rim'),
+ ic2('Legendär: Fangzahn des Urvaters (Dolch)','legendary dark serrated dagger shaped like a dragon fang with green venom glow, orange legendary glow around the rim'),
+ ic2('Legendär: Atiesh (Stab)','legendary wizard staff with a carved raven head and a violet crystal, orange legendary glow around the rim'),
+ ic2('Legendär: Rüstung des Erwachten Titanen','legendary golden plate chestpiece with a glowing blue titan rune in the center, orange legendary glow around the rim'),
+ ic2('Legendär: Siegel des Weltenwächters','legendary signet ring with a tiny glowing world globe as its gem, orange legendary glow around the rim')
+]);
 add('9. Welt-UI',null,[
  ['EP-Balken','vector game UI asset in classic World of Warcraft interface style, complete horizontal experience bar, dark metal rim with small notches, filled about 60% with a glossy purple gradient, empty dark trough for the rest, 12:1, solid pure black background (#000000), no text, 1200x100'],
  ['Questfenster','vector game UI asset in classic World of Warcraft interface style, tall quest dialog window, aged parchment page inside a dark carved wood and bronze frame, round empty portrait ring in the top left corner, empty parchment area for text, portrait 3:4, solid pure black background (#000000), no text, 900x1200'],
