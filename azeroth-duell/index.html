@@ -1139,7 +1139,7 @@ function music(name){
   if(MUS.name===name&&MUS.el&&!MUS.el.paused)return;
   if(MUS.el){const o=MUS.el;mFade(o,0,()=>o.pause())}
   try{
-    const a=new Audio('audio/'+name+'.m4a');a.loop=true;a.volume=0;MUS.el=a;MUS.name=name;
+    const a=new Audio('audio/'+name+'.mp3');a.loop=true;a.volume=0;MUS.el=a;MUS.name=name;
     const pr=a.play();if(pr&&pr.then)pr.then(()=>mFade(a,.3)).catch(()=>{if(MUS.el===a){MUS.el=null;MUS.name=null}});
   }catch(e){MUS.el=null;MUS.name=null}
 }
