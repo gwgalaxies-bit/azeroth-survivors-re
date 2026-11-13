@@ -323,6 +323,8 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .ovl .bnr.win{width:min(62vw,250px)}.ovl .bnr.lose{width:min(60vw,240px)}
 .bnr.win span{font-size:clamp(22px,7.5vw,32px)}
 .pin.town b{color:#7a1f12}
+.bagwarn{font-size:13px;font-weight:700;color:#8a1a10;background:#f6d2c4;border:1px solid #b3261b;border-radius:8px;padding:7px 9px}
+.dn{color:#b3261b;font-weight:700}
 .resbar{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:8px 12px;font-size:12.5px}
 .tabs{display:flex;gap:8px}.tabs .btn{font-size:15px}
 .tmsg{font-size:13px;font-weight:700;text-align:center;color:#1f5a14;background:#dff0c0;border:1px solid #6a9a4a;border-radius:8px;padding:5px 8px}
@@ -1151,7 +1153,7 @@ function camp(){
       <div class="panel hero">${avatar(S.race,S.cls,86)}<div class="hi"><h2>${esc(S.name)}</h2>
         <div class="sub mut"><span style="color:${R.f==='a'?'#5ea6ff':'#ff6b5e'}">${R.f==='a'?'Allianz':'Horde'}</span> · ${R.n} ${C.n}</div>
         <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.kills||0}</b></span><span>🪙 Gold <b>${S.gold}</b></span><span>✨ Staub <b>${S.dust}</b> · 💠 <b>${S.shard}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div></div></div>
-      <div class="sec">Ausrüstung · antippen zum Wechseln, halten für Details</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
+      <div class="sec">Ausrüstung · Rucksack ${S.bag.length}/${bagCap()}</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
       <div class="sec">Symbole</div><div class="panel abrow">${C.ab.map((id,i)=>{const lk=lvl<UNLOCK[i];return icoHTML(A[id],lk?'nr':'',`data-tip="pv:${id}"`).replace('</button>',lk?`<span class="lk"><span>🔒</span><small>Stufe ${UNLOCK[i]}</small></span></button>`:'</button>')}).join('')}${icoHTML(A['r_'+R.ab],'racial',`data-tip="pv:r_${R.ab}"`)}</div>
       <div class="hint" style="margin-top:-6px">Details: mit der Maus darüberfahren oder gedrückt halten</div>
       ${xpBar()}
@@ -1351,7 +1353,8 @@ function genItem(lvl,minRar=0,slot){
   const ic=slot==='w'?{Schwert:'🗡️',Streitkolben:'🔨',Bogen:'🏹',Dolch:'🔪',Stab:'🪄'}[C.wp]:slot==='a'?'🛡️':pick(['📿','💍','🔮']);
   return{id:Math.random().toString(36).slice(2,9),slot,slotN:{w:'Waffe',a:'Rüstung',t:'Schmuck'}[slot],name:`${base} ${pick(SUF[rar])}`,ic,rar,lvl,v:itemVal(lvl,rar)};
 }
-function bagTrim(slot){const l=S.bag.filter(x=>x.slot===slot);while(l.length>8){l.sort((a,b)=>a.v-b.v);const x=l.shift();S.bag=S.bag.filter(y=>y!==x);S.gold+=sellPrice(x)}}
+const bagCap=()=>S.cap||20,bagFull=()=>S.bag.length>=bagCap();
+const CAP_MAX=40,capPrice=()=>600*Math.pow(2,Math.round((bagCap()-20)/5));
 function equipItem(id){
   const it=S.bag.find(x=>x.id===id);if(!it)return false;
   const old=S.eq[it.slot];S.eq[it.slot]=it;S.bag=S.bag.filter(x=>x!==it);if(old)S.bag.push(old);save();return true;
@@ -1371,7 +1374,7 @@ function gear(k){
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="camp">‹</button><h2>${nm} wechseln</h2></div>
     <div class="scroll"><div class="panel cmp"><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div>
     <div class="sec">Angelegt</div>${cur?row(cur,true):'<div class="hint">Nichts angelegt.</div>'}
-    <div class="sec">Rucksack (${bag.length}/8)</div>${bag.length?bag.map(i=>row(i,false)).join(''):'<div class="hint">Keine weiteren Teile dieser Art.<br>Besiege Gegner, um Beute zu finden.</div>'}
+    <div class="sec">Rucksack · ${nm} (${bag.length}) · gesamt ${S.bag.length}/${bagCap()}</div>${bag.length?bag.map(i=>row(i,false)).join(''):'<div class="hint">Keine weiteren Teile dieser Art.<br>Besiege Gegner, um Beute zu finden.</div>'}
     </div></div>`,'lite');
 }
 function itemScore(it){if(!it)return 0;return it.v*(it.slot==='w'?1.4:it.slot==='a'?1:.8)}
@@ -1395,7 +1398,7 @@ function applyXp(x){
   while(S.lvl<30&&S.xp>=xpNeed(S.lvl)){S.xp-=xpNeed(S.lvl);S.lvl++;lv.push(S.lvl)}
   if(S.lvl>=30)S.xp=0;return lv;
 }
-function giveItem(it){if(!S.eq[it.slot]){S.eq[it.slot]=it;return true}S.bag.push(it);bagTrim(it.slot);return false}
+function giveItem(it){if(!S.eq[it.slot]){S.eq[it.slot]=it;return true}if(bagFull()){it.sold=sellPrice(it);S.gold+=it.sold;return false}S.bag.push(it);return false}
 function xpBar(){
   const n=xpNeed(S.lvl),pc=S.lvl>=30?100:Math.min(100,S.xp/n*100);
   return`<div class="xpb"><i style="width:${pc}%"></i><b>${S.lvl>=30?'Maximalstufe':`Stufe ${S.lvl} · ${S.xp} / ${n} EP`}</b></div>`;
@@ -1409,11 +1412,11 @@ function rewardHTML(xp,lv,it,eq,gold){
   }
   if(it){
     h+=`<div class="rw"><button class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
-      <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':(()=>{const d=it.v-S.eq[it.slot].v;return d>0?`<span class="new">▲ Besser als dein aktuelles Teil (+${d})</span>`:`Im Rucksack · ${d<0?d:'gleichwertig'} zum aktuellen Teil`})()}</div>`;
+      <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':it.sold?`<span class="dn">🎒 Rucksack voll – für ${it.sold} 🪙 verkauft</span>`:(()=>{const d=it.v-S.eq[it.slot].v;return d>0?`<span class="new">▲ Besser als dein aktuelles Teil (+${d})</span>`:`Im Rucksack · ${d<0?d:'gleichwertig'} zum aktuellen Teil`})()}</div>`;
   }
   return h;
 }
-const eqBtn=(it,eq)=>it&&!eq?`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`:'';
+const eqBtn=(it,eq)=>it&&!eq&&!it.sold?`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`:'';
 const backAct=()=>ENC&&ENC.raid!=null?'map':'zone:'+(ENC?ENC.z:0);
 
 function result(win){
@@ -1509,7 +1512,7 @@ function zoneScreen(z){
     const rw=`<div class="qrw">Belohnung: <b>${def.xp} EP</b> · <b>${15+def.lvl*5} 🪙</b> · <b class="r${def.rar}t">${RAR[def.rar]}${def.rar<3?' oder besser':''}: ${{w:'Waffe',a:'Rüstung',t:'Schmuck'}[def.slot]}</b></div>`;
     const goal=`<div class="qgoal ${st.st==='ready'?'ok':''}">${st.st==='ready'?'✔':'◻'} ${def.goal}${st.st!=='new'?` · ${Math.min(st.n,def.need)} / ${def.need}`:` (${def.need}×)`}</div>`;
     const btn=st.st==='new'?`<button class="btn prime" data-a="qacc:${z}">Quest annehmen</button>`
-      :st.st==='ready'?`<button class="btn prime" data-a="qfin:${z}">Quest abschließen</button>`
+      :st.st==='ready'?(bagFull()?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${S.bag.length}/${bagCap()}). Verkaufe oder zerlege etwas im Handelsposten, bevor du die Quest abschließt.</div><button class="btn" disabled>Quest abschließen</button>`:`<button class="btn prime" data-a="qfin:${z}">Quest abschließen</button>`)
       :def.type==='named'?`<button class="btn" data-a="named:${z}">⚔ ${esc(def.foeName)} herausfordern</button>`
       :def.type==='dungeon'?`<div class="hint">Betritt den Dungeon weiter unten.</div>`:`<div class="hint">Jage die Gegner weiter unten.</div>`;
     qb=`<div class="qt">${st.st==='new'?'❗':st.st==='ready'?'❓':'📜'} ${def.t} <small>Quest ${def.i+1}/5</small></div><div class="qtx">„${def.x}“</div>${goal}${rw}${btn}`;
@@ -1560,7 +1563,7 @@ function genLegend(slot){
   const ic=slot==='w'?{Schwert:'🗡️',Streitkolben:'🔨',Bogen:'🏹',Dolch:'🔪',Stab:'🪄'}[C.wp]:slot==='a'?'🛡️':'💍';
   return{id:Math.random().toString(36).slice(2,9),slot,slotN:SLOTN[slot],name:nm,ic,rar:4,lvl:S.lvl,v:itemVal(S.lvl,4)};
 }
-function resBar(){return`<div class="panel resbar"><span>🪙 <b>${S.gold}</b> Gold</span><span>✨ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${S.pots}</b> Tränke</span></div>`}
+function resBar(){return`<div class="panel resbar"><span>🪙 <b>${S.gold}</b> Gold</span><span>✨ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${S.pots}</b> Tränke</span><span style="grid-column:1/-1;${bagFull()?'color:#b3261b;font-weight:700':''}">🎒 Rucksack <b>${S.bag.length} / ${bagCap()}</b>${bagFull()?' – voll':''}</span></div>`}
 function itemRow(it,btns,extra=''){
   return`<div class="irow"><span class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]};--is:50px"><span class="g">${it.ic}</span></span>
     <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · ${it.slotN} · Stufe ${it.lvl}</small>${itemText(it).map(l=>`<span class="tg">${l}</span>`).join(' · ')}${extra}</div><div class="bt2">${btns}</div></div>`;
@@ -1576,10 +1579,11 @@ function townScreen(tab){
     body=`<div class="panel qbox"><div class="npc"><span class="ico" style="--is:56px;--sc:#c9a227"><span class="g">🧑‍🌾</span></span><div><b>Händlerin Mira</b><small>„Gold oder Staub – ich nehme beides.“</small></div></div></div>
       <div class="sec">Kaufen · Gold</div>
       <div class="irow"><span class="ico pot" style="--sc:#e05050;--is:50px"><span class="g">🧪</span></span><div class="ii"><b>Heiltrank</b><small>Kommt in deinen Vorrat. Bis zu 3 zusätzliche Tränke pro Kampf; nur benutzte werden verbraucht.</small></div><div class="bt2"><button class="ib" data-a="buypot" ${S.gold<pp?'disabled':''}>${pp} 🪙</button></div></div>
+      <div class="irow"><span class="ico" style="--sc:#a8683a;--is:50px"><span class="g">🎒</span></span><div class="ii"><b>Rucksackfach</b><small>${bagCap()>=CAP_MAX?'Dein Rucksack ist maximal ausgebaut.':`+5 Plätze (jetzt ${bagCap()}, höchstens ${CAP_MAX}). Jedes weitere Fach kostet das Doppelte.`}</small></div><div class="bt2">${bagCap()>=CAP_MAX?'':`<button class="ib" data-a="buycap" ${S.gold<capPrice()?'disabled':''}>${capPrice()} 🪙</button>`}</div></div>
       ${shopStock().map(it=>itemRow(it,`<button class="ib" data-a="buy:${it.id}" ${S.gold<buyPrice(it)?'disabled':''}>${buyPrice(it)} 🪙</button>`,cmp(it))).join('')||'<div class="hint">Ausverkauft. Neue Ware gibt es mit deiner nächsten Stufe.</div>'}
       <div class="sec">Tauschen · Magiestaub</div>
       ${TRADE.map(t=>`<div class="irow"><span class="ico" style="--sc:#b98cff;--is:50px"><span class="g">${t.ic}</span></span><div class="ii"><b>${t.n}</b><small>${t.d}</small></div><div class="bt2">${t.rar?['w','a','t'].map(sl=>`<button class="ib sm" data-a="trade:${t.id}:${sl}" ${S.dust<t.cost?'disabled':''}>${SLOTN[sl]}</button>`).join(''):`<button class="ib" data-a="trade:${t.id}" ${S.dust<t.cost?'disabled':''}>Tauschen</button>`}<small class="cost">${t.cost} ✨</small></div></div>`).join('')}
-      <div class="sec">Verkaufen · Rucksack (${bag.length})</div>
+      <div class="sec">Verkaufen · Rucksack (${bag.length}/${bagCap()})</div>
       ${bag.length?bag.map(it=>itemRow(it,`<button class="ib" data-a="sell:${it.id}">+${sellPrice(it)} 🪙</button>`)).join(''):'<div class="hint">Dein Rucksack ist leer. Angelegte Teile kannst du nicht verkaufen.</div>'}`;
   }else{
     const end=S.lvl>=LEG_LVL;
@@ -1588,7 +1592,7 @@ function townScreen(tab){
       <div class="panel infobox">${end?`Für <b>${LEG_COST} 💠 Titanensplitter</b> schmiede ich dir ein <b class="r4t">legendäres</b> Teil deiner Stufe.`:`<b>Erst im Endgame:</b> Komm wieder, wenn du Stufe ${LEG_LVL} erreicht hast.`} Titanensplitter gibt es nur beim Zerlegen <b class="r3t">epischer</b> Ausrüstung.
         <div class="legrow">${['w','a','t'].map(sl=>{const pv={slot:sl,rar:4,v:itemVal(S.lvl,4)};return`<button class="btn ${end&&S.shard>=LEG_COST?'prime':''}" data-a="forge:${sl}" ${end&&S.shard>=LEG_COST?'':'disabled'}><span class="r4t" style="display:block;font-size:13px">${SLOTN[sl]}</span><small style="font:600 10px var(--body);display:block">${itemText(pv)[0]}</small></button>`}).join('')}</div>
         <div class="hint">Du hast ${S.shard} / ${LEG_COST} 💠</div></div>
-      <div class="sec">Zerlegen · Rucksack (${bag.length})</div>
+      <div class="sec">Zerlegen · Rucksack (${bag.length}/${bagCap()})</div>
       ${bag.length?bag.map(it=>itemRow(it,`<button class="ib" data-a="scrap:${it.id}">${it.rar===4?'+3 💠':`+${DUST[it.rar]} ✨${it.rar===3?' +1 💠':''}`}</button>`)).join(''):'<div class="hint">Dein Rucksack ist leer. Angelegte Teile kannst du nicht zerlegen.</div>'}`;
   }
   const sc=document.querySelector('.scroll'),y=sc&&document.querySelector('.town')?sc.scrollTop:0;
@@ -1601,14 +1605,15 @@ function townScreen(tab){
 let TT='h';
 function townAct(k,v,a){
   const find=id=>S.bag.find(x=>x.id===id);
-  if(k==='buypot'){const p=potPrice();if(S.gold<p)return;S.gold-=p;S.pots++;TMSG='🧪 Heiltrank gekauft.'}
-  else if(k==='buy'){const it=shopStock().find(x=>x.id===v);if(!it||S.gold<buyPrice(it))return;S.gold-=buyPrice(it);S.shop.items=S.shop.items.filter(x=>x!==it);const eq=giveItem(it);TMSG=`Gekauft: <b class="r${it.rar}t">${esc(it.name)}</b>${eq?' (angelegt)':' (im Rucksack)'}`}
+  if(k==='buycap'){const p=capPrice();if(S.gold<p||bagCap()>=CAP_MAX)return;S.gold-=p;S.cap=bagCap()+5;TMSG=`🎒 Rucksack erweitert: jetzt ${S.cap} Plätze.`}
+  else if(k==='buypot'){const p=potPrice();if(S.gold<p)return;S.gold-=p;S.pots++;TMSG='🧪 Heiltrank gekauft.'}
+  else if(k==='buy'){const it=shopStock().find(x=>x.id===v);if(!it||S.gold<buyPrice(it))return;if(S.eq[it.slot]&&bagFull()){TMSG='<span class="dn">🎒 Rucksack voll – erst Platz schaffen.</span>';return townScreen(TT)}S.gold-=buyPrice(it);S.shop.items=S.shop.items.filter(x=>x!==it);const eq=giveItem(it);TMSG=`Gekauft: <b class="r${it.rar}t">${esc(it.name)}</b>${eq?' (angelegt)':' (im Rucksack)'}`}
   else if(k==='sell'){const it=find(v);if(!it)return;S.bag=S.bag.filter(x=>x!==it);S.gold+=sellPrice(it);TMSG=`Verkauft für ${sellPrice(it)} 🪙.`}
   else if(k==='scrap'){const it=find(v);if(!it)return;S.bag=S.bag.filter(x=>x!==it);
     if(it.rar===4){S.shard+=3;TMSG='Zerlegt: +3 💠 Titanensplitter.'}else{S.dust+=DUST[it.rar];if(it.rar===3)S.shard++;TMSG=`Zerlegt: +${DUST[it.rar]} ✨ Magiestaub${it.rar===3?' und +1 💠 Titanensplitter':''}.`}}
-  else if(k==='trade'){const t=TRADE.find(x=>x.id===v);if(!t||S.dust<t.cost)return;S.dust-=t.cost;
+  else if(k==='trade'){const t=TRADE.find(x=>x.id===v);if(!t||S.dust<t.cost)return;if(t.rar&&S.eq[a.split(':')[2]]&&bagFull()){TMSG='<span class="dn">🎒 Rucksack voll – erst Platz schaffen.</span>';return townScreen(TT)}S.dust-=t.cost;
     if(t.id==='pot'){S.pots++;TMSG='🧪 Heiltrank eingetauscht.'}else{const it=genItem(S.lvl,t.rar,a.split(':')[2]);const eq=giveItem(it);TMSG=`Erhalten: <b class="r${it.rar}t">${esc(it.name)}</b>${eq?' (angelegt)':' (im Rucksack)'}`}}
-  else if(k==='forge'){if(S.lvl<LEG_LVL||S.shard<LEG_COST)return;S.shard-=LEG_COST;const it=genLegend(v),old=S.eq[v];S.eq[v]=it;if(old){S.bag.push(old);bagTrim(v)}SFX.win();TMSG=`Geschmiedet und angelegt: <b class="r4t">${esc(it.name)}</b>${old?' · dein altes Teil liegt im Rucksack':''}`}
+  else if(k==='forge'){if(S.lvl<LEG_LVL||S.shard<LEG_COST)return;if(S.eq[v]&&bagFull()){TMSG='<span class="dn">🎒 Rucksack voll – dein altes Teil braucht einen Platz.</span>';return townScreen(TT)}S.shard-=LEG_COST;const it=genLegend(v),old=S.eq[v];S.eq[v]=it;if(old)S.bag.push(old);SFX.win();TMSG=`Geschmiedet und angelegt: <b class="r4t">${esc(it.name)}</b>${old?' · dein altes Teil liegt im Rucksack':''}`}
   save();SFX.heal();townScreen(TT);
 }
 function questLog(){
@@ -1619,7 +1624,7 @@ function questLog(){
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>Questlog</h2></div><div class="scroll">${rows}<div class="hint">❗ neue Quest · 📜 läuft · ❓ bereit zur Abgabe</div></div></div>`,'lite');
 }
 function questFinish(z){
-  const st=qs(z),def=questDef(z,st.i);if(!def||st.st!=='ready')return;
+  const st=qs(z),def=questDef(z,st.i);if(!def||st.st!=='ready'||bagFull())return;
   const qg=15+def.lvl*5;S.gold+=qg;
   const lv=applyXp(def.xp),it=genItem(Math.max(def.lvl,S.lvl-1),def.rar,def.slot),eq=giveItem(it);
   st.i++;st.st='new';st.n=0;save();SFX.win();
@@ -1652,7 +1657,7 @@ function onAct(a,el){
     case 'camp':B=null;camp();break;
     case 'map':worldMap();break;
     case 'town':townScreen(v);break;
-    case 'buypot':case 'buy':case 'sell':case 'scrap':case 'trade':case 'forge':townAct(k,v,a);break;
+    case 'buycap':case 'buypot':case 'buy':case 'sell':case 'scrap':case 'trade':case 'forge':townAct(k,v,a);break;
     case 'qlog':questLog();break;
     case 'go':travel(v);break;
     case 'go2':S.loc=v;save();zoneScreen(+v.slice(1));break;
