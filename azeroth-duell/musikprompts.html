@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Azeroth Duell – Musikprompts</title>
+<style>
+:root{--ink:#2b1d0e;--gold:#8a5a00;--red:#a3201a}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  background:radial-gradient(120% 60% at 50% 0%,#f6e7c0,#e6cf99 70%,#d2b676);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 80px}
+h1{font:800 28px Georgia,serif;margin:6px 0 2px;color:#5a3a06}
+h2{font:800 20px Georgia,serif;margin:26px 0 8px;color:var(--red);border-bottom:2px solid #8a5a0066;padding-bottom:4px}
+.lead{color:#5b4220;margin:0 0 12px}
+.bar{position:sticky;top:0;z-index:5;background:#e6cf99ee;padding:8px 0;backdrop-filter:blur(4px)}
+input{width:100%;padding:11px 12px;border-radius:8px;border:2px solid #8a5a00;background:#fff8e6;font-size:16px;color:var(--ink)}
+.style{background:#fff8e6;border:2px solid #8a5a0088;border-radius:10px;padding:10px 12px;margin:8px 0}
+.style b{color:var(--gold)}
+.style p{margin:4px 0 8px;font-size:13px;-webkit-user-select:text;user-select:text}
+ol{list-style:none;margin:0;padding:0;counter-reset:n}
+li{counter-increment:n;display:flex;gap:10px;align-items:flex-start;background:#fff8e6cc;border:1px solid #8a5a0055;border-radius:10px;padding:9px 10px;margin:7px 0}
+li::before{content:counter(n);flex:none;min-width:24px;height:24px;border-radius:12px;background:#5a3a06;color:#fff3cf;font:700 12px/24px system-ui;text-align:center}
+li .t{flex:1;min-width:0}
+li .t b{display:block;font-size:14px}
+li .t span{display:block;font-size:12.5px;color:#4a371c;-webkit-user-select:text;user-select:text;word-break:break-word}
+button{font:700 13px system-ui;color:#fff;background:linear-gradient(#d23a30,#8f1812);border:2px solid #5e0f0b;border-radius:4px;padding:8px 12px;cursor:pointer;box-shadow:0 2px 0 #4a0b08;flex:none}
+button:active{transform:translateY(2px);box-shadow:none}
+button.ok{background:linear-gradient(#3da04a,#1f6a2a);border-color:#124a1a}
+button.all{margin-bottom:4px}
+.hide{display:none!important}
+.tips li::before{content:"✦";background:none;color:var(--red);font-size:16px}
+.tips li{display:list-item;list-style:none;display:block}
+.tips li::before{display:inline;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Azeroth Duell – Musikprompts</h1>
+<p class="lead">Jeder Eintrag ist ein <b>kompletter, einzeln nutzbarer Prompt</b> für einen Musikgenerator: einmal auf „Kopieren“ tippen und einfügen. Alle Stücke sind instrumental. Hintergrundmusik ist als Schleife angelegt, Jingles haben ein klares Ende.</p>
+<div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Kampf, Wald, Raid, Sieg …"></div>
+
+<div id="out"></div>
+
+<h2>Tipps</h2>
+<ol class="tips">
+<li>Wenn der Generator die Länge begrenzt (oft etwa 30 Sekunden), reicht das für eine Schleife. Die Längenangabe im Prompt ist nur ein Wunsch.</li>
+<li>Schleifen klingen selten perfekt nahtlos. Am einfachsten: in Audacity Anfang und Ende kurz überblenden.</li>
+<li>Fürs Spiel am besten als MP3 oder OGG mit etwa 96–128 kbit/s exportieren, damit die Datei klein bleibt.</li>
+<li>Kommt trotzdem Gesang heraus, den Prompt noch einmal ausführen oder „strictly instrumental“ an den Anfang setzen.</li>
+</ol>
+</div>
+<script>
+const G=[];
+const BASE='instrumental only, no vocals, no lyrics, no spoken words, orchestral fantasy adventure game soundtrack in the spirit of classic MMORPG scores, live-sounding orchestra, warm analog mix, rich reverb like a large concert hall';
+const LOOP=', seamless loop: starts and ends on the same chord and the same quiet texture, no fade-out, no big final hit';
+const add=(title,items)=>G.push({title,items:items.map(([n,p])=>({n,p:p+', '+BASE}))});
+const loop=(n,m)=>[n,m+LOOP];
+add('1. Menü und Karte',[
+ loop('Titelbildschirm (Hauptthema)','majestic heroic main theme, slow noble French horn melody over warm strings, soft choir pads without words, harp arpeggios, building to a proud full-orchestra statement and settling back down, 80 BPM, D minor to D major, about 60 seconds'),
+ loop('Heldenerstellung','calm hopeful theme, solo oboe and harp, gentle strings, a sense of a journey about to begin, light celesta sparkles, 70 BPM, G major, about 45 seconds'),
+ loop('Weltkarte','wandering adventure theme, pizzicato strings and soft frame drum pulse, wooden flute melody, light lute strumming, curious and open, like looking over a map by candlelight, 90 BPM, A minor, about 60 seconds'),
+ loop('Heldenlager / Ausrüstung','quiet campfire ambience music, fingerpicked acoustic guitar and lute, low sustained strings, occasional soft flute phrase, cozy and reflective, 65 BPM, E minor, about 45 seconds')
+]);
+add('2. Gebiete',[
+ loop('Wald der Nebel','mystical forest theme, airy wooden flutes and harp, soft female choir vowels, gentle strings, distant bird-like woodwind trills, peaceful and slightly mysterious, 72 BPM, E minor, about 60 seconds'),
+ loop('Die Rote Wüste','desert caravan theme, oud and duduk melody over hand drums and finger cymbals, low drone strings, hot and wide open, Phrygian dominant scale, 95 BPM, about 60 seconds'),
+ loop('Düsterfenn','gloomy haunted swamp theme, low cellos and contrabass, detuned music box, distant church bell, eerie whispering choir pads without words, slow and uneasy, 55 BPM, C minor, about 60 seconds'),
+ loop('Eiskronengletscher','frozen wasteland theme, cold high violin harmonics, glassy celesta and bowed vibraphone, lonely solo horn, slow deep male choir hum, vast and icy, 60 BPM, B minor, about 60 seconds'),
+ loop('Brennende Steppe','volcanic warzone theme, heavy taiko and anvil hits, low brass growls, aggressive ostinato strings, ominous choir stabs without words, tense and hot, 100 BPM, D Phrygian, about 60 seconds'),
+ loop('Handelsposten','cheerful tavern market theme, lively fiddle, tin whistle, hand claps, bodhran and lute, bouncy and friendly, 115 BPM, D major, about 45 seconds')
+]);
+add('3. Kampf',[
+ loop('Kampf (normal)','energetic battle theme, driving staccato strings ostinato, snare and toms, bold brass fanfares, quick woodwind runs, heroic and urgent but not dark, 140 BPM, A minor, about 60 seconds'),
+ loop('Duell gegen Rivalen','tense one-on-one duel theme, tight percussion, sharp string stabs, solo trumpet call and response with low horns, proud and competitive, 132 BPM, F sharp minor, about 60 seconds'),
+ loop('Dungeon','dark dungeon crawl battle theme, pulsing low strings and timpani, metallic percussion, creeping bassoon line, sudden brass swells, claustrophobic tension, 120 BPM, C minor, about 60 seconds'),
+ loop('Bosskampf','epic boss battle theme, full orchestra and large choir singing wordless vowels, pounding taiko, heroic horn theme fighting against menacing low brass, relentless strings, 150 BPM, D minor, about 75 seconds'),
+ loop('Raid: Onyxias Hort','dragon lair raid theme, roaring low brass clusters, huge war drums, fiery fast string runs, wordless choir in fierce staccato, dangerous and grand, 145 BPM, E minor, about 75 seconds'),
+ loop('Raid: Geschmolzener Kern','molten core raid theme, hammering anvil rhythm, deep male choir chanting wordless syllables, blazing brass, rumbling contrabass and bass drum, unstoppable march, 110 BPM, C sharp minor, about 75 seconds'),
+ loop('Raid: Naxxramas','undead necropolis raid theme, pipe organ and cold strings, ghostly boys choir vowels, tolling bells, slow dread building into a furious orchestral storm, 125 BPM, G minor, about 75 seconds'),
+ loop('Raid: Ahn’Qiraj','ancient insect temple raid theme, hypnotic Middle Eastern percussion, buzzing string tremolos, exotic double-reed melody, alien dissonant brass, eerie and overwhelming, 128 BPM, Phrygian dominant, about 75 seconds')
+]);
+add('4. Kurze Jingles (nicht geloopt)',[
+ ['Sieg','short victory fanfare, bright trumpets and horns, cymbal crash, rising strings, triumphant final chord, D major, about 6 seconds, clear ending'],
+ ['Niederlage','short defeat sting, descending low brass and cellos, soft timpani roll, sad final minor chord that fades, about 6 seconds, clear ending'],
+ ['Quest angenommen','very short quest accept jingle, two warm horn notes rising with a harp glissando, hopeful, about 3 seconds, clear ending'],
+ ['Quest erfüllt','short quest complete fanfare, cheerful brass and glockenspiel, quick string flourish, satisfying resolved major chord, about 5 seconds, clear ending'],
+ ['Stufenaufstieg','short level-up fanfare, sparkling harp and celesta run upward, proud horn chord, shimmering cymbal swell, about 4 seconds, clear ending'],
+ ['Neue Fähigkeit','very short magical unlock jingle, glittering chimes and a rising string swell, one bright bell at the end, about 3 seconds, clear ending'],
+ ['Beute','very short loot jingle, coin-like glockenspiel notes and a quick harp pluck, playful, about 2 seconds, clear ending'],
+ ['Epische Beute','short epic loot sting, deep choir "ah" swell, majestic horns and a bright shimmering cymbal, awe-inspiring, about 5 seconds, clear ending'],
+ ['Legendäres geschmiedet','short legendary forge fanfare, three heavy anvil strikes, then blazing full brass chord with choir vowels and a ringing bell, about 7 seconds, clear ending'],
+ ['Reise auf der Karte','very short travel jingle, light galloping frame drum and a quick flute run, about 3 seconds, clear ending']
+]);
+const out=document.getElementById('out'),styles=document.getElementById('styles');
+const names={icon:'STIL-ICON (Fähigkeiten, Items, Wappen)',portrait:'STIL-PORTRAIT (Rassen)',monster:'STIL-MONSTER (Monster, Bosse)',ui:'STIL-UI (Hintergründe, Buttons, Rahmen)'};
+function copy(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='Kopiert ✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1400)};
+  try{navigator.clipboard.writeText(text).then(done,()=>fallback(text,done))}catch(e){fallback(text,done)}
+}
+function fallback(text,done){
+  const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+  try{document.execCommand('copy');done()}catch(e){}t.remove();
+}
+for(const g of G){
+  const h=document.createElement('h2');h.textContent=g.title+` (${g.items.length})`;
+  const all=document.createElement('button');all.className='all';all.textContent='Alle dieser Gruppe kopieren';
+  all.onclick=()=>copy(g.items.map(i=>i.n+':\n'+i.p).join('\n\n'),all);
+  const ol=document.createElement('ol');
+  for(const i of g.items){
+    const li=document.createElement('li');li.dataset.s=(g.title+' '+i.n+' '+i.p).toLowerCase();
+    li.innerHTML=`<div class="t"><b></b><span></span></div>`;
+    li.querySelector('b').textContent=i.n;li.querySelector('span').textContent=i.p;
+    const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(i.p,b);li.appendChild(b);ol.appendChild(li);
+  }
+  const wrap=document.createElement('section');wrap.append(h,all,ol);out.appendChild(wrap);
+}
+document.getElementById('q').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#out li').forEach(li=>li.classList.toggle('hide',!!q&&!li.dataset.s.includes(q)));
+  document.querySelectorAll('#out section').forEach(s=>s.classList.toggle('hide',!!q&&![...s.querySelectorAll('li')].some(l=>!l.classList.contains('hide'))));
+});
+</script>
+</body>
+</html>
