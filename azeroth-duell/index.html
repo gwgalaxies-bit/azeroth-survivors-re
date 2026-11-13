@@ -222,8 +222,8 @@ svg{display:block}
 .u.dead .pt .fig{filter:grayscale(1) brightness(.45);transition:filter .6s}
 .plate{position:relative;width:min(100%,380px);aspect-ratio:621/154;flex:none;background:var(--i-plate) center/100% 100% no-repeat;filter:drop-shadow(0 3px 5px #000a);touch-action:none}
 .sl{position:absolute;overflow:hidden;border-radius:4px}
-.sl1{left:26.1%;width:56.7%;top:24%;height:30%}
-.sl2{left:26.1%;width:56.7%;top:66.9%;height:16.2%;border-radius:3px}
+.sl1{left:27%;width:54.4%;top:23.4%;height:28%}
+.sl2{left:27%;width:54.4%;top:65.6%;height:13.4%;border-radius:3px}
 .sl i{position:absolute;left:0;top:0;bottom:0;width:100%;transition:width .35s;background:linear-gradient(#7cec8e,#27a63f 55%,#167a2a);box-shadow:inset 0 1px 0 #fff7}
 .sl i.m{background:linear-gradient(#ffe07a,#e0a21a 55%,#a8730c)}.sl i.l{background:linear-gradient(#ff9a8c,#dc3326 55%,#a01c12)}
 .sl2 i{transition:width .25s;box-shadow:inset 0 1px 0 #fff6}
@@ -232,7 +232,7 @@ svg{display:block}
 .u.e .sl1 .nn{color:#ffd9d2}
 .sl1 b{position:absolute;right:6px;top:50%;transform:translateY(-50%);font:700 10.5px/1 var(--body);color:#fff;text-shadow:0 1px 2px #000,0 0 3px #000}
 .sl2 b{position:absolute;inset:0;text-align:center;font:700 8.5px/100% var(--body);color:#fff;text-shadow:0 1px 2px #000,0 0 2px #000;display:grid;place-items:center}
-.lvl{position:absolute;left:86.5%;width:12.5%;top:13%;height:58%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--disp);font-weight:800;color:#ffd100;text-shadow:0 1px 2px #000;line-height:1}
+.lvl{position:absolute;left:85.6%;width:10.6%;top:15%;height:42%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:var(--disp);font-weight:800;color:#ffd100;text-shadow:0 1px 2px #000;line-height:1}
 .lvl small{font:700 7px var(--body);color:#e8d8a8;letter-spacing:.5px;margin-bottom:1px}
 .lvl span{font-size:clamp(14px,4.4vw,18px)}
 .sts{position:absolute;left:24%;top:100%;margin-top:3px;display:flex;gap:3px;min-height:22px;flex-wrap:wrap;max-width:100%}
@@ -264,7 +264,7 @@ svg{display:block}
 .ovl .rw b{display:block;font-family:var(--disp)}
 .r0t{color:#e6e6e6}.r1t{color:#1eff00}.r2t{color:#4aa8ff}.r3t{color:#c36bff}.r4t{color:#ff8000}
 .new{color:var(--gold);font-weight:700;font-size:13.5px}
-.ovl .box.scb{padding:0 6px;width:100%;max-width:370px;background:none;border-style:solid;border-color:transparent;border-width:30px 22px;border-image:var(--i-scroll) 100 70 fill/30px 22px stretch;box-shadow:none;filter:drop-shadow(0 6px 12px #000c);color:#2a1608}
+.ovl .box.scb{padding:10px 6px;width:100%;max-width:370px;background:none;border-style:solid;border-color:transparent;border-width:30px 22px;border-image:var(--i-scroll) 100 70 fill/30px 22px stretch;box-shadow:none;filter:drop-shadow(0 6px 12px #000c);color:#2a1608}
 .ink .lv{color:#5a1f9a}.ink .new{color:#7a1f12}.ink .mut{color:#6a4f2e}
 .ink .r0t{color:#555}.ink .r1t{color:#1a7a10}.ink .r2t{color:#0a55b8}.ink .r3t{color:#7a2cb8}.ink .r4t{color:#c25e00}
 .newab{display:flex;gap:14px;align-items:center;text-align:left;--is:58px;padding:4px 6px;width:100%}
@@ -327,6 +327,11 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 @keyframes lootp{50%{filter:drop-shadow(0 0 14px #ffd100) drop-shadow(0 4px 4px #0009);transform:scale(1.03)}}
 .lootacts{display:flex;flex-direction:column;gap:8px;width:100%}
 .lootacts .btn{font-size:15px}
+.lootbag{width:100%;display:flex;flex-direction:column;gap:9px;text-align:left;border-top:1px dashed #7a5420;padding-top:10px}
+.lbrow{display:flex;gap:10px;align-items:center}
+.lbrow>div{flex:1;min-width:0}.lbrow b{display:block;font-family:var(--disp);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lbrow small{display:block;font-size:11px;color:#6a4f2e}
+.lbrow .ib{width:40px;height:40px;font-size:14px;border-width:10px;border-image-width:10px}
 .bagwarn{font-size:13px;font-weight:700;color:#8a1a10;background:#f6d2c4;border:1px solid #b3261b;border-radius:8px;padding:7px 9px}
 .dn{color:#b3261b;font-weight:700}
 .resbar{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:8px 12px;font-size:12.5px}
@@ -1413,7 +1418,7 @@ function rewardHTML(xp,lv,it,eq,gold){
   let h=`<div class="lv">+${xp} Erfahrung${gold?` · <span style="color:#8a5a00">+${gold} 🪙</span>`:''}</div>${xpBar()}`;
   for(const l of lv){
     h+=`<div class="lv up">⭐ Stufe ${l} erreicht!</div>`;
-    h+=CLASSES[S.cls].ab.filter((_,i)=>UNLOCK[i]===l).map(id=>`<div class="newab">${icoHTML(A[id],'',`data-tip="pv:${id}"`)}<div><b>NEUES SYMBOL!</b><span>${A[id].n}</span><small>${abDesc(hero,A[id])[0]||''}</small></div></div>`).join('');
+    h+=CLASSES[S.cls].ab.filter((_,i)=>UNLOCK[i]===l).map(id=>`<div class="newab">${icoHTML(A[id],'',`data-tip="pv:${id}"`)}<div><b>NEUE FÄHIGKEIT!</b><span>${A[id].n}</span><small>${abDesc(hero,A[id])[0]||''}</small></div></div>`).join('');
   }
   if(it){
     h+=`<div class="rw"><button class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
@@ -1421,21 +1426,23 @@ function rewardHTML(xp,lv,it,eq,gold){
   }
   return h;
 }
-let LOOT=null;
+let LOOT=null,LOOTBAG=false;
 function lootOpen(){
   const it=LOOT;if(!it)return;
   const cur=S.eq[it.slot],full=cur&&bagFull(),d=cur?it.v-cur.v:0;
   $$('lootbtn').style.display='none';$$('loothint').style.display='none';
   $$('lootbox').innerHTML=`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}"><span class="g">${it.ic}</span></button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
     <div id="eqnote" class="${!cur||d>0?'new':'mut'}">${!cur?'Dein Platz dafür ist noch leer.':d>0?`▲ Besser als dein aktuelles Teil (+${d})`:d<0?`▼ Schwächer als dein aktuelles Teil (${d})`:'Gleichwertig zu deinem aktuellen Teil'}</div>
-    ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${S.bag.length}/${bagCap()}). Du kannst das Teil nur verkaufen oder liegen lassen.</div>`:''}
-    <div class="lootacts" id="lootacts"><button class="btn prime" data-a="loottake" ${full?'disabled':''}>Nehmen</button><button class="btn dark" data-a="lootsell">Verkaufen +${sellPrice(it)} 🪙</button><button class="btn dark" data-a="lootleave">Liegen lassen</button></div>`;
+    ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${S.bag.length}/${bagCap()}). Wirf unten ein Teil weg, um Platz zu schaffen – oder lass die Beute liegen.</div>`:''}
+    <div class="lootacts" id="lootacts"><button class="btn prime" data-a="loottake" ${full?'disabled':''}>Nehmen</button><button class="btn dark" data-a="lootleave">Liegen lassen</button>
+    <button class="btn dark" data-a="lootbag" style="font-size:13px">🎒 Rucksack ${LOOTBAG||full?'schließen':'aufräumen'} (${S.bag.length}/${bagCap()})</button></div>
+    ${LOOTBAG||full?`<div class="lootbag">${[...S.bag].sort((x,y)=>x.v-y.v).map(x=>`<div class="lbrow"><span class="ico item r${x.rar}" data-tip="it:${x.id}" style="--sc:${RARC[x.rar]};--is:34px"><span class="g">${x.ic}</span></span><div><b class="r${x.rar}t">${esc(x.name)}</b><small>${x.slotN} · ${itemText(x)[0]}</small></div><button class="ib" data-a="lootdrop:${x.id}">🗑</button></div>`).join('')||'<div class="mut">Der Rucksack ist leer.</div>'}</div>`:''}`;
 }
 function lootDone(how){
-  const it=LOOT;if(!it)return;LOOT=null;
+  const it=LOOT;if(!it)return;LOOT=null;LOOTBAG=false;
+  const lb=document.querySelector('#lootbox .lootbag');if(lb)lb.style.display='none';
   const n=$$('eqnote'),acts=$$('lootacts');let extra='';
   if(how==='take'){const eq=giveItem(it);n.className='new';n.textContent=eq?'✔ Genommen und angelegt (Platz war leer)':'✔ Im Rucksack';if(!eq)extra=`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`;SFX.heal()}
-  else if(how==='sell'){S.gold+=sellPrice(it);n.className='mut';n.textContent=`Verkauft für ${sellPrice(it)} 🪙`;SFX.heal()}
   else{n.className='mut';n.textContent='Liegen gelassen'}
   acts.innerHTML=extra;if(!extra)acts.style.display='none';
   const bw=document.querySelector('#lootbox .bagwarn');if(bw)bw.style.display='none';
@@ -1456,7 +1463,7 @@ function result(win){
     const LT={hunt:[.3,0],named:[1,1],dtrash:[.35,0],dboss:[1,2],rmini:[.6,2],rboss:[1,3]}[E.kind];
     let it=null,eq=false;
     if(Math.random()<LT[0])it=genItem(foe.lvl,LT[1]);
-    LOOT=it;
+    LOOT=it;LOOTBAG=false;
     // Questfortschritt
     let qline='';
     if(E.z!=null&&E.raid==null){
@@ -1680,7 +1687,8 @@ function onAct(a,el){
     case 'drop':S.bag=S.bag.filter(x=>x.id!==v);save();gear(GS);break;
     case 'loot':lootOpen();break;
     case 'loottake':lootDone('take');break;
-    case 'lootsell':lootDone('sell');break;
+    case 'lootbag':LOOTBAG=!LOOTBAG;lootOpen();break;
+    case 'lootdrop':S.bag=S.bag.filter(x=>x.id!==v);save();SFX.miss();lootOpen();break;
     case 'lootleave':lootDone('leave');break;
     case 'eqnow':if(equipItem(v)){SFX.heal();const n=$$('eqnote');if(n){n.className='new';n.textContent='✔ Angelegt'}const b=$$('eqbtn');if(b)b.style.display='none'}break;
     case 'retry':case 'next':startBattle();break;
