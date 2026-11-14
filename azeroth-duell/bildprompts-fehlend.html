@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Azeroth Duell – Fehlende Bilder</title>
+<style>
+:root{--ink:#2b1d0e;--gold:#8a5a00;--red:#a3201a}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  background:radial-gradient(120% 60% at 50% 0%,#f6e7c0,#e6cf99 70%,#d2b676);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 80px}
+h1{font:800 28px Georgia,serif;margin:6px 0 2px;color:#5a3a06}
+h2{font:800 20px Georgia,serif;margin:26px 0 8px;color:var(--red);border-bottom:2px solid #8a5a0066;padding-bottom:4px}
+.lead{color:#5b4220;margin:0 0 12px}
+.bar{position:sticky;top:0;z-index:5;background:#e6cf99ee;padding:8px 0;backdrop-filter:blur(4px)}
+input{width:100%;padding:11px 12px;border-radius:8px;border:2px solid #8a5a00;background:#fff8e6;font-size:16px;color:var(--ink)}
+.style{background:#fff8e6;border:2px solid #8a5a0088;border-radius:10px;padding:10px 12px;margin:8px 0}
+.style b{color:var(--gold)}
+.style p{margin:4px 0 8px;font-size:13px;-webkit-user-select:text;user-select:text}
+ol{list-style:none;margin:0;padding:0;counter-reset:n}
+li{counter-increment:n;display:flex;gap:10px;align-items:flex-start;background:#fff8e6cc;border:1px solid #8a5a0055;border-radius:10px;padding:9px 10px;margin:7px 0}
+li::before{content:counter(n);flex:none;min-width:24px;height:24px;border-radius:12px;background:#5a3a06;color:#fff3cf;font:700 12px/24px system-ui;text-align:center}
+li .t{flex:1;min-width:0}
+li .t b{display:block;font-size:14px}
+li .t span{display:block;font-size:12.5px;color:#4a371c;-webkit-user-select:text;user-select:text;word-break:break-word}
+button{font:700 13px system-ui;color:#fff;background:linear-gradient(#d23a30,#8f1812);border:2px solid #5e0f0b;border-radius:4px;padding:8px 12px;cursor:pointer;box-shadow:0 2px 0 #4a0b08;flex:none}
+button:active{transform:translateY(2px);box-shadow:none}
+button.ok{background:linear-gradient(#3da04a,#1f6a2a);border-color:#124a1a}
+button.all{margin-bottom:4px}
+.hide{display:none!important}
+.tips li::before{content:"✦";background:none;color:var(--red);font-size:16px}
+.tips li{display:list-item;list-style:none;display:block}
+.tips li::before{display:inline;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Azeroth Duell – Bildprompts für die fehlenden Bilder</h1>
+<p class="lead">Jeder Eintrag ist ein <b>kompletter Prompt für genau ein Bild</b>: einmal kopieren, einfügen, fertig. Alle Einzelbilder haben schwarzen Hintergrund und keine Beschriftung. Gruppe 1 bis 3 fehlt im Spiel noch, Gruppe 4 und 5 sind Verbesserungen.</p>
+<div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Schmied, Biss, Streitkolben …"></div>
+
+<div id="out"></div>
+
+<h2>Tipps</h2>
+<ol class="tips">
+<li>Bitte ein Bild pro Prompt erzeugen. Einzelbilder kann ich sauberer ausschneiden als Bögen mit mehreren Motiven.</li>
+<li>Wenn doch ein Bogen entsteht: bitte ohne Text im Bild und mit gleichmäßigem Raster.</li>
+</ol>
+</div>
+<script>
+const G=[];
+const BLK=', solid pure black background (#000000), nothing else in the background, no text, no letters, no watermark';
+const ICON='flat vector game icon, bold clean shapes, thick dark brown outline, limited warm palette with one strong accent color, subtle cel-shaded highlights, centered single subject filling the square, high contrast, fantasy MMO style like classic World of Warcraft ability icons, one single icon only, square 1:1, 512x512';
+const PORT='stylized vector character portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, exaggerated fantasy proportions like Warcraft cinematic art, one single character only, circular composition filling the frame, 1024x1024';
+const add=(title,items)=>G.push({title,items:items.map(([n,p])=>({n,p}))});
+const ic=(n,col,m)=>[n,ICON+', '+col+' accent color, '+m+BLK];
+add('1. Handelsposten',[
+ ['Händlerin Mira',PORT+', cheerful female human merchant with freckles, auburn hair in a bun, green vest over a linen shirt, coin pouch and small brass scales, market stall with goods behind her'+BLK],
+ ['Schmied Thargas',PORT+', burly dwarf blacksmith with thick black beard, bald head, leather apron, heavy hammer on his shoulder, glowing forge and anvil behind him'+BLK],
+ ['Pin: Handelsposten','round map pin medallion game icon, thick bronze ring with rivets, small pointed tip at the bottom, inside: small timber-framed trading post house with a hanging shop sign and smoke from the chimney, flat vector style with bold shapes and thick dark outline, classic World of Warcraft map icon look, one single pin only, centered, 512x512'+BLK],
+ ['Handelsposten (Kopfbild, quer)','painterly vector game location banner illustration, wide 16:9, cozy fantasy trading post at a crossroads, timber-framed shop with awning and crates, open-air smithy with glowing forge and anvil next to it, lanterns, banners, warm evening light, classic World of Warcraft town mood, full-bleed image filling the whole frame, no border, no text, no labels, no UI, 1280x720']
+]);
+add('2. Fähigkeiten der Monster (23)',[
+ ic('Biss','steel gray','open beast jaws with sharp fangs biting down'),
+ ic('Prankenhieb','steel gray','three bloody claw slash marks with a beast paw'),
+ ic('Rammstoß','steel gray','charging horned beast head with impact burst and stars'),
+ ic('Reißen','red','jagged claws tearing flesh with blood drops'),
+ ic('Giftspritzer','green','splash of green venom droplets with a small skull'),
+ ic('Kampfgebrüll','red','roaring beast mouth with red sound waves'),
+ ic('Feueratem','orange','dragon mouth breathing a cone of fire'),
+ ic('Frostatem','ice blue','dragon mouth breathing a cone of ice and snowflakes'),
+ ic('Schattenblitz (Monster)','dark purple','dark purple energy ball with black smoke trail and red sparks'),
+ ic('Aussaugen','dark purple','bat fangs with red life essence streaming into them'),
+ ic('Regeneration','green','glowing green heart with small leaves and healing sparkles'),
+ ic('Zerschmettern (Monster)','steel gray','huge stone fist smashing the ground with flying rocks'),
+ ic('Spinnennetz','green','sticky spider web with a trapped silhouette in the middle'),
+ ic('Steinhaut','steel gray','muscular arm covered in cracked gray stone plates'),
+ ic('Kreischen','steel gray','screaming harpy mouth with sharp piercing sound rings'),
+ ic('Giftklinge','green','curved blade dripping with green poison'),
+ ic('Hinterhalt','steel gray','hooded figure striking from the shadows with a dagger'),
+ ic('Verschwinden','steel gray','puff of gray smoke with a fading cloaked silhouette'),
+ ic('Schwanzpeitsche','steel gray','spiked dragon tail whipping with motion arc and impact'),
+ ic('Lavaschlag','orange','splash of molten lava with glowing droplets and cracked rock'),
+ ic('Hammer des Ragnaros','orange','giant burning hammer slamming down with fire shockwave'),
+ ic('Frostnova (Monster)','ice blue','ring of sharp ice spikes exploding outward from a frozen skull'),
+ ic('Todeswelle','dark purple','wave of dark energy with green skulls rushing forward')
+]);
+const it=(n,m)=>[n,ICON+', orange legendary glow around the rim, '+m+BLK];
+add('3. Legendäre Teile, die noch fehlen',[
+ it('Lederwams des Erwachten Titanen','legendary golden-brown leather jerkin with glowing blue titan rune on the chest'),
+ it('Robe des Erwachten Titanen','legendary hooded robe in gold and white cloth with a glowing blue titan rune on the chest')
+]);
+add('4. Bilder zum Ersetzen (weißer Hintergrund oder uneinheitlich)',[
+ ic('Steingestalt (Zwerg)','green','a clenched fist and forearm turned to gray granite stone with rock shards flying off'),
+ ic('Streitkolben – Gewöhnlich','steel gray','flanged iron mace with studded head, plain silver-white rim, no glow'),
+ ic('Streitkolben – Selten','green','flanged iron mace with studded head, same design, bright green rim with a faint green glow'),
+ ic('Streitkolben – Hervorragend','blue','flanged iron mace with studded head, same design, rich blue rim with a faint blue glow'),
+ ic('Streitkolben – Episch','violet','flanged iron mace with studded head, same design, violet rim with a strong purple glow and tiny sparks'),
+ ['Skorpid','stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, armored desert scorpion with raised stinger and claws, dark sandy brown backdrop inside a round frame, one single creature only, 1024x1024'+BLK],
+ ['Harpyie','stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, screeching harpy with feathered wings and talons, dark teal backdrop inside a round frame, one single creature only, 1024x1024'+BLK],
+ ['Giftschlange','stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, green cobra with flared hood and fangs, dark green backdrop inside a round frame, one single creature only, 1024x1024'+BLK],
+ ['Krokilisk','stylized vector creature portrait, bust shot, front view, thick dark outline, flat colors with simple cel shading, armored swamp crocolisk with open jaws, dark olive backdrop inside a round frame, one single creature only, 1024x1024'+BLK]
+]);
+const fx=(n,m)=>[n,'flat vector battle effect sprite, '+m+', one single effect only, centered, 512x512'+BLK];
+add('5. Kampfeffekte (einzeln, ohne Beschriftung)',[
+ fx('Treffer-Funke','yellow-white impact spark burst'),
+ fx('Kritischer Treffer','large red star burst with speed lines'),
+ fx('Heil-Glitzer','green sparkles rising upward'),
+ fx('Betäubungssterne','three yellow stars circling in a ring'),
+ fx('Level-Up-Strahlen','golden light rays bursting from the center')
+]);
+const out=document.getElementById('out'),styles=document.getElementById('styles');
+const names={icon:'STIL-ICON (Fähigkeiten, Items, Wappen)',portrait:'STIL-PORTRAIT (Rassen)',monster:'STIL-MONSTER (Monster, Bosse)',ui:'STIL-UI (Hintergründe, Buttons, Rahmen)'};
+function copy(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='Kopiert ✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1400)};
+  try{navigator.clipboard.writeText(text).then(done,()=>fallback(text,done))}catch(e){fallback(text,done)}
+}
+function fallback(text,done){
+  const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+  try{document.execCommand('copy');done()}catch(e){}t.remove();
+}
+for(const g of G){
+  const h=document.createElement('h2');h.textContent=g.title+` (${g.items.length})`;
+  const all=document.createElement('button');all.className='all';all.textContent='Alle dieser Gruppe kopieren';
+  all.onclick=()=>copy(g.items.map(i=>i.n+':\n'+i.p).join('\n\n'),all);
+  const ol=document.createElement('ol');
+  for(const i of g.items){
+    const li=document.createElement('li');li.dataset.s=(g.title+' '+i.n+' '+i.p).toLowerCase();
+    li.innerHTML=`<div class="t"><b></b><span></span></div>`;
+    li.querySelector('b').textContent=i.n;li.querySelector('span').textContent=i.p;
+    const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(i.p,b);li.appendChild(b);ol.appendChild(li);
+  }
+  const wrap=document.createElement('section');wrap.append(h,all,ol);out.appendChild(wrap);
+}
+document.getElementById('q').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#out li').forEach(li=>li.classList.toggle('hide',!!q&&!li.dataset.s.includes(q)));
+  document.querySelectorAll('#out section').forEach(s=>s.classList.toggle('hide',!!q&&![...s.querySelectorAll('li')].some(l=>!l.classList.contains('hide'))));
+});
+</script>
+</body>
+</html>
