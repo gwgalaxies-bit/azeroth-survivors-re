@@ -603,7 +603,7 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .bagwarn{font-size:13px;font-weight:700;color:#8a1a10;background:#f6d2c4;border:1px solid #b3261b;border-radius:8px;padding:7px 9px}
 .dn{color:#b3261b;font-weight:700}
 .resbar{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:8px 12px;font-size:12.5px}
-.tabs{display:flex;gap:8px}.tabs .btn{font-size:15px}
+.tabs{display:flex;gap:8px}.tabs .btn.on{transform:translateY(3px);filter:brightness(.82);color:#ffd9a0}.tabs .btn{font-size:15px}
 .tmsg{font-size:13px;font-weight:700;text-align:center;color:#1f5a14;background:#dff0c0;border:1px solid #6a9a4a;border-radius:8px;padding:5px 8px}
 .irow .bt2{align-items:center}
 .irow .ib[disabled]{opacity:.45;filter:grayscale(.8);pointer-events:none}
@@ -677,7 +677,7 @@ const CLASSES={
   hexer:{n:'Hexenmeister',ic:'👁️',col:'#9482C9',hp:1.1,ap:1.2,arm:.7,res:1.1,spd:10,rk:'mana',wp:'Stab',ar:'Robe',d:'Gift, Verderbnis und Lebensentzug.',ab:['schattenblitz','verderbnis','aderlass','furcht','seelenfeuer']},
   druide:{n:'Druide',ic:'🌿',col:'#FF7D0A',hp:1.1,ap:.95,arm:.8,res:1.1,spd:10,rk:'mana',wp:'Stab',ar:'Lederwams',d:'Naturmagie: Zorn, Mondlicht und Verjüngung.',ab:['zorn','mondfeuer','verjuengung','wurzeln','sternenfall']}
 };
-const UNLOCK=[1,1,2,4,6];
+const UNLOCK=[1,6,11,16,21];
 
 const D=(p,o={})=>({k:'dmg',p,...o});
 const ST=(w,id,n,ic,t,m)=>({k:'st',w,id,n,ic,t,m});
@@ -924,17 +924,17 @@ function rival(z,faction){
   u.title=`${RACES[race].n} ${CLASSES[cls].n}`;return u;
 }
 function namedFoe(z,faction){
-  return z===0?mkMon(BOSSES[0],ZL[0]+3,{hp:1.5,ap:1.05,sc:.92,boss:true,title:'Elite'}):rival(z,faction);
+  return z===0?mkMon(BOSSES[0],ZL[0]+3,{hp:1.2,ap:1,sc:.75,boss:true,title:'Elite'}):rival(z,faction);
 }
 function dungeonList(z){
   const W=WORLD[z];
-  return[...W.dg.trash.map(k=>()=>mkMon(MONS[k],ZL[z]+3,{hp:1.25,sc:.9,title:'Elite'})),
-    ()=>mkMon(W.dg.boss,ZL[z]+4,{hp:1.5,ap:1.05,sc:.92,boss:true,title:'Dungeonboss'})];
+  return[...W.dg.trash.map(k=>()=>mkMon(MONS[k],ZL[z]+3,{hp:z?1.25:1,sc:z?.9:.7,title:'Elite'})),
+    ()=>mkMon(W.dg.boss,ZL[z]+4,{hp:z?1.5:1.2,ap:z?1.05:1,sc:z?.92:.72,boss:true,title:'Dungeonboss'})];
 }
 function raidList(r){
   const R=RAIDS[r];
-  return[...R.enc.map(([n,k,ic])=>()=>mkMon(MONS[k],R.lvl,{n,ic,hp:1.4,sc:.95,boss:true,title:'Raidboss'})),
-    ()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:1.7,ap:1.1,sc:1,boss:true,title:'Raidboss'})];
+  return[...R.enc.map(([n,k,ic])=>()=>mkMon(MONS[k],R.lvl,{n,ic,hp:1.4,sc:r?.95:.84,boss:true,title:'Raidboss'})),
+    ()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:1.7,ap:1.1,sc:r?1:.88,boss:true,title:'Raidboss'})];
 }
 const xpNeed=l=>60+40*l;
 const XPK={hunt:1,named:1.6,dtrash:1.3,dboss:2.2,rmini:2,rboss:3};
@@ -1967,7 +1967,7 @@ function townScreen(tab){
   }
   const sc=document.querySelector('.scroll'),y=sc&&document.querySelector('.town')?sc.scrollTop:0;
   mount(`<div class="scr town"><div class="top"><button class="ib" data-a="map">‹</button><h2>${TOWN.n}</h2><button class="ib" data-a="camp">👤</button></div>
-    <div style="padding:0 14px;display:flex;flex-direction:column;gap:8px">${has('town')?'<div class="zhead" style="height:70px;background-image:linear-gradient(#0000 40%,#000a),var(--i-town)"></div>':''}${resBar()}<div class="tabs"><button class="btn ${tab==='h'?'':'dark'}" data-a="town:h">Händler</button><button class="btn ${tab==='s'?'':'dark'}" data-a="town:s">Schmied</button></div>
+    <div style="padding:0 14px;display:flex;flex-direction:column;gap:8px">${has('town')?'<div class="zhead" style="height:70px;background-image:linear-gradient(#0000 40%,#000a),var(--i-town)"></div>':''}${resBar()}<div class="tabs"><button class="btn ${tab==='h'?'dark on':''}" data-a="town:h">Händler</button><button class="btn ${tab==='s'?'dark on':''}" data-a="town:s">Schmied</button></div>
     ${TMSG?`<div class="tmsg">${TMSG}</div>`:''}</div>
     <div class="scroll">${body}</div></div>`,'lite');
   TMSG='';if(y)document.querySelector('.scroll').scrollTop=y;
