@@ -624,6 +624,8 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .lbrow .ib{width:40px;height:40px;font-size:14px;border-width:10px;border-image-width:10px}
 .bagwarn{font-size:13px;font-weight:700;color:#8a1a10;background:#f6d2c4;border:1px solid #b3261b;border-radius:8px;padding:7px 9px}
 .dn{color:#b3261b;font-weight:700}
+.sup{color:#1f7a14;font-weight:700}.sdn{color:#b3261b;font-weight:700}.sne{color:inherit}
+#tip .sup{color:#1f7a14}#tip .sdn{color:#a3201a}#tip .sne{color:#2a1608}
 .resbar{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:8px 12px;font-size:12.5px}
 .tabs{display:flex;gap:8px}.tabs .btn.on{transform:translateY(3px);filter:brightness(.82);color:#ffd9a0}.tabs .btn{font-size:15px}
 .tmsg{font-size:13px;font-weight:700;text-align:center;color:#1f5a14;background:#dff0c0;border:1px solid #6a9a4a;border-radius:8px;padding:5px 8px}
@@ -985,13 +987,16 @@ function itemBonus(it){
 }
 function itemText(it){
   const b=itemBonus(it),o=[];
-  if(b.ap)o.push(`+${Math.round(b.ap)} Angriffskraft`);
-  if(b.hp)o.push(`+${Math.round(b.hp)} Leben`);
-  if(b.arm)o.push(`+${Math.round(b.arm)} Rüstung`);
-  if(b.crit)o.push(`+${(b.crit*100).toFixed(1)} % Kritische Treffer`);
-  if(b.mres)o.push(`+${Math.round(b.mres)} Magiewiderstand`);
+  if(b.ap)o.push(`${Math.round(b.ap)} Angriffskraft`);
+  if(b.hp)o.push(`${Math.round(b.hp)} Leben`);
+  if(b.arm)o.push(`${Math.round(b.arm)} Rüstung`);
+  if(b.crit)o.push(`${(b.crit*100).toFixed(1)} % Kritische Treffer`);
+  if(b.mres)o.push(`${Math.round(b.mres)} Magiewiderstand`);
   return o;
 }
+// Werte grün = besser als angelegt, rot = schlechter
+const statCls=it=>{const c=S&&S.eq&&S.eq[it.slot];if(!c||!it.id||c.id===it.id)return'sne';const d=it.v-c.v;return d>0?'sup':d<0?'sdn':'sne'};
+const statHTML=(it,sep)=>itemText(it).map(l=>`<span class="${statCls(it)}">${l}</span>`).join(sep);
 let UID=0;
 function mkUnit(o){
   const lvl=o.lvl,t=o.tm,R=o.race?RACES[o.race]:{},sc=o.sc||1;
@@ -1446,7 +1451,7 @@ function resolveTip(el){
   return null;
 }
 function itemTip(it){
-  return`<div class="tn" style="color:${RARD[it.rar]}">${esc(it.name)}</div><div class="tl"><span>${it.slotN}</span><i>Stufe ${it.lvl}</i></div><div style="color:${RARD[it.rar]}">${RAR[it.rar]}</div>`+itemText(it).map(l=>`<div class="td tg">${l}</div>`).join('');
+  return`<div class="tn" style="color:${RARD[it.rar]}">${esc(it.name)}</div><div class="tl"><span>${it.slotN}</span><i>Stufe ${it.lvl}</i></div><div style="color:${RARD[it.rar]}">${RAR[it.rar]}</div>`+itemText(it).map(l=>`<div class="td ${statCls(it)}">${l}</div>`).join('');
 }
 function unitTip(u){
   let h=`<div class="tn" style="color:${u.player?'#1f58b8':'#a3201a'}">${esc(u.name)}</div><div class="tl"><span>Stufe ${u.lvl} ${u.title||(u.race?RACES[u.race].n+' '+CLASSES[u.cls].n:'')}</span></div>`;
@@ -1820,8 +1825,7 @@ function gear(k){
   const row=(it,eq)=>{
     const d=(!eq&&cur)?it.v-cur.v:0;
     return`<div class="irow ${eq?'on':''}"><span class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]};--is:54px">${itG(it)}</span>
-      <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · Stufe ${it.lvl}</small>${itemText(it).map(l=>`<span class="tg">${l}</span>`).join('<br>')}
-      ${!eq&&cur?`<br><span class="${d>0?'up':d<0?'dn':'mut'}">${d>0?'▲ +'+d:d<0?'▼ '+d:'= gleich'}</span>`:''}</div>
+      <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · Stufe ${it.lvl}</small>${statHTML(it,'<br>')}</div>
       <div class="bt2">${eq?'<span class="new">Angelegt</span>':`<button class="ib" data-a="equip:${it.id}">Anlegen</button><button class="ib" data-a="drop:${it.id}">🗑</button>`}</div></div>`;
   };
   const bag=S.bag.filter(x=>x.slot===k).sort((a,b)=>b.v-a.v);
@@ -1865,8 +1869,8 @@ function rewardHTML(xp,lv,it,eq,gold){
     h+=CLASSES[S.cls].ab.filter(id=>UL[id]===l).map(id=>`<div class="newab">${icoHTML(A[id],'',`data-tip="pv:${id}"`)}<div><b>NEUE FÄHIGKEIT!</b><span>${A[id].n}</span><small>${abDesc(hero,A[id])[0]||''}</small></div></div>`).join('');
   }
   if(it){
-    h+=`<div class="rw"><button class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
-      <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':it.sold?`<span class="dn">🎒 Rucksack voll – für ${it.sold} 🪙 verkauft</span>`:(()=>{const d=it.v-S.eq[it.slot].v;return d>0?`<span class="new">▲ Besser als dein aktuelles Teil (+${d})</span>`:`Im Rucksack · ${d<0?d:'gleichwertig'} zum aktuellen Teil`})()}</div>`;
+    h+=`<div class="rw"><button class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${statHTML(it,' · ')}</div></div>
+      <div id="eqnote" class="${eq?'new':'mut'}">${eq?'✔ Angelegt (Platz war leer)':it.sold?`<span class="dn">🎒 Rucksack voll – für ${it.sold} 🪙 verkauft</span>`:'Im Rucksack'}</div>`;
   }
   return h;
 }
@@ -1875,8 +1879,8 @@ function lootOpen(){
   const it=LOOT;if(!it)return;
   const cur=S.eq[it.slot],full=cur&&bagFull(),d=cur?it.v-cur.v:0;
   $$('lootbtn').style.display='none';$$('loothint').style.display='none';
-  $$('lootbox').innerHTML=`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${itemText(it).join(' · ')}</div></div>
-    <div id="eqnote" class="${!cur||d>0?'new':'mut'}">${!cur?'Dein Platz dafür ist noch leer.':d>0?`▲ Besser als dein aktuelles Teil (+${d})`:d<0?`▼ Schwächer als dein aktuelles Teil (${d})`:'Gleichwertig zu deinem aktuellen Teil'}</div>
+  $$('lootbox').innerHTML=`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${statHTML(it,' · ')}</div></div>
+    <div id="eqnote" class="mut"></div>
     ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${S.bag.length}/${bagCap()}). Wirf unten ein Teil weg, um Platz zu schaffen – oder lass die Beute liegen.</div>`:''}
     <div class="lootacts" id="lootacts"><button class="btn prime" data-a="loottake" ${full?'disabled':''}>Nehmen</button><button class="btn dark" data-a="lootleave">Liegen lassen</button>
     <button class="btn dark" data-a="lootbag" style="font-size:13px">🎒 Rucksack ${LOOTBAG||full?'schließen':'aufräumen'} (${S.bag.length}/${bagCap()})</button></div>
@@ -1886,13 +1890,13 @@ function lootDone(how){
   const it=LOOT;if(!it)return;LOOT=null;LOOTBAG=false;
   const lb=document.querySelector('#lootbox .lootbag');if(lb)lb.style.display='none';
   const n=$$('eqnote'),acts=$$('lootacts');let extra='';
-  if(how==='take'){const eq=giveItem(it);n.className='new';n.textContent=eq?'✔ Genommen und angelegt (Platz war leer)':'✔ Im Rucksack';if(!eq)extra=`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`;SFX.heal()}
+  if(how==='take'){const eq=giveItem(it);n.className='new';n.textContent=eq?'✔ Genommen und angelegt (Platz war leer)':'✔ Im Rucksack';SFX.heal()}
   else{n.className='mut';n.textContent='Liegen gelassen'}
   acts.innerHTML=extra;if(!extra)acts.style.display='none';
   const bw=document.querySelector('#lootbox .bagwarn');if(bw)bw.style.display='none';
   $$('after').style.display='flex';save();
 }
-const eqBtn=(it,eq)=>it&&!eq&&!it.sold?`<button class="btn dark" id="eqbtn" data-a="eqnow:${it.id}">Jetzt anlegen</button>`:'';
+const eqBtn=()=>'';
 const backAct=()=>ENC&&ENC.raid!=null?'map':'zone:'+(ENC?ENC.z:0);
 
 function bModal(kind){
@@ -2073,14 +2077,14 @@ function genLegend(slot){
 function resBar(){return`<div class="panel resbar"><span>🪙 <b>${S.gold}</b> Gold</span><span>◈ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${S.pots}</b> Tränke</span><span style="grid-column:1/-1;${bagFull()?'color:#b3261b;font-weight:700':''}">🎒 Rucksack <b>${S.bag.length} / ${bagCap()}</b>${bagFull()?' – voll':''}</span></div>`}
 function itemRow(it,btns,extra=''){
   return`<div class="irow"><span class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]};--is:50px">${itG(it)}</span>
-    <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · ${it.slotN} · Stufe ${it.lvl}</small>${itemText(it).map(l=>`<span class="tg">${l}</span>`).join(' · ')}${extra}</div><div class="bt2">${btns}</div></div>`;
+    <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · ${it.slotN} · Stufe ${it.lvl}</small>${statHTML(it,' · ')}${extra}</div><div class="bt2">${btns}</div></div>`;
 }
 let TMSG='';
 function townScreen(tab){
   music('tavern');
   hero=heroUnit(S);B=null;TT=tab;
   const bag=[...S.bag].sort((a,b)=>a.slot.localeCompare(b.slot)||b.v-a.v);
-  const cmp=it=>{const c=S.eq[it.slot];if(!c)return'';const d=it.v-c.v;return`<br><span class="${d>0?'up':d<0?'dn':'mut'}">${d>0?'▲ +'+d:d<0?'▼ '+d:'= gleich'} zu angelegt</span>`};
+  const cmp=()=>'';
   let body;
   if(tab==='h'){
     const pp=potPrice();
