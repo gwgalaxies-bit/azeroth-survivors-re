@@ -1023,7 +1023,7 @@ function heroUnit(S){
 function mkMon(d,lvl,o={}){
   const u=mkUnit({name:o.n||d.n,lvl,tm:{hp:d.hp*(o.hp||1),ap:d.ap*(o.ap||1),arm:d.arm,res:d.res,spd:d.spd},ic:o.ic||d.ic,col:d.c,mon:true,boss:!!o.boss,
     weak:d.weak,resist:d.resist,sc:o.sc||.86,abs:d.mv,rk:'energy'});
-  u.rv=0;u.title=o.title||'Monster';u.quote=o.n?null:d.q;return u;
+  u.rv=0;u.rageAt=o.rageAt||0;u.title=o.title||'Monster';u.quote=o.n?null:d.q;return u;
 }
 function rival(z,faction){
   const keys=Object.keys(RACES).filter(r=>RACES[r].f!==faction),race=keys[(z+3)%4],cl=RACES[race].cls,cls=cl[(z*2+1)%cl.length];
@@ -1041,13 +1041,14 @@ function dungeonList(z){
   return[mob(0),mob(1),elite(W.dg.trash[0]),mob(2),mob(3),elite(W.dg.trash[1]),
     ()=>mkMon(W.dg.boss,ZL[z]+4,{hp:z?1.5:1.2,ap:z?1.05:1,sc:z?.92:.72,boss:true,title:'Dungeonboss'})];
 }
+const RAIDHP=9,RAIDAP=.66;
 function raidList(r){
   const R=RAIDS[r];
-  return[...R.enc.map(([n,k,ic])=>()=>mkMon(MONS[k],R.lvl,{n,ic,hp:1.4,sc:r?.95:.84,boss:true,title:'Raidboss'})),
-    ()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:1.7,ap:1.1,sc:r?1:.88,boss:true,title:'Raidboss'})];
+  // Ein einziger, sehr langer Kampf gegen den Boss
+  return[()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:RAIDHP,ap:RAIDAP*(r===1?.87:1),sc:1,boss:true,title:'Raidboss',rageAt:260})];
 }
 const xpNeed=l=>120+80*l;
-const XPK={hunt:1,named:1.6,dtrash:1.3,dboss:2.2,rmini:2,rboss:3};
+const XPK={hunt:1,named:1.6,dtrash:1.3,dboss:2.2,rmini:2,rboss:9};
 function fightXp(elvl,lvl,kind){
   const d=elvl-lvl,f=d>=0?Math.min(1.5,1+.1*d):Math.max(.1,1+.2*d);
   return Math.round((18+7*elvl)*XPK[kind]*f);
@@ -1100,7 +1101,8 @@ function calc(B,src,tgt,sc,p,o){
   if(tgt.weak===sc)raw*=1.3;
   if(tgt.resist===sc)raw*=.7;
   if(o&&o.ex&&tgt.hp<=tgt.hpMax*.3)raw*=1+o.ex;
-  if(B.turns>40)raw*=1+.08*(B.turns-40);
+  const lim=Math.max(40,B.p.rageAt||0,B.e.rageAt||0);
+  if(B.turns>lim)raw*=1+.08*(B.turns-lim);
   return raw;
 }
 function strike(B,src,tgt,sc,f,evs){
@@ -1972,7 +1974,7 @@ function result(win){
       <div id="after" style="width:100%;display:${it?'none':'flex'};flex-direction:column;gap:12px">${next||`<button class="btn prime" data-a="${backAct()}">Weiter</button>${E.kind==='hunt'?'<button class="btn dark" data-a="retry">Nochmal jagen</button>':''}`}</div></div>`;
   }else{
     SFX.lose();
-    if(run){run.step=0;run.hp=1;run.potions=4}
+    if(run){run.step=0;run.hp=1;run.potions=run.type==="d"?4:8}
     html=`<div class="ovl"><div class="bnr lose"><span>NIEDERLAGE</span></div><div class="box scb ink"><div>${esc(foe.name)} war zu stark.</div><div class="mut">${run?'Der Lauf beginnt von vorn. ':''}Tipp: Achte auf Schwächen, Abklingzeiten und nutze deinen Heiltrank.</div></div>
       <button class="btn" data-a="retry">Erneut versuchen</button><button class="btn dark" data-a="${backAct()}">Zurück</button></div>`;
   }
@@ -2049,13 +2051,13 @@ function zoneScreen(z){
 function raidScreen(r){
   music('map');
   hero=heroUnit(S);B=null;
-  const R=RAIDS[r],bs=[...R.enc.map(([n,k,ic])=>({n,ic,c:MONS[k].c})),{n:BOSSES[R.boss].n,ic:BOSSES[R.boss].ic,c:BOSSES[R.boss].c,fin:1}];
+  const R=RAIDS[r],bs=[{n:BOSSES[R.boss].n,ic:BOSSES[R.boss].ic,c:BOSSES[R.boss].c,fin:1}];
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${R.n}</h2><button class="ib" data-a="camp">👤</button></div>
     <div class="scroll">
       <div class="zhead" style="background-image:linear-gradient(#0000 40%,#000a),var(--i-raid-${r},var(--i-zone-${R.zone}))"><span>Raid · Stufe ${R.lvl}</span></div>
-      <div class="panel infobox"><h3>${R.n}</h3>${R.d}<br>${bs.length} Bosse am Stück. Dein Leben bleibt zwischen den Kämpfen erhalten (+35 % Erholung), du hast 4 Heiltränke für den ganzen Raid. Der Endboss lässt <b class="r3t">epische</b> Beute fallen.${S.done['r'+r]?`<div class="pas">✔ ${S.done['r'+r]}× bezwungen</div>`:''}</div>
+      <div class="panel infobox"><h3>${R.n}</h3>${R.d}<br>Ein einziger, sehr langer Kampf gegen <b>${bs[0].n}</b>. Der Boss hat ein Vielfaches an Leben, schlägt dafür nicht so hart zu wie ein Dungeonboss. Du hast 8 Heiltränke. Teile dir Tränke, Heilung und Abklingzeiten ein. Der Boss lässt <b class="r3t">epische</b> Beute fallen.${S.done['r'+r]?`<div class="pas">✔ ${S.done['r'+r]}× bezwungen</div>`:''}</div>
       <div class="sec">Bosse</div>
-      ${bs.map((b,i)=>`<div class="mrow">${monFig({mon:true,boss:true,n:b.n,ic:b.ic,col:b.c},46)}<div class="mi"><b>${b.n}</b><small>${b.fin?'Endboss':'Boss '+(i+1)} · <span style="color:${lvlCol(R.lvl+(b.fin?1:0))};font-weight:700">Stufe ${R.lvl+(b.fin?1:0)}</span></small></div></div>`).join('')}
+      ${bs.map((b,i)=>`<div class="mrow">${monFig({mon:true,boss:true,n:b.n,ic:b.ic,col:b.c},46)}<div class="mi"><b>${b.n}</b><small>Raidboss · <span style="color:${lvlCol(R.lvl+(b.fin?1:0))};font-weight:700">Stufe ${R.lvl+(b.fin?1:0)}</span></small></div></div>`).join('')}
       <button class="btn prime" data-a="raid:${r}">Raid betreten</button>
     </div></div>`,'lite');
 }
@@ -2189,7 +2191,7 @@ function onAct(a,el){
     case 'hunt':{const z=+v,i=+a.split(':')[2],key=ZONES[z].mon[i];ENC={kind:'hunt',z,zone:z,key,make:()=>mkMon(MONS[key],ZL[z]+i)};startBattle();break}
     case 'named':{const z=+v;ENC={kind:'named',z,zone:z,make:()=>namedFoe(z,RACES[S.race].f)};startBattle();break}
     case 'dungeon':{const z=+v;ENC={z,zone:z,run:{type:'d',name:WORLD[z].dg.n,step:0,list:dungeonList(z),hp:1,potions:4}};startBattle();break}
-    case 'raid':{const r=+v;ENC={raid:r,zone:RAIDS[r].zone,run:{type:'r',name:RAIDS[r].n,step:0,list:raidList(r),hp:1,potions:4}};startBattle();break}
+    case 'raid':{const r=+v;ENC={raid:r,zone:RAIDS[r].zone,run:{type:'r',name:RAIDS[r].n,step:0,list:raidList(r),hp:1,potions:8}};startBattle();break}
     case 'bm':bModal(v);break;
     case 'fleego':{if(!B)break;const used=B.potFree+B.potExtra-B.p.potions;S.pots=Math.max(0,(S.pots||0)-Math.max(0,used-B.potFree));save();const m=document.querySelector('.ovl.bm');if(m)m.remove();onAct('flee');break}
     case 'bmx':{const m=document.querySelector('.ovl.bm');if(m)m.remove();break}
