@@ -648,8 +648,9 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .leather .top h2{color:#f3d9a0}
 .bagres{display:flex;justify-content:space-around;gap:6px;margin:2px 12px 8px;padding:7px 8px;border-radius:10px;font-size:13px;color:#f3e3b8;background:#00000055;border:1px dashed #c9a22788;box-shadow:inset 0 0 12px #0008}
 .baggrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px 10px;padding:12px 16px;margin:0 10px;border-radius:14px;justify-items:center;align-content:start;flex:1;min-height:0;overflow-y:auto;
-  background:#00000040;border:2px dashed #c9a22766;box-shadow:inset 0 0 22px #000a;--is:min(14.5vw,62px)}
-.bcell{width:var(--is);height:var(--is);touch-action:none;-webkit-user-select:none;user-select:none}
+  background:#00000040;border:2px dashed #c9a22766;box-shadow:inset 0 0 22px #000a;--bs:min(14.5vw,62px)}
+.baggrid .bcell{--is:var(--bs)}
+.bcell{width:var(--bs);height:var(--bs);touch-action:none;-webkit-user-select:none;user-select:none}
 .bcell.empty{border-radius:10px;background:#0000004d;box-shadow:inset 0 2px 6px #000c,0 1px 0 #ffffff14}
 .bcell.lift{opacity:.25}
 .ghost{position:fixed!important;z-index:80;transform:translate(-50%,-60%) scale(1.15);pointer-events:none;filter:drop-shadow(0 8px 10px #000c)}
@@ -658,6 +659,17 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .trash span{font-size:24px;line-height:1.1}.trash b{font-family:var(--disp);font-size:15px;letter-spacing:1px}.trash small{font-size:11px;opacity:.8}
 .trash.armed{background:#6a1612cc;border-color:#ff6a5e;color:#ffd9d2}
 .trash.hot{background:#c2261bee;border-style:solid;border-color:#ffd100;color:#fff;transform:scale(1.03);box-shadow:0 0 22px #ff3a2aaa}
+.bagpane,.bagbox{width:100%;border-radius:14px;padding:8px 0 0;background:
+  repeating-linear-gradient(47deg,#0000 0 5px,#00000018 5px 6px),repeating-linear-gradient(-43deg,#0000 0 7px,#ffffff08 7px 8px),radial-gradient(circle at 30% 20%,#5a3a22,#3a2414 55%,#22140b);
+  border:2px solid #7a5420;box-shadow:inset 0 0 20px #000a,0 4px 10px #000a}
+.bagbox{padding:10px 0 0;max-height:74vh;overflow-y:auto}
+.bagbox .bagpane{border:0;box-shadow:none;background:none;padding:0}
+.bagpane .baggrid{flex:none;overflow:visible;gap:9px 6px;padding:10px 8px;margin:0 8px;--bs:min(12.5vw,52px)}
+.bagpane .bagres{margin:2px 8px 8px}
+.bagpane .trash{margin:0 8px 8px;padding:7px}.bagpane .trash span{font-size:20px}
+.bagpane .ico::before{inset:-5px}
+.trash.float{position:fixed;left:max(10px,calc(50vw - 230px));right:max(10px,calc(50vw - 230px));bottom:10px;margin:0;z-index:75;box-shadow:0 0 30px #000}
+#lootbox .bagpane .baggrid{grid-template-columns:repeat(auto-fill,minmax(46px,1fr));--bs:40px;gap:10px 4px}
 /* ---- Pergament-Theme (Menüs) ---- */
 #app.lite{--txt:#3a2410;--mut:#6a4f2e;--parch:#3a2410;--gold:#7a1f12;--gold2:#8a5a1c;--gold3:#7a5420;color:var(--txt)}
 .lite .top h2{color:#7a1f12;text-shadow:0 1px 0 #fff8}
@@ -2001,14 +2013,12 @@ function lootOpen(){
   $$('lootbtn').style.display='none';$$('loothint').style.display='none';
   const head=it.junk?`<div class="rw"><span class="ico" style="--sc:#a8683a">${gi('i-sell','🧺')}</span><div><b>${esc(it.name)}</b><span class="mut">Beutestück</span><br>${TRV[it.name]||1} Gold wert · belegt 1 Rucksackplatz</div></div>`
     :`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${statHTML(it,' · ')}</div></div>`;
-  const rows=[...S.bag].sort((x,y)=>x.v-y.v).map(x=>`<div class="lbrow"><span class="ico item r${x.rar}" data-tip="it:${x.id}" style="--sc:${RARC[x.rar]};--is:34px">${itG(x)}</span><div><b class="r${x.rar}t">${esc(x.name)}</b><small>${x.slotN} · ${itemText(x)[0]}</small></div><button class="ib" data-a="lootdrop:${x.id}">🗑</button></div>`).join('')
-    +Object.keys(S.junk).map(k=>`<div class="lbrow"><span class="ico" style="--sc:#a8683a;--is:34px">${gi('i-sell','🧺')}</span><div><b>${S.junk[k]}× ${esc(k)}</b><small>Beutestück · ${TRV[k]||1} Gold pro Stück</small></div><button class="ib" data-a="lootjdrop:${k}">🗑</button></div>`).join('');
   $$('lootbox').innerHTML=`${LQ.length>1?`<div class="mut" style="font-size:12px">Beute 1 von ${LQ.length}</div>`:''}${head}
     <div id="eqnote" class="mut"></div>
     ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${bagUsed()}/${bagCap()}). Wirf unten etwas weg, um Platz zu schaffen – oder lass die Beute liegen.</div>`:''}
     <div class="lootacts" id="lootacts"><button class="btn prime" data-a="loottake" ${full?'disabled':''}>Nehmen</button><button class="btn dark" data-a="lootleave">Liegen lassen</button>
     <button class="btn dark" data-a="lootbag" style="font-size:13px">🎒 Rucksack ${LOOTBAG||full?'schließen':'aufräumen'} (${bagUsed()}/${bagCap()})</button></div>
-    ${LOOTBAG||full?`<div class="lootbag">${rows||'<div class="mut">Der Rucksack ist leer.</div>'}</div>`:''}`;
+    ${LOOTBAG||full?bagPane():''}`;
 }
 function lootDone(how){
   const it=LOOT;if(!it)return;LQ.shift();LOOT=LQ[0]||null;LOOTBAG=false;
@@ -2017,7 +2027,7 @@ function lootDone(how){
   else msg='Liegen gelassen';
   save();
   if(LOOT)return lootOpen();
-  const lb=document.querySelector('#lootbox .lootbag');if(lb)lb.style.display='none';
+  const lb=document.querySelector('#lootbox .bagpane');if(lb)lb.remove();
   const n=$$('eqnote'),acts=$$('lootacts');n.className=cls;n.textContent=msg;acts.style.display='none';
   const bw=document.querySelector('#lootbox .bagwarn');if(bw)bw.style.display='none';
   $$('after').style.display='flex';
@@ -2030,11 +2040,7 @@ function bModal(kind){
   if(!B||document.querySelector('.ovl'))return;
   const p=B.p;let h;
   if(kind==='bag'){
-    const bag=[...S.bag].sort((a,b)=>a.slot.localeCompare(b.slot)||b.v-a.v);
-    h=`<h3>Rucksack ${bagUsed()} / ${bagCap()}</h3><div class="kv"><span>🪙 <b>${S.gold}</b> Gold</span><span>◈ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${p.potions}</b> Tränke im Kampf</span></div>
-      ${bag.map(x=>`<div class="lbrow"><span class="ico item r${x.rar}" data-tip="it:${x.id}" style="--sc:${RARC[x.rar]};--is:34px">${itG(x)}</span><div><b class="r${x.rar}t">${esc(x.name)}</b><small>${x.slotN} · ${itemText(x)[0]}</small></div></div>`).join('')||'<div class="mut" style="text-align:center">Der Rucksack ist leer.</div>'}
-      ${Object.keys(S.junk).length?`<div style="font-size:12.5px"><b>Beutestücke:</b> ${Object.keys(S.junk).map(k=>`${S.junk[k]}× ${k}`).join(', ')}</div>`:''}
-      <div class="mut" style="font-size:12px;text-align:center">Ausrüstung wechseln kannst du nur außerhalb des Kampfes.</div>`;
+    h=`<div class="mut" style="font-size:12px;text-align:center;color:#c9b48a">🧪 ${p.potions} Tränke in diesem Kampf · Ausrüstung wechseln geht nur außerhalb des Kampfes.</div>${bagPane()}`;
   }else if(kind==='quest'){
     const rows=WORLD.map((W,z)=>[0,1,2].map(g=>{const q=qInfo(z,g),def=q.def;if(!def||q.state==='new'||S.lvl<ZREQ[z])return'';
       return`<div><b>${q.state==='ready'?'❓':'📜'} ${def.t}</b><br><small>${ZONES[z].n} · ${q.state==='ready'?'Bereit zur Abgabe bei '+W.npcs[g].n:`${def.goal}: ${Math.min(q.n,def.need)} / ${def.need}`}</small></div>`}).join('')).join('');
@@ -2050,7 +2056,7 @@ function bModal(kind){
     h=`<h3>Fliehen?</h3><div style="text-align:center">Du verlässt den Kampf gegen ${esc(B.e.name)} ohne Belohnung.${run?`<br><b>${esc(run.name)} beginnt dann von vorn.</b>`:''} Verbrauchte gekaufte Tränke bekommst du nicht zurück.</div>`;
   }
   const btns=kind==='flee'?`<button class="btn" data-a="fleego">🏃 Ja, fliehen</button><button class="btn dark" data-a="bmx">Weiterkämpfen</button>`:`<button class="btn dark" data-a="bmx">Zurück zum Kampf</button>`;
-  document.querySelector('.scr').insertAdjacentHTML('beforeend',`<div class="ovl bm"><div class="box scb ink">${h}</div>${btns}</div>`);
+  document.querySelector('.scr').insertAdjacentHTML('beforeend',kind==='bag'?`<div class="ovl bm"><div class="bagbox">${h}</div>${btns}</div>`:`<div class="ovl bm"><div class="box scb ink">${h}</div>${btns}</div>`);
 }
 function result(win){
   const bm=document.querySelector('.ovl.bm');if(bm)bm.remove();
@@ -2273,18 +2279,26 @@ function townAct(k,v,a){
   save();SFX.heal();townScreen(TT);
 }
 let BAGBACK='map';
-function bagScreen(back){
-  if(back)BAGBACK=back;hero=heroUnit(S);B=null;
+function bagCells(){
   const cells=[];
   [...S.bag].sort((a,b)=>a.slot.localeCompare(b.slot)||b.v-a.v).forEach(it=>cells.push(`<span class="ico item r${it.rar} bcell" data-bi="g:${it.id}" style="--sc:${RARC[it.rar]}">${itG(it)}</span>`));
   for(const k of Object.keys(S.junk))for(let n=0;n<S.junk[k];n++)cells.push(`<span class="ico bcell" data-bi="j:${k}" style="--sc:#a8683a">${gi('i-sell','🧺')}</span>`);
   const cap=Math.max(bagCap(),cells.length);
   while(cells.length<cap)cells.push('<span class="bcell empty"></span>');
+  return cells;
+}
+const TRASH='<div class="trash" id="trash"><span>🗑</span><b>Wegschmeißen</b><small>Teil hierher ziehen</small></div>';
+// Rucksack als Einblendung (Kampf, Beute)
+const bagPane=()=>`<div class="bagpane"><div class="bagres"><span>🎒 <b>${bagUsed()} / ${bagCap()}</b></span><span>🪙 <b>${S.gold}</b></span><span>◈ <b>${S.dust}</b></span><span>💠 <b>${S.shard}</b></span></div>
+  <div class="baggrid">${bagCells().join('')}</div><div class="baghint">Antippen = Details · Gedrückt halten und ziehen = wegwerfen</div>${TRASH}</div>`;
+function bagScreen(back){
+  if(back)BAGBACK=back;hero=heroUnit(S);B=null;
+  const cells=bagCells();
   mount(`<div class="scr bagscr"><div class="top"><button class="ib" data-a="${BAGBACK}">‹</button><h2>Rucksack</h2><button class="ib" data-a="camp">👤</button></div>
     <div class="bagres"><span>🎒 <b>${bagUsed()} / ${bagCap()}</b></span><span>🪙 <b>${S.gold}</b></span><span>◈ <b>${S.dust}</b></span><span>💠 <b>${S.shard}</b></span></div>
     <div class="baggrid" id="baggrid">${cells.join('')}</div>
     <div class="baghint">Antippen = Details · Gedrückt halten und ziehen = wegwerfen<br>Anlegen kannst du Ausrüstung im Charakterfenster.</div>
-    <div class="trash" id="trash"><span>🗑</span><b>Wegschmeißen</b><small>Teil hierher ziehen</small></div></div>`,'leather');
+    ${TRASH}</div>`,'leather');
 }
 function bagTipHTML(bi){
   if(bi[0]==='g'){const it=S.bag.find(x=>x.id===bi.slice(2));return it?itemTip(it):null}
@@ -2294,12 +2308,15 @@ function bagTipHTML(bi){
 function bagTrash(bi){
   if(bi[0]==='g')S.bag=S.bag.filter(x=>x.id!==bi.slice(2));
   else{const k=bi.slice(2);if(S.junk[k]){S.junk[k]--;if(S.junk[k]<=0)delete S.junk[k]}}
-  save();SFX.miss();bagScreen();
+  save();SFX.miss();
+  const bm=document.querySelector('.ovl.bm');
+  if(bm){bm.remove();bModal('bag')}else if(LOOT&&$$('lootbox'))lootOpen();else bagScreen();
 }
 // Antippen = Details, Halten + Ziehen = wegwerfen
 const DR={el:null,ghost:null,timer:null,drag:false,x:0,y:0,tip:false};
-function dragEnd(){clearTimeout(DR.timer);if(DR.ghost)DR.ghost.remove();if(DR.el)DR.el.classList.remove('lift');const t=$$('trash');if(t)t.classList.remove('hot','armed');DR.el=DR.ghost=null;DR.drag=false}
-const overTrash=e=>{const t=$$('trash');if(!t)return false;const r=t.getBoundingClientRect();return e.clientY>=r.top-10&&e.clientX>=r.left&&e.clientX<=r.right};
+const trashEl=()=>$$('trashf')||$$('trash');
+function dragEnd(){clearTimeout(DR.timer);const tf=$$('trashf');if(tf)tf.parentNode.removeChild(tf);if(DR.ghost)DR.ghost.parentNode.removeChild(DR.ghost);if(DR.el)DR.el.classList.remove('lift');const t=$$('trash');if(t)t.classList.remove('hot','armed');DR.el=DR.ghost=null;DR.drag=false}
+const overTrash=e=>{const t=trashEl();if(!t)return false;const r=t.getBoundingClientRect();return e.clientY>=r.top-10&&e.clientX>=r.left&&e.clientX<=r.right};
 document.addEventListener('pointerdown',e=>{
   if(DR.tip){hideTip();DR.tip=false}
   const el=e.target.closest('[data-bi]');if(!el)return;
@@ -2307,7 +2324,10 @@ document.addEventListener('pointerdown',e=>{
   DR.timer=setTimeout(()=>{
     if(!DR.el)return;DR.drag=true;el.classList.add('lift');
     const r=el.getBoundingClientRect(),g=el.cloneNode(true);g.className+=' ghost';g.style.cssText+=`;width:${r.width}px;height:${r.height}px;left:${DR.x}px;top:${DR.y}px`;
-    document.body.appendChild(g);DR.ghost=g;$$('trash').classList.add('armed');
+    document.body.appendChild(g);DR.ghost=g;
+    const t0=$$('trash'),tr=t0.getBoundingClientRect();
+    if(tr.bottom>innerHeight-4||tr.top<0){const f=t0.cloneNode(true);f.id='trashf';f.classList.add('float');document.body.appendChild(f)}
+    trashEl().classList.add('armed');
     if(navigator.vibrate)try{navigator.vibrate(15)}catch(_){}
   },260);
 });
@@ -2315,7 +2335,7 @@ document.addEventListener('pointermove',e=>{
   if(!DR.el)return;
   if(!DR.drag){if(Math.hypot(e.clientX-DR.x,e.clientY-DR.y)>14){clearTimeout(DR.timer);DR.el=null}return}
   e.preventDefault();DR.ghost.style.left=e.clientX+'px';DR.ghost.style.top=e.clientY+'px';
-  $$('trash').classList.toggle('hot',overTrash(e));
+  trashEl().classList.toggle('hot',overTrash(e));
 },{passive:false});
 document.addEventListener('pointerup',e=>{
   const el=DR.el;if(!el)return;const was=DR.drag,bi=el.dataset.bi,hit=was&&overTrash(e);dragEnd();
