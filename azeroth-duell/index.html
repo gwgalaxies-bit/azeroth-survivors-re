@@ -1596,7 +1596,7 @@ document.addEventListener('pointerover',e=>{
   hoverEl=el;
   if(el)tipGo(el);else if(!pressEl)hideTip();
 });
-document.addEventListener('pointerleave',()=>{hoverEl=null;hideTip()});
+document.addEventListener('pointerleave',e=>{if(e.pointerType!=='mouse')return;hoverEl=null;hideTip()});
 // Finger: Details beim Gedrückthalten
 document.addEventListener('pointerdown',e=>{
   suppressClick=false;
@@ -2340,7 +2340,7 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',e=>{
   const el=DR.el;if(!el)return;const was=DR.drag,bi=el.dataset.bi,hit=was&&overTrash(e);dragEnd();
   if(hit)return bagTrash(bi);
-  if(!was){const h=bagTipHTML(bi);if(h){showTip(h,el);DR.tip=true;SFX.ui()}}
+  if(!was){const h=bagTipHTML(bi);if(h)setTimeout(()=>{showTip(h,el);DR.tip=true;SFX.ui()},30)}
 });
 document.addEventListener('pointercancel',dragEnd);
 function questLog(){
