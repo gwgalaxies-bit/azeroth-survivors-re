@@ -1041,11 +1041,12 @@ function dungeonList(z){
   return[mob(0),mob(1),elite(W.dg.trash[0]),mob(2),mob(3),elite(W.dg.trash[1]),
     ()=>mkMon(W.dg.boss,ZL[z]+4,{hp:z?1.5:1.2,ap:z?1.05:1,sc:z?.92:.72,boss:true,title:'Dungeonboss'})];
 }
-const RAIDHP=9,RAIDAP=.66;
+const RAIDHP=10,RAIDAP=1.05;
 function raidList(r){
   const R=RAIDS[r];
-  // Ein einziger, sehr langer Kampf gegen den Boss
-  return[()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:RAIDHP,ap:RAIDAP*(r===1?.87:1),sc:1,boss:true,title:'Raidboss',rageAt:260})];
+  // Vorbosse, dann der Endboss mit riesigem Lebensvorrat (sein Schaden bleibt über Versuche erhalten)
+  return[...R.enc.map(([n,k,ic])=>()=>mkMon(MONS[k],R.lvl,{n,ic,hp:1.4,sc:r?.92:.84,boss:true,title:'Raidboss'})),
+    ()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:RAIDHP,ap:RAIDAP*(r===1?.9:1),sc:1,boss:true,title:'Endboss',rageAt:260})];
 }
 const xpNeed=l=>120+80*l;
 const XPK={hunt:1,named:1.6,dtrash:1.3,dboss:2.2,rmini:2,rboss:9};
@@ -1618,7 +1619,7 @@ function startBattle(){
   music(ENC&&ENC.raid==null?ZMUS[ENC.zone]:null);
   hero=heroUnit(S);
   const E=ENC,run=E.run,foe=run?run.list[run.step]():E.make();
-  if(run){E.kind=run.type+(run.step===run.list.length-1?'boss':(run.type==='d'?'trash':'mini'));hero.hp=Math.max(1,Math.round(hero.hpMax*run.hp))}
+  if(run){E.kind=run.type+(run.step===run.list.length-1?'boss':(run.type==='d'?'trash':'mini'));hero.hp=Math.max(1,Math.round(hero.hpMax*run.hp));if(run.bossHp!=null&&run.step===run.list.length-1)foe.hp=Math.min(foe.hpMax,run.bossHp)}
   const potFree=run?run.potions:2,potExtra=Math.min(S.pots||0,3);hero.potions=potFree+potExtra;
   B=newBattle(hero,foe);B.token=Math.random();B.potFree=potFree;B.potExtra=potExtra;
   const Z=ZONES[E.zone],sub=run?`${esc(run.name)} · Gegner ${run.step+1}/${run.list.length}`:E.kind==='named'?'Questziel':'Jagd';
@@ -1974,8 +1975,10 @@ function result(win){
       <div id="after" style="width:100%;display:${it?'none':'flex'};flex-direction:column;gap:12px">${next||`<button class="btn prime" data-a="${backAct()}">Weiter</button>${E.kind==='hunt'?'<button class="btn dark" data-a="retry">Nochmal jagen</button>':''}`}</div></div>`;
   }else{
     SFX.lose();
-    if(run){run.step=0;run.hp=1;run.potions=run.type==="d"?4:8}
-    html=`<div class="ovl"><div class="bnr lose"><span>NIEDERLAGE</span></div><div class="box scb ink"><div>${esc(foe.name)} war zu stark.</div><div class="mut">${run?'Der Lauf beginnt von vorn. ':''}Tipp: Achte auf Schwächen, Abklingzeiten und nutze deinen Heiltrank.</div></div>
+    const atEnd=run&&run.type==='r'&&run.step===run.list.length-1;
+    if(atEnd){run.bossHp=Math.max(1,foe.hp);run.hp=1;run.potions=potLeft;run.tries=(run.tries||1)+1}
+    else if(run){run.step=0;run.hp=1;run.bossHp=null;run.potions=run.type==="d"?4:8}
+    html=`<div class="ovl"><div class="bnr lose"><span>NIEDERLAGE</span></div><div class="box scb ink"><div>${esc(foe.name)} war zu stark.</div>${atEnd?`<div class="qline">${esc(foe.name)} hat noch <b>${run.bossHp} / ${foe.hpMax}</b> Leben. Du trittst mit vollem Leben wieder an (Versuch ${run.tries}), seine Wunden bleiben. Tränke übrig: ${run.potions}. Verlässt du den Raid, heilt er sich.</div>`:''}<div class="mut">${run&&!atEnd?'Der Lauf beginnt von vorn. ':''}Tipp: Achte auf Schwächen, Abklingzeiten und nutze deinen Heiltrank.</div></div>
       <button class="btn" data-a="retry">Erneut versuchen</button><button class="btn dark" data-a="${backAct()}">Zurück</button></div>`;
   }
   document.querySelector('.scr').insertAdjacentHTML('beforeend',html);
@@ -2051,13 +2054,13 @@ function zoneScreen(z){
 function raidScreen(r){
   music('map');
   hero=heroUnit(S);B=null;
-  const R=RAIDS[r],bs=[{n:BOSSES[R.boss].n,ic:BOSSES[R.boss].ic,c:BOSSES[R.boss].c,fin:1}];
+  const R=RAIDS[r],bs=[...R.enc.map(([n,k,ic])=>({n,ic,c:MONS[k].c})),{n:BOSSES[R.boss].n,ic:BOSSES[R.boss].ic,c:BOSSES[R.boss].c,fin:1}];
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${R.n}</h2><button class="ib" data-a="camp">👤</button></div>
     <div class="scroll">
       <div class="zhead" style="background-image:linear-gradient(#0000 40%,#000a),var(--i-raid-${r},var(--i-zone-${R.zone}))"><span>Raid · Stufe ${R.lvl}</span></div>
-      <div class="panel infobox"><h3>${R.n}</h3>${R.d}<br>Ein einziger, sehr langer Kampf gegen <b>${bs[0].n}</b>. Der Boss hat ein Vielfaches an Leben, schlägt dafür nicht so hart zu wie ein Dungeonboss. Du hast 8 Heiltränke. Teile dir Tränke, Heilung und Abklingzeiten ein. Der Boss lässt <b class="r3t">epische</b> Beute fallen.${S.done['r'+r]?`<div class="pas">✔ ${S.done['r'+r]}× bezwungen</div>`:''}</div>
+      <div class="panel infobox"><h3>${R.n}</h3>${R.d}<br>${bs.length-1} Vorbosse, dann der Endboss <b>${bs[bs.length-1].n}</b> mit einem riesigen Lebensvorrat. Stirbst du an einem Vorboss, beginnt der Raid von vorn. Stirbst du am Endboss, trittst du mit vollem Leben wieder gegen ihn an und <b>sein verlorenes Leben bleibt weg</b>, bis du den Raid verlässt. Du hast 8 Heiltränke für den ganzen Raid, sie werden nicht aufgefüllt. Der Endboss lässt <b class="r3t">epische</b> Beute fallen.${S.done['r'+r]?`<div class="pas">✔ ${S.done['r'+r]}× bezwungen</div>`:''}</div>
       <div class="sec">Bosse</div>
-      ${bs.map((b,i)=>`<div class="mrow">${monFig({mon:true,boss:true,n:b.n,ic:b.ic,col:b.c},46)}<div class="mi"><b>${b.n}</b><small>Raidboss · <span style="color:${lvlCol(R.lvl+(b.fin?1:0))};font-weight:700">Stufe ${R.lvl+(b.fin?1:0)}</span></small></div></div>`).join('')}
+      ${bs.map((b,i)=>`<div class="mrow">${monFig({mon:true,boss:true,n:b.n,ic:b.ic,col:b.c},46)}<div class="mi"><b>${b.n}</b><small>${b.fin?'Endboss':'Vorboss '+(i+1)} · <span style="color:${lvlCol(R.lvl+(b.fin?1:0))};font-weight:700">Stufe ${R.lvl+(b.fin?1:0)}</span></small></div></div>`).join('')}
       <button class="btn prime" data-a="raid:${r}">Raid betreten</button>
     </div></div>`,'lite');
 }
