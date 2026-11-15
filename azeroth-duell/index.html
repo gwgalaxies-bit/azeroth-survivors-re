@@ -1531,7 +1531,7 @@ function resolveTip(el){
     }
     case 'pot':return`<div class="tn">Heiltrank</div>${S.pots?`<div class="td tg">Dazu ${Math.min(S.pots,3)} gekaufte Tränke aus deinem Vorrat (${S.pots}).</div>`:''}<div class="tl"><span>Gegenstand</span><i>Verbraucht deinen Zug</i></div><div class="td w">Stellt <b>40 %</b> deines maximalen Lebens wieder her.</div><div class="tf">Pro Kampf ${B?B.p.potions:2} übrig.</div>`;
     case 'pass':return`<div class="tn">Abwarten</div><div class="td w">Du überspringst deinen Zug${B&&B.p.rk==='mana'?' und erhältst 10 Mana':''}.</div>`;
-    case 'loot':return LOOT?itemTip(LOOT):null;
+    case 'loot':return LOOT&&!LOOT.junk?itemTip(LOOT):null;
     case 'it':{const it=[...Object.values(S.eq),...S.bag,...((S.shop&&S.shop.items)||[])].find(x=>x&&x.id===a);return it?itemTip(it):null}
     case 'item':{const it=S.eq[a];return it?itemTip(it):`<div class="tn mut">Leerer Platz</div><div class="td w">Besiege Gegner, um Beute zu erhalten.</div>`}
     case 'st':{const u=a==='p'?B.p:B.e,s=u.st.find(x=>x.id===b);return s?stTip(s):null}
@@ -1903,7 +1903,7 @@ function genItem(lvl,minRar=0,slot){
   const ic=slot==='w'?{Schwert:'🗡️',Streitkolben:'🔨',Bogen:'🏹',Dolch:'🔪',Stab:'🪄'}[C.wp]:slot==='a'?'🛡️':pick(['📿','💍','🔮']);
   return{id:Math.random().toString(36).slice(2,9),slot,slotN:{w:'Waffe',a:'Rüstung',t:'Schmuck'}[slot],name:`${base} ${pick(SUF[rar])}`,ic,rar,lvl,v:Math.max(1,Math.round(itemVal(lvl,rar)*rnd(.84,1.2))),aff:rar===3?rollAff(1,1):undefined};
 }
-const bagCap=()=>S.cap||20,bagUsed=()=>S.bag.length+Object.keys(S.junk||{}).length,bagFull=()=>bagUsed()>=bagCap();
+const bagCap=()=>S.cap||20,bagUsed=()=>S.bag.length+Object.values(S.junk||{}).reduce((a,b)=>a+b,0),bagFull=()=>bagUsed()>=bagCap();
 const CAP_MAX=40,capPrice=()=>600*Math.pow(2,Math.round((bagCap()-20)/5));
 function equipItem(id){
   const it=S.bag.find(x=>x.id===id);if(!it)return false;
@@ -1977,25 +1977,32 @@ function rewardHTML(xp,lv,it,eq,gold){
 let LOOT=null,LOOTBAG=false;
 function lootOpen(){
   const it=LOOT;if(!it)return;
-  const cur=S.eq[it.slot],full=cur&&bagFull(),d=cur?it.v-cur.v:0;
+  const full=it.junk?bagFull():(S.eq[it.slot]&&bagFull());
   $$('lootbtn').style.display='none';$$('loothint').style.display='none';
-  $$('lootbox').innerHTML=`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${statHTML(it,' · ')}</div></div>
+  const head=it.junk?`<div class="rw"><span class="ico" style="--sc:#a8683a">${gi('i-sell','🧺')}</span><div><b>${esc(it.name)}</b><span class="mut">Beutestück</span><br>${TRV[it.name]||1} Gold wert · belegt 1 Rucksackplatz</div></div>`
+    :`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${statHTML(it,' · ')}</div></div>`;
+  const rows=[...S.bag].sort((x,y)=>x.v-y.v).map(x=>`<div class="lbrow"><span class="ico item r${x.rar}" data-tip="it:${x.id}" style="--sc:${RARC[x.rar]};--is:34px">${itG(x)}</span><div><b class="r${x.rar}t">${esc(x.name)}</b><small>${x.slotN} · ${itemText(x)[0]}</small></div><button class="ib" data-a="lootdrop:${x.id}">🗑</button></div>`).join('')
+    +Object.keys(S.junk).map(k=>`<div class="lbrow"><span class="ico" style="--sc:#a8683a;--is:34px">${gi('i-sell','🧺')}</span><div><b>${S.junk[k]}× ${esc(k)}</b><small>Beutestück · ${TRV[k]||1} Gold pro Stück</small></div><button class="ib" data-a="lootjdrop:${k}">🗑</button></div>`).join('');
+  $$('lootbox').innerHTML=`${LQ.length>1?`<div class="mut" style="font-size:12px">Beute 1 von ${LQ.length}</div>`:''}${head}
     <div id="eqnote" class="mut"></div>
-    ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${bagUsed()}/${bagCap()}). Wirf unten ein Teil weg, um Platz zu schaffen – oder lass die Beute liegen.</div>`:''}
+    ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${bagUsed()}/${bagCap()}). Wirf unten etwas weg, um Platz zu schaffen – oder lass die Beute liegen.</div>`:''}
     <div class="lootacts" id="lootacts"><button class="btn prime" data-a="loottake" ${full?'disabled':''}>Nehmen</button><button class="btn dark" data-a="lootleave">Liegen lassen</button>
     <button class="btn dark" data-a="lootbag" style="font-size:13px">🎒 Rucksack ${LOOTBAG||full?'schließen':'aufräumen'} (${bagUsed()}/${bagCap()})</button></div>
-    ${LOOTBAG||full?`<div class="lootbag">${[...S.bag].sort((x,y)=>x.v-y.v).map(x=>`<div class="lbrow"><span class="ico item r${x.rar}" data-tip="it:${x.id}" style="--sc:${RARC[x.rar]};--is:34px">${itG(x)}</span><div><b class="r${x.rar}t">${esc(x.name)}</b><small>${x.slotN} · ${itemText(x)[0]}</small></div><button class="ib" data-a="lootdrop:${x.id}">🗑</button></div>`).join('')||'<div class="mut">Der Rucksack ist leer.</div>'}</div>`:''}`;
+    ${LOOTBAG||full?`<div class="lootbag">${rows||'<div class="mut">Der Rucksack ist leer.</div>'}</div>`:''}`;
 }
 function lootDone(how){
-  const it=LOOT;if(!it)return;LOOT=null;LOOTBAG=false;
+  const it=LOOT;if(!it)return;LQ.shift();LOOT=LQ[0]||null;LOOTBAG=false;
+  let msg,cls='mut';
+  if(how==='take'){if(it.junk){S.junk[it.name]=(S.junk[it.name]||0)+1;msg=`✔ ${it.name} im Rucksack`}else{const eq=giveItem(it);msg=eq?'✔ Genommen und angelegt (Platz war leer)':'✔ Im Rucksack'}cls='new';SFX.heal()}
+  else msg='Liegen gelassen';
+  save();
+  if(LOOT)return lootOpen();
   const lb=document.querySelector('#lootbox .lootbag');if(lb)lb.style.display='none';
-  const n=$$('eqnote'),acts=$$('lootacts');let extra='';
-  if(how==='take'){const eq=giveItem(it);n.className='new';n.textContent=eq?'✔ Genommen und angelegt (Platz war leer)':'✔ Im Rucksack';SFX.heal()}
-  else{n.className='mut';n.textContent='Liegen gelassen'}
-  acts.innerHTML=extra;if(!extra)acts.style.display='none';
+  const n=$$('eqnote'),acts=$$('lootacts');n.className=cls;n.textContent=msg;acts.style.display='none';
   const bw=document.querySelector('#lootbox .bagwarn');if(bw)bw.style.display='none';
-  $$('after').style.display='flex';save();
+  $$('after').style.display='flex';
 }
+let LQ=[];
 const eqBtn=()=>'';
 const backAct=()=>ENC&&ENC.raid!=null?'map':'zone:'+(ENC?ENC.z:0);
 
@@ -2038,10 +2045,11 @@ function result(win){
     const LT={hunt:[.3,0],named:[1,1],dtrash:[.35,0],dboss:[1,2],rmini:[.6,2],rboss:[1,3]}[E.kind];
     let it=null,eq=false;
     if(Math.random()<LT[0])it=genItem(foe.lvl,LT[1]);
-    LOOT=it;LOOTBAG=false;
+    LQ=it?[it]:[];LOOTBAG=false;
     // Questfortschritt
     let qline='';
-    if(foe.tr&&(E.kind==='hunt'||E.kind==='dtrash')&&Math.random()<.65){if(!S.junk[foe.tr]&&bagFull())qline+=`<div class="qline dn">🎒 Rucksack voll – ${foe.tr} blieb liegen.</div>`;else{S.junk[foe.tr]=(S.junk[foe.tr]||0)+1;qline+=`<div class="qline">🧺 Beutestück: ${foe.tr} (${S.junk[foe.tr]})</div>`}}
+    if(foe.tr&&(E.kind==='hunt'||E.kind==='dtrash')&&Math.random()<.65){if(bagFull())LQ.push({junk:true,name:foe.tr});else{S.junk[foe.tr]=(S.junk[foe.tr]||0)+1;qline+=`<div class="qline">🧺 Beutestück: ${foe.tr} (${S.junk[foe.tr]})</div>`}}
+    LOOT=LQ[0]||null;it=LOOT;
     if(E.z!=null&&E.raid==null)for(const g of [0,1,2]){
       const st=qs(E.z,g),def=questDef(E.z,g,st.i);if(!def||st.st!=='active')continue;
       if(def.type==='collect'){if(foe.tr===def.tr&&(S.junk[def.tr]||0)===def.need)qline+=`<div class="qline ok">❓ „${def.t}“ erfüllt – kehre zu ${WORLD[E.z].npcs[g].n} zurück!</div>`;continue}
@@ -2210,7 +2218,7 @@ function townScreen(tab){
       <div class="sec">Tauschen · Magiestaub</div>
       ${TRADE.map(t=>`<div class="irow"><span class="ico" style="--sc:#b98cff;--is:50px">${gi(t.rar?'q-chest':'i-potion',t.ic)}</span><div class="ii"><b>${t.n}</b><small>${t.d}</small></div><div class="bt2">${t.rar?['w','a','t'].map(sl=>`<button class="ib sm" data-a="trade:${t.id}:${sl}" ${S.dust<t.cost?'disabled':''}>${SLOTN[sl]}</button>`).join(''):`<button class="ib" data-a="trade:${t.id}" ${S.dust<t.cost?'disabled':''}>Tauschen</button>`}<small class="cost">${t.cost} ◈</small></div></div>`).join('')}
       <div class="sec">Beutestücke verkaufen</div>
-      ${Object.keys(S.junk).length?Object.keys(S.junk).map(k=>`<div class="irow"><span class="ico" style="--sc:#a8683a;--is:44px">${gi('i-sell','🧺')}</span><div class="ii"><b>${S.junk[k]}× ${k}</b><small>${TRV[k]||1} Gold pro Stück · belegt 1 Rucksackplatz${junkNeeded(k)?' · <span class="dn">für eine Quest benötigt</span>':''}</small></div><div class="bt2"><button class="ib" data-a="junk:${k}">${S.junk[k]*(TRV[k]||1)} 🪙</button></div></div>`).join(''):'<div class="hint">Keine Beutestücke. Gegner in den Gebieten und Dungeons lassen sie fallen.</div>'}
+      ${Object.keys(S.junk).length?Object.keys(S.junk).map(k=>`<div class="irow"><span class="ico" style="--sc:#a8683a;--is:44px">${gi('i-sell','🧺')}</span><div class="ii"><b>${S.junk[k]}× ${k}</b><small>${TRV[k]||1} Gold pro Stück · belegt ${S.junk[k]} ${S.junk[k]>1?'Rucksackplätze':'Rucksackplatz'}${junkNeeded(k)?' · <span class="dn">für eine Quest benötigt</span>':''}</small></div><div class="bt2"><button class="ib" data-a="junk:${k}">${TRV[k]||1} 🪙</button></div></div>`).join(''):'<div class="hint">Keine Beutestücke. Gegner in den Gebieten und Dungeons lassen sie fallen.</div>'}
       <div class="sec">Verkaufen · Ausrüstung (${bag.length})</div>
       ${bag.length?bag.map(it=>itemRow(it,`<button class="ib" data-a="sell:${it.id}">+${sellPrice(it)} 🪙</button>`)).join(''):'<div class="hint">Dein Rucksack ist leer. Angelegte Teile kannst du nicht verkaufen.</div>'}`;
   }else{
@@ -2284,6 +2292,7 @@ function onAct(a,el){
     case 'loottake':lootDone('take');break;
     case 'lootbag':LOOTBAG=!LOOTBAG;lootOpen();break;
     case 'lootdrop':S.bag=S.bag.filter(x=>x.id!==v);save();SFX.miss();lootOpen();break;
+    case 'lootjdrop':if(S.junk[v]){S.junk[v]--;if(S.junk[v]<=0)delete S.junk[v];save();SFX.miss();lootOpen()}break;
     case 'lootleave':lootDone('leave');break;
     case 'eqnow':if(equipItem(v)){SFX.heal();const n=$$('eqnote');if(n){n.className='new';n.textContent='✔ Angelegt'}const b=$$('eqbtn');if(b)b.style.display='none'}break;
     case 'retry':case 'next':startBattle();break;
@@ -2298,7 +2307,7 @@ function onAct(a,el){
     case 'qacc':{const st=qs(+v,+a.split(':')[2]);st.st='active';st.n=0;save();zoneScreen(+v);break}
     case 'qfin':questFinish(+v,+a.split(':')[2]);break;
     case 'portal':{const w=S.world||0;if(!w&&S.lvl<25){const m=$$('mapmsg');m.textContent='Das Dunkle Portal öffnet sich erst ab Stufe 25.';m.classList.add('warn');SFX.miss();break}S.world=w?0:1;S.loc='p0';save();SFX.win();worldMap();break}
-    case 'junk':{const n=S.junk[v]||0;if(n){S.gold+=n*(TRV[v]||1);delete S.junk[v];TMSG=`${n}× ${v} verkauft.`;save();SFX.heal();townScreen('h')}break}
+    case 'junk':{const n=S.junk[v]||0;if(n){S.gold+=(TRV[v]||1);S.junk[v]--;if(S.junk[v]<=0)delete S.junk[v];TMSG=`1× ${v} verkauft.`;save();SFX.heal();townScreen('h')}break}
     case 'hunt':{const z=+v,i=+a.split(':')[2],key=ZONES[z].mon[i];ENC={kind:'hunt',z,zone:z,key,make:()=>mkMon(MONS[key],ZL[z]+i)};startBattle();break}
     case 'named':{const z=+v;ENC={kind:'named',z,zone:z,make:()=>namedFoe(z,RACES[S.race].f)};startBattle();break}
     case 'dungeon':{const z=+v;ENC={z,zone:z,run:{type:'d',name:WORLD[z].dg.n,step:0,list:dungeonList(z),hp:1,potions:4}};startBattle();break}
