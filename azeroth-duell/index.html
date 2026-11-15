@@ -355,9 +355,11 @@ svg{display:block}
   background:var(--c);border:2px solid #000;font-size:calc(var(--s)*.17);box-shadow:0 2px 4px #000a}
 .mon{display:grid;place-items:center;border-radius:50%;flex:none;position:relative;
   background:radial-gradient(circle at 40% 30%,color-mix(in srgb,var(--g) 55%,#3a2c1c),#150f09 75%);border:3px solid var(--gold2);box-shadow:inset 0 0 0 2px #000,0 0 0 2px #000,0 0 18px color-mix(in srgb,var(--g) 50%,transparent)}
-.mon.boss{border-color:#e8e8f0;box-shadow:inset 0 0 0 2px #000,0 0 0 2px #000,0 0 22px #ffd10099}
+.mon.boss{border-color:#ffd100;box-shadow:inset 0 0 0 2px #000,0 0 0 2px #000,0 0 22px #ffd10099}
 .mon span{filter:drop-shadow(0 4px 3px #000a);line-height:1}
 .mon .mimg{position:absolute;inset:0;border-radius:50%;background:center/cover;filter:none}
+.mon .mimg.bz{background-size:124%}
+.npc .ico .gi{background-size:138%}
 .av .rimg{display:block;width:100%;height:100%;border-radius:50%;border:3px solid var(--gold2);box-shadow:inset 0 0 0 2px #000,0 0 0 2px #000;background:center/cover}
 .pt .av .rimg{border:0;box-shadow:none}.hm .av .rimg{border:2px solid #ffd100;box-shadow:0 0 0 1px #000}
 .cb.im,.ci.im{background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
@@ -1339,7 +1341,7 @@ function avatar(race,cls,s=64,badge=true){
 }
 function monFig(u,s=64){
   const k=monKey(u);
-  return`<span class="mon ${u.boss?'boss':''}" style="width:${s}px;height:${s}px;--g:${u.col}">${k?`<span class="mimg" style="background-image:var(--i-${k})"></span>`:`<span style="font-size:${s*.58}px">${u.ic}</span>`}</span>`;
+  return`<span class="mon ${u.boss?'boss':''}" style="width:${s}px;height:${s}px;--g:${u.col}">${k?`<span class="mimg${k.startsWith('boss-')?' bz':''}" style="background-image:var(--i-${k})"></span>`:`<span style="font-size:${s*.58}px">${u.ic}</span>`}</span>`;
 }
 function fig(u,s,badge=true){return u.mon?monFig(u,s):avatar(u.race,u.cls,s,badge)}
 function icoHTML(a,extra='',attrs=''){
