@@ -579,6 +579,7 @@ svg{display:block}
 .pin.raid .pimg{width:50px;height:50px}.pin:active .pimg{transform:scale(.92)}
 .pin .qm.im{top:-18px}
 .route{display:none}
+.ric.rnd{border-radius:50%}.ib .ric{width:26px;height:26px;margin:-3px;vertical-align:middle}.ib .ric.rnd{box-shadow:0 0 0 1.5px #ffd100}
 .ric{display:inline-block;width:1.25em;height:1.25em;vertical-align:-.28em;background:center/cover no-repeat;border-radius:3px;margin:0 1px}
 .zhead.dgh{height:84px;background-position:center 68%}
 .bnr.quest{width:min(74vw,300px);aspect-ratio:360/214;background-image:var(--i-q-banner)}
@@ -627,7 +628,7 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .sup{color:#1f7a14;font-weight:700}.sdn{color:#b3261b;font-weight:700}.sne{color:inherit}
 #tip .sup{color:#1f7a14}#tip .sdn{color:#a3201a}#tip .sne{color:#2a1608}
 .resbar{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;padding:8px 12px;font-size:12.5px}
-.tabs{display:flex;gap:8px}.tabs .btn.on{transform:translateY(3px);filter:brightness(.82);color:#ffd9a0}.tabs .btn{font-size:15px}
+.tabs{display:flex;gap:8px}.tabs .btn.on{transform:translateY(3px);filter:brightness(.82);color:#ffd9a0}.tabs .btn,.tabs .btn.dark{font-size:15px}
 .tmsg{font-size:13px;font-weight:700;text-align:center;color:#1f5a14;background:#dff0c0;border:1px solid #6a9a4a;border-radius:8px;padding:5px 8px}
 .irow .bt2{align-items:center}
 .irow .ib[disabled]{opacity:.45;filter:grayscale(.8);pointer-events:none}
@@ -1042,7 +1043,7 @@ function raidList(r){
   return[...R.enc.map(([n,k,ic])=>()=>mkMon(MONS[k],R.lvl,{n,ic,hp:1.4,sc:r?.95:.84,boss:true,title:'Raidboss'})),
     ()=>mkMon(BOSSES[R.boss],R.lvl+1,{hp:1.7,ap:1.1,sc:r?1:.88,boss:true,title:'Raidboss'})];
 }
-const xpNeed=l=>60+40*l;
+const xpNeed=l=>120+80*l;
 const XPK={hunt:1,named:1.6,dtrash:1.3,dboss:2.2,rmini:2,rboss:3};
 function fightXp(elvl,lvl,kind){
   const d=elvl-lvl,f=d>=0?Math.min(1.5,1+.1*d):Math.max(.1,1+.2*d);
@@ -1509,14 +1510,15 @@ document.addEventListener('scroll',()=>{clearTimeout(tipTimer);hideTip()},true);
    SCREENS
 ================================================================ */
 const app=document.getElementById('app');
-const RIC={'🪙':'i-gold','◈':'i-dust','💠':'i-shard','🎒':'i-bag'},RRE=/[🪙◈💠🎒]/u;
+const RIC={'🪙':'i-gold','◈':'i-dust','💠':'i-shard','🎒':'i-bag','🧪':'i-potion','📜':'q-log','👤':'race'},RRE=/[🪙◈💠🎒🧪📜👤]/u;
 function icoFix(root){
   const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT),L=[];let n;
   while(n=w.nextNode())if(RRE.test(n.nodeValue)&&!n.parentNode.closest('.g,.fxl,input'))L.push(n);
   for(const t of L){
     const f=document.createDocumentFragment();
-    for(const part of t.nodeValue.split(/([🪙◈💠🎒])/u)){
-      if(RIC[part]&&has(RIC[part])){const i=document.createElement('i');i.className='ric';i.style.backgroundImage=`var(--i-${RIC[part]})`;f.appendChild(i)}
+    for(const part of t.nodeValue.split(/([🪙◈💠🎒🧪📜👤])/u)){
+      const rk=part==='👤'?(S?'race-'+S.race:null):RIC[part];
+      if(rk&&has(rk)){const i=document.createElement('i');i.className='ric'+(part==='👤'?' rnd':'');i.style.backgroundImage=`var(--i-${rk})`;f.appendChild(i)}
       else if(part)f.appendChild(document.createTextNode(part));
     }
     t.parentNode.replaceChild(f,t);
@@ -1843,7 +1845,7 @@ const qs=z=>S.q[z]||(S.q[z]={i:0,st:'new',n:0});
 function questDef(z,i){
   const W=WORLD[z];if(i>4)return null;
   const [t,x]=W.q[i],lv=ZL[z]+i;
-  const base={i,t,x,xp:Math.round(xpNeed(lv)*.7),lvl:lv,slot:['w','a','t'][i%3],rar:i===4?2:1};
+  const base={i,t,x,xp:Math.round(xpNeed(lv)*.4),lvl:lv,slot:['w','a','t'][i%3],rar:i===4?2:1};
   if(i<3){const k=ZONES[z].mon[QMON[i]],m=MONS[k];return{...base,type:'kill',mon:k,need:2,goal:`${m.n} besiegen`}}
   if(i===3){const f=namedFoe(z,RACES[S.race].f);
     return{...base,type:'named',need:1,goal:`${f.name} besiegen`,foeName:f.name,
@@ -2094,7 +2096,7 @@ function townScreen(tab){
       <div class="irow"><span class="ico" style="--sc:#a8683a;--is:50px">${gi('i-bagslot','🎒')}</span><div class="ii"><b>Rucksackfach</b><small>${bagCap()>=CAP_MAX?'Dein Rucksack ist maximal ausgebaut.':`+5 Plätze (jetzt ${bagCap()}, höchstens ${CAP_MAX}). Jedes weitere Fach kostet das Doppelte.`}</small></div><div class="bt2">${bagCap()>=CAP_MAX?'':`<button class="ib" data-a="buycap" ${S.gold<capPrice()?'disabled':''}>${capPrice()} 🪙</button>`}</div></div>
       ${shopStock().map(it=>itemRow(it,`<button class="ib" data-a="buy:${it.id}" ${S.gold<buyPrice(it)?'disabled':''}>${buyPrice(it)} 🪙</button>`,cmp(it))).join('')||'<div class="hint">Ausverkauft. Neue Ware gibt es mit deiner nächsten Stufe.</div>'}
       <div class="sec">Tauschen · Magiestaub</div>
-      ${TRADE.map(t=>`<div class="irow"><span class="ico" style="--sc:#b98cff;--is:50px"><span class="g">${t.ic}</span></span><div class="ii"><b>${t.n}</b><small>${t.d}</small></div><div class="bt2">${t.rar?['w','a','t'].map(sl=>`<button class="ib sm" data-a="trade:${t.id}:${sl}" ${S.dust<t.cost?'disabled':''}>${SLOTN[sl]}</button>`).join(''):`<button class="ib" data-a="trade:${t.id}" ${S.dust<t.cost?'disabled':''}>Tauschen</button>`}<small class="cost">${t.cost} ◈</small></div></div>`).join('')}
+      ${TRADE.map(t=>`<div class="irow"><span class="ico" style="--sc:#b98cff;--is:50px">${gi(t.rar?'q-chest':'i-potion',t.ic)}</span><div class="ii"><b>${t.n}</b><small>${t.d}</small></div><div class="bt2">${t.rar?['w','a','t'].map(sl=>`<button class="ib sm" data-a="trade:${t.id}:${sl}" ${S.dust<t.cost?'disabled':''}>${SLOTN[sl]}</button>`).join(''):`<button class="ib" data-a="trade:${t.id}" ${S.dust<t.cost?'disabled':''}>Tauschen</button>`}<small class="cost">${t.cost} ◈</small></div></div>`).join('')}
       <div class="sec">Verkaufen · Rucksack (${bag.length}/${bagCap()})</div>
       ${bag.length?bag.map(it=>itemRow(it,`<button class="ib" data-a="sell:${it.id}">+${sellPrice(it)} 🪙</button>`)).join(''):'<div class="hint">Dein Rucksack ist leer. Angelegte Teile kannst du nicht verkaufen.</div>'}`;
   }else{
