@@ -325,7 +325,7 @@ svg{display:block}
 .scroll{flex:1;overflow-y:auto;padding:14px 14px 20px;display:flex;flex-direction:column;gap:12px}
 .scroll>*{flex-shrink:0}
 .top{display:flex;align-items:center;gap:10px;padding:12px 14px 4px}
-.top h2{flex:1;font-size:20px;color:var(--gold);text-shadow:0 2px 0 #000}
+.top h2{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:20px;color:var(--gold);text-shadow:0 2px 0 #000}
 .ib{width:46px;height:46px;font-size:18px;display:grid;place-items:center;color:#fff3d6;text-shadow:0 1px 0 #000;border:12px solid transparent;border-image:var(--i-btn-sq) 30 fill/12px/0 stretch;background:none;filter:drop-shadow(0 2px 3px #0008)}
 .ib:active{transform:translateY(2px)}
 
@@ -1690,7 +1690,8 @@ function camp(){
         <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.kills||0}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span><span>🪙 Gold <b>${S.gold}</b></span><span>◈ Magiestaub <b>${S.dust}</b></span><span>🧪 Tränke <b>${S.pots}</b></span><span>💠 Titanensplitter <b>${S.shard}</b></span></div></div></div>
       <div class="sec">Ausrüstung · Rucksack ${bagUsed()}/${bagCap()}</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
       <div class="sec">Symbole</div><div class="panel abrow">${C.ab.map((id,i)=>{const lk=lvl<UL[id];return icoHTML(A[id],lk?'nr':'',`data-tip="pv:${id}"`).replace('</button>',lk?`<span class="lk"><span>🔒</span><small>Stufe ${UL[id]}</small></span></button>`:'</button>')}).join('')}${icoHTML(A['r_'+R.ab],'racial',`data-tip="pv:r_${R.ab}"`)}</div>
-      <div class="hint" style="margin-top:-6px">Details: mit der Maus darüberfahren oder gedrückt halten</div>
+      <button class="btn" style="font-size:15px" data-a="bag:camp">🎒 Rucksack öffnen (${bagUsed()}/${bagCap()})</button>
+      <div class="hint">Details: mit der Maus darüberfahren oder gedrückt halten</div>
       ${xpBar()}
       <button class="btn prime" data-a="map">Zur Weltkarte</button>
     </div></div>`,'lite');
@@ -2048,7 +2049,7 @@ function result(win){
     LQ=it?[it]:[];LOOTBAG=false;
     // Questfortschritt
     let qline='';
-    if(foe.tr&&(E.kind==='hunt'||E.kind==='dtrash')&&Math.random()<.65){if(bagFull())LQ.push({junk:true,name:foe.tr});else{S.junk[foe.tr]=(S.junk[foe.tr]||0)+1;qline+=`<div class="qline">🧺 Beutestück: ${foe.tr} (${S.junk[foe.tr]})</div>`}}
+    if(foe.tr&&(E.kind==='hunt'||E.kind==='dtrash')&&Math.random()<.65)LQ.push({junk:true,name:foe.tr});
     LOOT=LQ[0]||null;it=LOOT;
     if(E.z!=null&&E.raid==null)for(const g of [0,1,2]){
       const st=qs(E.z,g),def=questDef(E.z,g,st.i);if(!def||st.st!=='active')continue;
@@ -2107,7 +2108,7 @@ function worldMap(){
     return`<button class="pin raid ${lock?'lock':''}" style="left:${r.x}%;top:${r.y}%" data-a="go:r${i}">${has('pin-r'+i)?`<span class="pimg" style="background-image:var(--i-pin-${lock?'lock':'r'+i})"></span>`:`<span class="ico item r3" style="--is:44px;--sc:#a335ee"><span class="g">${lock?'🔒':r.ic}</span></span>`}<b>${r.n}</b><small>${lock?'Ab Stufe '+r.req:'Raid · Stufe '+r.lvl}${S.done['r'+i]?' ✔':''}</small></button>`}).join('');
   const hp=worldOf(S.loc)===w&&S.loc[0]!=='p'?pinPos(S.loc):PORTAL,plock=S.lvl<25;
   const mapbg=w?(bgi('worldmap2')?`background:${bgi('worldmap2')} center/100% 100%`:'background:radial-gradient(circle at 30% 84%,#a83a2a88,#0000 26%),radial-gradient(circle at 68% 72%,#3a8ac888,#0000 26%),radial-gradient(circle at 30% 56%,#6ab04a88,#0000 26%),radial-gradient(circle at 68% 38%,#7a8a9a88,#0000 26%),radial-gradient(circle at 34% 22%,#3a6a4a99,#0000 26%),linear-gradient(#3a2a4a,#1a1426)'):'';
-  mount(`<div class="scr"><div class="top"><h2>${WNAME[w]}</h2><button class="ib" data-a="qlog">📜</button><button class="ib" data-a="snd">${soundOn?'🔊':'🔇'}</button><button class="ib" data-a="menu">☰</button></div>
+  mount(`<div class="scr"><div class="top"><h2>${WNAME[w]}</h2><button class="ib" data-a="bag:map">🎒</button><button class="ib" data-a="qlog">📜</button><button class="ib" data-a="menu">☰</button></div>
     <div style="padding:0 10px">${heroStrip()}</div>
     <div class="map ${w?'w2':''}" id="map" style="${mapbg}">
       ${zp}${rp}
@@ -2151,7 +2152,7 @@ function zoneScreen(z){
   const mons=Z.mon.map((k,i)=>{const m=MONS[k],lv=ZL[z]+i,a=act[k],u={mon:true,n:m.n,ic:m.ic,col:m.c};
     return`<button class="mrow" data-a="hunt:${z}:${i}">${monFig(u,46)}<div class="mi"><b>${m.n}</b><small><span style="color:${lvlCol(lv)};font-weight:700">Stufe ${lv}</span>${m.weak?` · Schwäche ${SCH[m.weak][0]}`:''}${m.resist?` · Resistent ${SCH[m.resist][0]}`:''}</small>${a?`<em>📜 Quest ${Math.min(a.n,a.def.need)}/${a.def.need}</em>`:''}</div><span class="go">⚔</span></button>`}).join('');
   const dlock=S.lvl<ZL[z]+2,db=W.dg.boss;
-  mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${Z.n}</h2><button class="ib" data-a="camp">👤</button></div>
+  mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${Z.n}</h2><button class="ib" data-a="bag:zone:${z}">🎒</button><button class="ib" data-a="camp">👤</button></div>
     <div class="scroll">
       <div class="zhead" style="background-image:linear-gradient(#0000 40%,#000a),${bgi('zone-'+z)||Z.bg}"><span>Stufe ${ZL[z]}–${ZL[z]+4}</span></div>
       <div class="sec">Questgeber</div>${boxes}
@@ -2232,7 +2233,7 @@ function townScreen(tab){
       ${bag.length?bag.map(it=>itemRow(it,`<button class="ib" data-a="scrap:${it.id}">${it.rar===4?'+3 💠':`+${DUST[it.rar]} ◈${it.rar===3?' +1 💠':''}`}</button>`)).join(''):'<div class="hint">Dein Rucksack ist leer. Angelegte Teile kannst du nicht zerlegen.</div>'}`;
   }
   const sc=document.querySelector('.scroll'),y=sc&&document.querySelector('.town')?sc.scrollTop:0;
-  mount(`<div class="scr town"><div class="top"><button class="ib" data-a="map">‹</button><h2>${TOWN.n}</h2><button class="ib" data-a="camp">👤</button></div>
+  mount(`<div class="scr town"><div class="top"><button class="ib" data-a="map">‹</button><h2>${TOWN.n}</h2><button class="ib" data-a="bag:town:${tab}">🎒</button><button class="ib" data-a="camp">👤</button></div>
     <div style="padding:0 14px;display:flex;flex-direction:column;gap:8px">${has('town')?'<div class="zhead" style="height:70px;background-image:linear-gradient(#0000 40%,#000a),var(--i-town)"></div>':''}${resBar()}<div class="tabs"><button class="btn ${tab==='h'?'dark on':''}" data-a="town:h">Händler</button><button class="btn ${tab==='s'?'dark on':''}" data-a="town:s">Schmied</button></div>
     ${TMSG?`<div class="tmsg">${TMSG}</div>`:''}</div>
     <div class="scroll">${body}</div></div>`,'lite');
@@ -2251,6 +2252,20 @@ function townAct(k,v,a){
     if(t.id==='pot'){S.pots++;TMSG='🧪 Heiltrank eingetauscht.'}else{const it=genItem(S.lvl,t.rar,a.split(':')[2]);const eq=giveItem(it);TMSG=`Erhalten: <b class="r${it.rar}t">${esc(it.name)}</b>${eq?' (angelegt)':' (im Rucksack)'}`}}
   else if(k==='forge'){if(S.lvl<LEG_LVL||S.shard<LEG_COST)return;if(S.eq[v]&&bagFull()){TMSG='<span class="dn">🎒 Rucksack voll – dein altes Teil braucht einen Platz.</span>';return townScreen(TT)}S.shard-=LEG_COST;const it=genLegend(v),old=S.eq[v];S.eq[v]=it;if(old)S.bag.push(old);SFX.win();TMSG=`Geschmiedet und angelegt: <b class="r4t">${esc(it.name)}</b>${old?' · dein altes Teil liegt im Rucksack':''}`}
   save();SFX.heal();townScreen(TT);
+}
+let BAGBACK='map';
+function bagScreen(back){
+  if(back)BAGBACK=back;hero=heroUnit(S);B=null;
+  const bag=[...S.bag].sort((a,b)=>a.slot.localeCompare(b.slot)||b.v-a.v);
+  const rows=bag.map(it=>itemRow(it,`<button class="ib" data-a="bequip:${it.id}">Anlegen</button><button class="ib" data-a="bdrop:${it.id}">🗑</button>`)).join('');
+  const junk=Object.keys(S.junk).map(k=>`<div class="irow"><span class="ico" style="--sc:#a8683a;--is:44px">${gi('i-sell','🧺')}</span><div class="ii"><b>${S.junk[k]}× ${esc(k)}</b><small>Beutestück · ${TRV[k]||1} Gold pro Stück · belegt ${S.junk[k]} ${S.junk[k]>1?'Plätze':'Platz'}${junkNeeded(k)?' · <span class="dn">für eine Quest benötigt</span>':''}</small></div><div class="bt2"><button class="ib" data-a="bjdrop:${k}">🗑</button></div></div>`).join('');
+  const sc=document.querySelector('.scr.bagscr .scroll'),y=sc?sc.scrollTop:0;
+  mount(`<div class="scr bagscr"><div class="top"><button class="ib" data-a="${BAGBACK}">‹</button><h2>Rucksack</h2><button class="ib" data-a="camp">👤</button></div>
+    <div style="padding:0 14px">${resBar()}</div>
+    <div class="scroll"><div class="sec">Ausrüstung (${bag.length})</div>${rows||'<div class="hint">Keine Ausrüstung im Rucksack.</div>'}
+    <div class="sec">Beutestücke (${Object.values(S.junk).reduce((a,b)=>a+b,0)})</div>${junk||'<div class="hint">Keine Beutestücke.</div>'}
+    <div class="hint">Verkaufen und Zerlegen kannst du im Handelsposten. 🗑 wirft ein Teil ohne Gegenwert weg.</div></div></div>`,'lite');
+  if(y)document.querySelector('.scroll').scrollTop=y;
 }
 function questLog(){
   const rows=WORLD.map((W,z)=>{if(S.lvl<ZREQ[z])return'';
@@ -2287,6 +2302,10 @@ function onAct(a,el){
       S={name:nm,race:CR.race,cls:CR.cls,lvl:1,xp:0,eq:{},bag:[],q:{},done:{},loc:'z0',gold:0,dust:0,shard:0,pots:0,junk:{},world:0};save();worldMap();break}
     case 'slot':gear(v);break;
     case 'equip':if(equipItem(v)){SFX.heal();gear(GS)}break;
+    case 'bag':bagScreen(a.slice(4));break;
+    case 'bequip':if(equipItem(v)){SFX.heal();bagScreen()}break;
+    case 'bdrop':S.bag=S.bag.filter(x=>x.id!==v);save();SFX.miss();bagScreen();break;
+    case 'bjdrop':if(S.junk[v]){S.junk[v]--;if(S.junk[v]<=0)delete S.junk[v];save();SFX.miss();bagScreen()}break;
     case 'drop':S.bag=S.bag.filter(x=>x.id!==v);save();gear(GS);break;
     case 'loot':lootOpen();break;
     case 'loottake':lootDone('take');break;
