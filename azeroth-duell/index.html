@@ -639,6 +639,25 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .legrow{display:flex;gap:6px;margin:8px 0 2px}.legrow .btn{padding:0;font-size:13px}
 .legrow .btn.prime .r4t{color:#5a1a00;text-shadow:0 1px 0 #fff8}
 .legrow .btn.prime small{color:#3a2206;text-shadow:none}
+/* ---- Rucksack (Leder) ---- */
+#app.leather{background:
+  radial-gradient(120% 80% at 50% 0%,#0000 40%,#0009),
+  repeating-linear-gradient(47deg,#0000 0 5px,#00000018 5px 6px),
+  repeating-linear-gradient(-43deg,#0000 0 7px,#ffffff08 7px 8px),
+  radial-gradient(circle at 30% 20%,#5a3a22,#3a2414 55%,#22140b)}
+.leather .top h2{color:#f3d9a0}
+.bagres{display:flex;justify-content:space-around;gap:6px;margin:2px 12px 8px;padding:7px 8px;border-radius:10px;font-size:13px;color:#f3e3b8;background:#00000055;border:1px dashed #c9a22788;box-shadow:inset 0 0 12px #0008}
+.baggrid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px 10px;padding:12px 16px;margin:0 10px;border-radius:14px;justify-items:center;align-content:start;flex:1;min-height:0;overflow-y:auto;
+  background:#00000040;border:2px dashed #c9a22766;box-shadow:inset 0 0 22px #000a;--is:min(14.5vw,62px)}
+.bcell{width:var(--is);height:var(--is);touch-action:none;-webkit-user-select:none;user-select:none}
+.bcell.empty{border-radius:10px;background:#0000004d;box-shadow:inset 0 2px 6px #000c,0 1px 0 #ffffff14}
+.bcell.lift{opacity:.25}
+.ghost{position:fixed!important;z-index:80;transform:translate(-50%,-60%) scale(1.15);pointer-events:none;filter:drop-shadow(0 8px 10px #000c)}
+.baghint{text-align:center;font-size:11.5px;color:#c9b48a;padding:8px 12px 6px}
+.trash{margin:0 10px calc(10px + env(safe-area-inset-bottom));padding:10px;border-radius:14px;text-align:center;color:#e8b0a8;background:#3a0f0c99;border:2px dashed #a3201a;display:flex;flex-direction:column;align-items:center;gap:0;transition:all .12s}
+.trash span{font-size:24px;line-height:1.1}.trash b{font-family:var(--disp);font-size:15px;letter-spacing:1px}.trash small{font-size:11px;opacity:.8}
+.trash.armed{background:#6a1612cc;border-color:#ff6a5e;color:#ffd9d2}
+.trash.hot{background:#c2261bee;border-style:solid;border-color:#ffd100;color:#fff;transform:scale(1.03);box-shadow:0 0 22px #ff3a2aaa}
 /* ---- Pergament-Theme (Menüs) ---- */
 #app.lite{--txt:#3a2410;--mut:#6a4f2e;--parch:#3a2410;--gold:#7a1f12;--gold2:#8a5a1c;--gold3:#7a5420;color:var(--txt)}
 .lite .top h2{color:#7a1f12;text-shadow:0 1px 0 #fff8}
@@ -2256,17 +2275,54 @@ function townAct(k,v,a){
 let BAGBACK='map';
 function bagScreen(back){
   if(back)BAGBACK=back;hero=heroUnit(S);B=null;
-  const bag=[...S.bag].sort((a,b)=>a.slot.localeCompare(b.slot)||b.v-a.v);
-  const rows=bag.map(it=>itemRow(it,`<button class="ib" data-a="bequip:${it.id}">Anlegen</button><button class="ib" data-a="bdrop:${it.id}">🗑</button>`)).join('');
-  const junk=Object.keys(S.junk).map(k=>`<div class="irow"><span class="ico" style="--sc:#a8683a;--is:44px">${gi('i-sell','🧺')}</span><div class="ii"><b>${S.junk[k]}× ${esc(k)}</b><small>Beutestück · ${TRV[k]||1} Gold pro Stück · belegt ${S.junk[k]} ${S.junk[k]>1?'Plätze':'Platz'}${junkNeeded(k)?' · <span class="dn">für eine Quest benötigt</span>':''}</small></div><div class="bt2"><button class="ib" data-a="bjdrop:${k}">🗑</button></div></div>`).join('');
-  const sc=document.querySelector('.scr.bagscr .scroll'),y=sc?sc.scrollTop:0;
+  const cells=[];
+  [...S.bag].sort((a,b)=>a.slot.localeCompare(b.slot)||b.v-a.v).forEach(it=>cells.push(`<span class="ico item r${it.rar} bcell" data-bi="g:${it.id}" style="--sc:${RARC[it.rar]}">${itG(it)}</span>`));
+  for(const k of Object.keys(S.junk))for(let n=0;n<S.junk[k];n++)cells.push(`<span class="ico bcell" data-bi="j:${k}" style="--sc:#a8683a">${gi('i-sell','🧺')}</span>`);
+  const cap=Math.max(bagCap(),cells.length);
+  while(cells.length<cap)cells.push('<span class="bcell empty"></span>');
   mount(`<div class="scr bagscr"><div class="top"><button class="ib" data-a="${BAGBACK}">‹</button><h2>Rucksack</h2><button class="ib" data-a="camp">👤</button></div>
-    <div style="padding:0 14px">${resBar()}</div>
-    <div class="scroll"><div class="sec">Ausrüstung (${bag.length})</div>${rows||'<div class="hint">Keine Ausrüstung im Rucksack.</div>'}
-    <div class="sec">Beutestücke (${Object.values(S.junk).reduce((a,b)=>a+b,0)})</div>${junk||'<div class="hint">Keine Beutestücke.</div>'}
-    <div class="hint">Verkaufen und Zerlegen kannst du im Handelsposten. 🗑 wirft ein Teil ohne Gegenwert weg.</div></div></div>`,'lite');
-  if(y)document.querySelector('.scroll').scrollTop=y;
+    <div class="bagres"><span>🎒 <b>${bagUsed()} / ${bagCap()}</b></span><span>🪙 <b>${S.gold}</b></span><span>◈ <b>${S.dust}</b></span><span>💠 <b>${S.shard}</b></span></div>
+    <div class="baggrid" id="baggrid">${cells.join('')}</div>
+    <div class="baghint">Antippen = Details · Gedrückt halten und ziehen = wegwerfen<br>Anlegen kannst du Ausrüstung im Charakterfenster.</div>
+    <div class="trash" id="trash"><span>🗑</span><b>Wegschmeißen</b><small>Teil hierher ziehen</small></div></div>`,'leather');
 }
+function bagTipHTML(bi){
+  if(bi[0]==='g'){const it=S.bag.find(x=>x.id===bi.slice(2));return it?itemTip(it):null}
+  const k=bi.slice(2);
+  return`<div class="tn">${esc(k)}</div><div class="tl"><span>Beutestück</span><i>belegt 1 Platz</i></div><div class="td w">${TRV[k]||1} Gold wert bei der Händlerin.</div>${junkNeeded(k)?'<div class="td tb">Wird für eine Quest benötigt.</div>':''}`;
+}
+function bagTrash(bi){
+  if(bi[0]==='g')S.bag=S.bag.filter(x=>x.id!==bi.slice(2));
+  else{const k=bi.slice(2);if(S.junk[k]){S.junk[k]--;if(S.junk[k]<=0)delete S.junk[k]}}
+  save();SFX.miss();bagScreen();
+}
+// Antippen = Details, Halten + Ziehen = wegwerfen
+const DR={el:null,ghost:null,timer:null,drag:false,x:0,y:0,tip:false};
+function dragEnd(){clearTimeout(DR.timer);if(DR.ghost)DR.ghost.remove();if(DR.el)DR.el.classList.remove('lift');const t=$$('trash');if(t)t.classList.remove('hot','armed');DR.el=DR.ghost=null;DR.drag=false}
+const overTrash=e=>{const t=$$('trash');if(!t)return false;const r=t.getBoundingClientRect();return e.clientY>=r.top-10&&e.clientX>=r.left&&e.clientX<=r.right};
+document.addEventListener('pointerdown',e=>{
+  if(DR.tip){hideTip();DR.tip=false}
+  const el=e.target.closest('[data-bi]');if(!el)return;
+  dragEnd();DR.el=el;DR.x=e.clientX;DR.y=e.clientY;
+  DR.timer=setTimeout(()=>{
+    if(!DR.el)return;DR.drag=true;el.classList.add('lift');
+    const r=el.getBoundingClientRect(),g=el.cloneNode(true);g.className+=' ghost';g.style.cssText+=`;width:${r.width}px;height:${r.height}px;left:${DR.x}px;top:${DR.y}px`;
+    document.body.appendChild(g);DR.ghost=g;$$('trash').classList.add('armed');
+    if(navigator.vibrate)try{navigator.vibrate(15)}catch(_){}
+  },260);
+});
+document.addEventListener('pointermove',e=>{
+  if(!DR.el)return;
+  if(!DR.drag){if(Math.hypot(e.clientX-DR.x,e.clientY-DR.y)>14){clearTimeout(DR.timer);DR.el=null}return}
+  e.preventDefault();DR.ghost.style.left=e.clientX+'px';DR.ghost.style.top=e.clientY+'px';
+  $$('trash').classList.toggle('hot',overTrash(e));
+},{passive:false});
+document.addEventListener('pointerup',e=>{
+  const el=DR.el;if(!el)return;const was=DR.drag,bi=el.dataset.bi,hit=was&&overTrash(e);dragEnd();
+  if(hit)return bagTrash(bi);
+  if(!was){const h=bagTipHTML(bi);if(h){showTip(h,el);DR.tip=true;SFX.ui()}}
+});
+document.addEventListener('pointercancel',dragEnd);
 function questLog(){
   const rows=WORLD.map((W,z)=>{if(S.lvl<ZREQ[z])return'';
     return[0,1,2].map(g=>{const q=qInfo(z,g),def=q.def;if(!def)return'';
@@ -2303,9 +2359,6 @@ function onAct(a,el){
     case 'slot':gear(v);break;
     case 'equip':if(equipItem(v)){SFX.heal();gear(GS)}break;
     case 'bag':bagScreen(a.slice(4));break;
-    case 'bequip':if(equipItem(v)){SFX.heal();bagScreen()}break;
-    case 'bdrop':S.bag=S.bag.filter(x=>x.id!==v);save();SFX.miss();bagScreen();break;
-    case 'bjdrop':if(S.junk[v]){S.junk[v]--;if(S.junk[v]<=0)delete S.junk[v];save();SFX.miss();bagScreen()}break;
     case 'drop':S.bag=S.bag.filter(x=>x.id!==v);save();gear(GS);break;
     case 'loot':lootOpen();break;
     case 'loottake':lootDone('take');break;
