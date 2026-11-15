@@ -1451,7 +1451,7 @@ function icoHTML(a,extra='',attrs=''){
 ================================================================ */
 const KEY='azeroth_duell_v1';
 let S=null,B=null,hero=null,busy=false,soundOn=true;
-function load(){try{const j=localStorage.getItem(KEY);if(!j)return null;const o=JSON.parse(j);o.bag=o.bag||[];o.eq=o.eq||{};if(!o.lvl){o.lvl=Math.min(50,1+(o.cleared||0));o.xp=0}o.gold=o.gold||0;o.dust=o.dust||0;o.shard=o.shard||0;o.pots=o.pots||0;o.junk=o.junk||{};o.world=o.world||0;for(const k of Object.keys(o.q||{}))if(/^\d+$/.test(k)){const q=o.q[k];delete o.q[k];if(q.i<3)o.q[k+'_0']=q;else{o.q[k+'_0']={i:3,st:'new',n:0};o.q[k+'_1']={i:q.i-3,st:q.st,n:q.n}}}o.q=o.q||{};o.done=o.done||{};if(o.loc==null)o.loc='z'+Math.max(0,ZREQ.filter(r=>r<=o.lvl).length-1);return o}catch(e){return null}}
+function load(){try{const j=localStorage.getItem(KEY);if(!j)return null;const o=JSON.parse(j);o.bag=o.bag||[];o.eq=o.eq||{};if(!o.lvl){o.lvl=Math.min(50,1+(o.cleared||0));o.xp=0}o.gold=o.gold||0;o.dust=o.dust||0;o.shard=o.shard||0;o.pots=o.pots||0;o.junk=o.junk||{};for(const it of [...Object.values(o.eq),...o.bag,...((o.shop&&o.shop.items)||[])])if(it&&it.rar>=3&&!it.aff)it.aff=rollAff(it.rar===4?2:1,it.rar===4?2:1);o.world=o.world||0;for(const k of Object.keys(o.q||{}))if(/^\d+$/.test(k)){const q=o.q[k];delete o.q[k];if(q.i<3)o.q[k+'_0']=q;else{o.q[k+'_0']={i:3,st:'new',n:0};o.q[k+'_1']={i:q.i-3,st:q.st,n:q.n}}}o.q=o.q||{};o.done=o.done||{};if(o.loc==null)o.loc='z'+Math.max(0,ZREQ.filter(r=>r<=o.lvl).length-1);return o}catch(e){return null}}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 try{soundOn=localStorage.getItem(KEY+'_snd')!=='0'}catch(e){}
 
@@ -1688,7 +1688,7 @@ function camp(){
       <div class="panel hero">${avatar(S.race,S.cls,86)}<div class="hi"><h2>${esc(S.name)}</h2>
         <div class="sub mut"><span style="color:${R.f==='a'?'#5ea6ff':'#ff6b5e'}">${R.f==='a'?'Allianz':'Horde'}</span> · ${R.n} ${C.n}</div>
         <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.kills||0}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span><span>🪙 Gold <b>${S.gold}</b></span><span>◈ Magiestaub <b>${S.dust}</b></span><span>🧪 Tränke <b>${S.pots}</b></span><span>💠 Titanensplitter <b>${S.shard}</b></span></div></div></div>
-      <div class="sec">Ausrüstung · Rucksack ${S.bag.length}/${bagCap()}</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
+      <div class="sec">Ausrüstung · Rucksack ${bagUsed()}/${bagCap()}</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
       <div class="sec">Symbole</div><div class="panel abrow">${C.ab.map((id,i)=>{const lk=lvl<UL[id];return icoHTML(A[id],lk?'nr':'',`data-tip="pv:${id}"`).replace('</button>',lk?`<span class="lk"><span>🔒</span><small>Stufe ${UL[id]}</small></span></button>`:'</button>')}).join('')}${icoHTML(A['r_'+R.ab],'racial',`data-tip="pv:r_${R.ab}"`)}</div>
       <div class="hint" style="margin-top:-6px">Details: mit der Maus darüberfahren oder gedrückt halten</div>
       ${xpBar()}
@@ -1903,7 +1903,7 @@ function genItem(lvl,minRar=0,slot){
   const ic=slot==='w'?{Schwert:'🗡️',Streitkolben:'🔨',Bogen:'🏹',Dolch:'🔪',Stab:'🪄'}[C.wp]:slot==='a'?'🛡️':pick(['📿','💍','🔮']);
   return{id:Math.random().toString(36).slice(2,9),slot,slotN:{w:'Waffe',a:'Rüstung',t:'Schmuck'}[slot],name:`${base} ${pick(SUF[rar])}`,ic,rar,lvl,v:Math.max(1,Math.round(itemVal(lvl,rar)*rnd(.84,1.2))),aff:rar===3?rollAff(1,1):undefined};
 }
-const bagCap=()=>S.cap||20,bagFull=()=>S.bag.length>=bagCap();
+const bagCap=()=>S.cap||20,bagUsed=()=>S.bag.length+Object.keys(S.junk||{}).length,bagFull=()=>bagUsed()>=bagCap();
 const CAP_MAX=40,capPrice=()=>600*Math.pow(2,Math.round((bagCap()-20)/5));
 function equipItem(id){
   const it=S.bag.find(x=>x.id===id);if(!it)return false;
@@ -1923,7 +1923,7 @@ function gear(k){
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="camp">‹</button><h2>${nm} wechseln</h2></div>
     <div class="scroll"><div class="panel cmp"><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div>
     <div class="sec">Angelegt</div>${cur?row(cur,true):'<div class="hint">Nichts angelegt.</div>'}
-    <div class="sec">Rucksack · ${nm} (${bag.length}) · gesamt ${S.bag.length}/${bagCap()}</div>${bag.length?bag.map(i=>row(i,false)).join(''):'<div class="hint">Keine weiteren Teile dieser Art.<br>Besiege Gegner, um Beute zu finden.</div>'}
+    <div class="sec">Rucksack · ${nm} (${bag.length}) · gesamt ${bagUsed()}/${bagCap()}</div>${bag.length?bag.map(i=>row(i,false)).join(''):'<div class="hint">Keine weiteren Teile dieser Art.<br>Besiege Gegner, um Beute zu finden.</div>'}
     </div></div>`,'lite');
 }
 function itemScore(it){if(!it)return 0;return it.v*(it.slot==='w'?1.4:it.slot==='a'?1:.8)}
@@ -1981,9 +1981,9 @@ function lootOpen(){
   $$('lootbtn').style.display='none';$$('loothint').style.display='none';
   $$('lootbox').innerHTML=`<div class="rw"><button class="ico item r${it.rar}" data-tip="loot" style="--sc:${RARC[it.rar]}">${itG(it)}</button><div><b class="r${it.rar}t">${esc(it.name)}</b><span class="mut">${RAR[it.rar]} · ${it.slotN}</span><br>${statHTML(it,' · ')}</div></div>
     <div id="eqnote" class="mut"></div>
-    ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${S.bag.length}/${bagCap()}). Wirf unten ein Teil weg, um Platz zu schaffen – oder lass die Beute liegen.</div>`:''}
+    ${full?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${bagUsed()}/${bagCap()}). Wirf unten ein Teil weg, um Platz zu schaffen – oder lass die Beute liegen.</div>`:''}
     <div class="lootacts" id="lootacts"><button class="btn prime" data-a="loottake" ${full?'disabled':''}>Nehmen</button><button class="btn dark" data-a="lootleave">Liegen lassen</button>
-    <button class="btn dark" data-a="lootbag" style="font-size:13px">🎒 Rucksack ${LOOTBAG||full?'schließen':'aufräumen'} (${S.bag.length}/${bagCap()})</button></div>
+    <button class="btn dark" data-a="lootbag" style="font-size:13px">🎒 Rucksack ${LOOTBAG||full?'schließen':'aufräumen'} (${bagUsed()}/${bagCap()})</button></div>
     ${LOOTBAG||full?`<div class="lootbag">${[...S.bag].sort((x,y)=>x.v-y.v).map(x=>`<div class="lbrow"><span class="ico item r${x.rar}" data-tip="it:${x.id}" style="--sc:${RARC[x.rar]};--is:34px">${itG(x)}</span><div><b class="r${x.rar}t">${esc(x.name)}</b><small>${x.slotN} · ${itemText(x)[0]}</small></div><button class="ib" data-a="lootdrop:${x.id}">🗑</button></div>`).join('')||'<div class="mut">Der Rucksack ist leer.</div>'}</div>`:''}`;
 }
 function lootDone(how){
@@ -2004,7 +2004,7 @@ function bModal(kind){
   const p=B.p;let h;
   if(kind==='bag'){
     const bag=[...S.bag].sort((a,b)=>a.slot.localeCompare(b.slot)||b.v-a.v);
-    h=`<h3>Rucksack ${S.bag.length} / ${bagCap()}</h3><div class="kv"><span>🪙 <b>${S.gold}</b> Gold</span><span>◈ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${p.potions}</b> Tränke im Kampf</span></div>
+    h=`<h3>Rucksack ${bagUsed()} / ${bagCap()}</h3><div class="kv"><span>🪙 <b>${S.gold}</b> Gold</span><span>◈ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${p.potions}</b> Tränke im Kampf</span></div>
       ${bag.map(x=>`<div class="lbrow"><span class="ico item r${x.rar}" data-tip="it:${x.id}" style="--sc:${RARC[x.rar]};--is:34px">${itG(x)}</span><div><b class="r${x.rar}t">${esc(x.name)}</b><small>${x.slotN} · ${itemText(x)[0]}</small></div></div>`).join('')||'<div class="mut" style="text-align:center">Der Rucksack ist leer.</div>'}
       ${Object.keys(S.junk).length?`<div style="font-size:12.5px"><b>Beutestücke:</b> ${Object.keys(S.junk).map(k=>`${S.junk[k]}× ${k}`).join(', ')}</div>`:''}
       <div class="mut" style="font-size:12px;text-align:center">Ausrüstung wechseln kannst du nur außerhalb des Kampfes.</div>`;
@@ -2041,7 +2041,7 @@ function result(win){
     LOOT=it;LOOTBAG=false;
     // Questfortschritt
     let qline='';
-    if(foe.tr&&(E.kind==='hunt'||E.kind==='dtrash')&&Math.random()<.65){S.junk[foe.tr]=(S.junk[foe.tr]||0)+1;qline+=`<div class="qline">🧺 Beutestück: ${foe.tr} (${S.junk[foe.tr]})</div>`}
+    if(foe.tr&&(E.kind==='hunt'||E.kind==='dtrash')&&Math.random()<.65){if(!S.junk[foe.tr]&&bagFull())qline+=`<div class="qline dn">🎒 Rucksack voll – ${foe.tr} blieb liegen.</div>`;else{S.junk[foe.tr]=(S.junk[foe.tr]||0)+1;qline+=`<div class="qline">🧺 Beutestück: ${foe.tr} (${S.junk[foe.tr]})</div>`}}
     if(E.z!=null&&E.raid==null)for(const g of [0,1,2]){
       const st=qs(E.z,g),def=questDef(E.z,g,st.i);if(!def||st.st!=='active')continue;
       if(def.type==='collect'){if(foe.tr===def.tr&&(S.junk[def.tr]||0)===def.need)qline+=`<div class="qline ok">❓ „${def.t}“ erfüllt – kehre zu ${WORLD[E.z].npcs[g].n} zurück!</div>`;continue}
@@ -2132,7 +2132,7 @@ function zoneScreen(z){
       const rw=`<div class="qrw">Belohnung: <b>${def.xp} EP</b> · <b>${15+def.lvl*5} 🪙</b> · <b class="r${def.rar}t">${RAR[def.rar]}${def.rar<3?' oder besser':''}: ${SLOTN[def.slot]}</b></div>`;
       const goal=`<div class="qgoal ${st==='ready'?'ok':''}">${st==='ready'?'✔':'◻'} ${def.goal}${st!=='new'?` · ${Math.min(q.n,def.need)} / ${def.need}`:` (${def.need}×)`}</div>`;
       const btn=st==='new'?`<button class="btn prime" data-a="qacc:${z}:${g}">Quest annehmen</button>`
-        :st==='ready'?(bagFull()?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${S.bag.length}/${bagCap()}). Verkaufe oder zerlege etwas im Handelsposten, bevor du die Quest abschließt.</div><button class="btn" disabled>Quest abschließen</button>`:`<button class="btn prime" data-a="qfin:${z}:${g}">Quest abschließen</button>`)
+        :st==='ready'?(bagFull()?`<div class="bagwarn">🎒 Dein Rucksack ist voll (${bagUsed()}/${bagCap()}). Verkaufe oder zerlege etwas im Handelsposten, bevor du die Quest abschließt.</div><button class="btn" disabled>Quest abschließen</button>`:`<button class="btn prime" data-a="qfin:${z}:${g}">Quest abschließen</button>`)
         :def.type==='named'?`<button class="btn" data-a="named:${z}">⚔ ${esc(def.foeName)} herausfordern</button>`
         :def.type==='dungeon'?`<div class="hint">Betritt den Dungeon weiter unten.</div>`:`<div class="hint">Jage die Gegner weiter unten.</div>`;
       qb=`<div class="qt">${st==='new'?'❗':st==='ready'?'❓':'📜'} ${def.t} <small>Quest ${def.i+1}/${GN[g]}</small></div><div class="qtx">„${def.x}“</div>${goal}${rw}${btn}`;
@@ -2141,7 +2141,7 @@ function zoneScreen(z){
   };
   const boxes=[0,1,2].map(box).join('');
   const mons=Z.mon.map((k,i)=>{const m=MONS[k],lv=ZL[z]+i,a=act[k],u={mon:true,n:m.n,ic:m.ic,col:m.c};
-    return`<button class="mrow" data-a="hunt:${z}:${i}">${monFig(u,46)}<div class="mi"><b>${m.n}</b><small><span style="color:${lvlCol(lv)};font-weight:700">Stufe ${lv}</span>${m.weak?` · Schwäche ${SCH[m.weak][0]}`:''}${m.resist?` · Resistent ${SCH[m.resist][0]}`:''}</small><small>Lässt fallen: ${m.tr}</small>${a?`<em>📜 Quest ${Math.min(a.n,a.def.need)}/${a.def.need}</em>`:''}</div><span class="go">⚔</span></button>`}).join('');
+    return`<button class="mrow" data-a="hunt:${z}:${i}">${monFig(u,46)}<div class="mi"><b>${m.n}</b><small><span style="color:${lvlCol(lv)};font-weight:700">Stufe ${lv}</span>${m.weak?` · Schwäche ${SCH[m.weak][0]}`:''}${m.resist?` · Resistent ${SCH[m.resist][0]}`:''}</small>${a?`<em>📜 Quest ${Math.min(a.n,a.def.need)}/${a.def.need}</em>`:''}</div><span class="go">⚔</span></button>`}).join('');
   const dlock=S.lvl<ZL[z]+2,db=W.dg.boss;
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${Z.n}</h2><button class="ib" data-a="camp">👤</button></div>
     <div class="scroll">
@@ -2188,7 +2188,7 @@ function genLegend(slot){
   return{id:Math.random().toString(36).slice(2,9),slot,slotN:SLOTN[slot],name:nm,ic,rar:4,lvl:S.lvl,v:Math.round(itemVal(S.lvl,4)*rnd(.96,1.12)),aff:rollAff(2,2)};
 }
 const junkNeeded=tr=>WORLD.some((W,z)=>{const q=qInfo(z,2);return q.def&&q.state!=='new'&&q.def.tr===tr});
-function resBar(){return`<div class="panel resbar"><span>🪙 <b>${S.gold}</b> Gold</span><span>◈ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${S.pots}</b> Tränke</span><span style="grid-column:1/-1;${bagFull()?'color:#b3261b;font-weight:700':''}">🎒 Rucksack <b>${S.bag.length} / ${bagCap()}</b>${bagFull()?' – voll':''}</span></div>`}
+function resBar(){return`<div class="panel resbar"><span>🪙 <b>${S.gold}</b> Gold</span><span>◈ <b>${S.dust}</b> Magiestaub</span><span>💠 <b>${S.shard}</b> Titanensplitter</span><span>🧪 <b>${S.pots}</b> Tränke</span><span style="grid-column:1/-1;${bagFull()?'color:#b3261b;font-weight:700':''}">🎒 Rucksack <b>${bagUsed()} / ${bagCap()}</b>${bagFull()?' – voll':''}</span></div>`}
 function itemRow(it,btns,extra=''){
   return`<div class="irow"><span class="ico item r${it.rar}" data-tip="it:${it.id}" style="--sc:${RARC[it.rar]};--is:50px">${itG(it)}</span>
     <div class="ii"><b class="r${it.rar}t">${esc(it.name)}</b><small>${RAR[it.rar]} · ${it.slotN} · Stufe ${it.lvl}</small>${statHTML(it,' · ')}${extra}</div><div class="bt2">${btns}</div></div>`;
@@ -2210,8 +2210,8 @@ function townScreen(tab){
       <div class="sec">Tauschen · Magiestaub</div>
       ${TRADE.map(t=>`<div class="irow"><span class="ico" style="--sc:#b98cff;--is:50px">${gi(t.rar?'q-chest':'i-potion',t.ic)}</span><div class="ii"><b>${t.n}</b><small>${t.d}</small></div><div class="bt2">${t.rar?['w','a','t'].map(sl=>`<button class="ib sm" data-a="trade:${t.id}:${sl}" ${S.dust<t.cost?'disabled':''}>${SLOTN[sl]}</button>`).join(''):`<button class="ib" data-a="trade:${t.id}" ${S.dust<t.cost?'disabled':''}>Tauschen</button>`}<small class="cost">${t.cost} ◈</small></div></div>`).join('')}
       <div class="sec">Beutestücke verkaufen</div>
-      ${Object.keys(S.junk).length?Object.keys(S.junk).map(k=>`<div class="irow"><span class="ico" style="--sc:#a8683a;--is:44px">${gi('i-sell','🧺')}</span><div class="ii"><b>${S.junk[k]}× ${k}</b><small>${TRV[k]||1} Gold pro Stück${junkNeeded(k)?' · <span class="dn">für eine Quest benötigt</span>':''}</small></div><div class="bt2"><button class="ib" data-a="junk:${k}">${S.junk[k]*(TRV[k]||1)} 🪙</button></div></div>`).join('')+`<button class="btn dark" style="font-size:14px" data-a="junkall">Alle Beutestücke verkaufen</button>`:'<div class="hint">Keine Beutestücke. Gegner in den Gebieten und Dungeons lassen sie fallen.</div>'}
-      <div class="sec">Verkaufen · Rucksack (${bag.length}/${bagCap()})</div>
+      ${Object.keys(S.junk).length?Object.keys(S.junk).map(k=>`<div class="irow"><span class="ico" style="--sc:#a8683a;--is:44px">${gi('i-sell','🧺')}</span><div class="ii"><b>${S.junk[k]}× ${k}</b><small>${TRV[k]||1} Gold pro Stück · belegt 1 Rucksackplatz${junkNeeded(k)?' · <span class="dn">für eine Quest benötigt</span>':''}</small></div><div class="bt2"><button class="ib" data-a="junk:${k}">${S.junk[k]*(TRV[k]||1)} 🪙</button></div></div>`).join(''):'<div class="hint">Keine Beutestücke. Gegner in den Gebieten und Dungeons lassen sie fallen.</div>'}
+      <div class="sec">Verkaufen · Ausrüstung (${bag.length})</div>
       ${bag.length?bag.map(it=>itemRow(it,`<button class="ib" data-a="sell:${it.id}">+${sellPrice(it)} 🪙</button>`)).join(''):'<div class="hint">Dein Rucksack ist leer. Angelegte Teile kannst du nicht verkaufen.</div>'}`;
   }else{
     const end=S.lvl>=LEG_LVL;
@@ -2220,7 +2220,7 @@ function townScreen(tab){
       <div class="panel infobox">${end?`Für <b>${LEG_COST} 💠 Titanensplitter</b> schmiede ich dir ein <b class="r4t">legendäres</b> Teil deiner Stufe.`:`<b>Erst im Endgame:</b> Komm wieder, wenn du Stufe ${LEG_LVL} erreicht hast.`} Titanensplitter gibt es nur beim Zerlegen <b class="r3t">epischer</b> Ausrüstung.
         <div class="legrow">${['w','a','t'].map(sl=>{const pv={slot:sl,rar:4,v:itemVal(S.lvl,4)};return`<button class="btn ${end&&S.shard>=LEG_COST?'prime':''}" data-a="forge:${sl}" ${end&&S.shard>=LEG_COST?'':'disabled'}><span class="r4t" style="display:block;font-size:13px">${SLOTN[sl]}</span><small style="font:600 10px var(--body);display:block">${itemText(pv)[0]}</small></button>`}).join('')}</div>
         <div class="hint">Du hast ${S.shard} / ${LEG_COST} 💠</div></div>
-      <div class="sec">Zerlegen · Rucksack (${bag.length}/${bagCap()})</div>
+      <div class="sec">Zerlegen · Ausrüstung (${bag.length})</div>
       ${bag.length?bag.map(it=>itemRow(it,`<button class="ib" data-a="scrap:${it.id}">${it.rar===4?'+3 💠':`+${DUST[it.rar]} ◈${it.rar===3?' +1 💠':''}`}</button>`)).join(''):'<div class="hint">Dein Rucksack ist leer. Angelegte Teile kannst du nicht zerlegen.</div>'}`;
   }
   const sc=document.querySelector('.scroll'),y=sc&&document.querySelector('.town')?sc.scrollTop:0;
@@ -2299,7 +2299,6 @@ function onAct(a,el){
     case 'qfin':questFinish(+v,+a.split(':')[2]);break;
     case 'portal':{const w=S.world||0;if(!w&&S.lvl<25){const m=$$('mapmsg');m.textContent='Das Dunkle Portal öffnet sich erst ab Stufe 25.';m.classList.add('warn');SFX.miss();break}S.world=w?0:1;S.loc='p0';save();SFX.win();worldMap();break}
     case 'junk':{const n=S.junk[v]||0;if(n){S.gold+=n*(TRV[v]||1);delete S.junk[v];TMSG=`${n}× ${v} verkauft.`;save();SFX.heal();townScreen('h')}break}
-    case 'junkall':{let g=0;for(const k in S.junk)g+=S.junk[k]*(TRV[k]||1);S.gold+=g;S.junk={};TMSG=`Alle Beutestücke für ${g} 🪙 verkauft.`;save();SFX.heal();townScreen('h');break}
     case 'hunt':{const z=+v,i=+a.split(':')[2],key=ZONES[z].mon[i];ENC={kind:'hunt',z,zone:z,key,make:()=>mkMon(MONS[key],ZL[z]+i)};startBattle();break}
     case 'named':{const z=+v;ENC={kind:'named',z,zone:z,make:()=>namedFoe(z,RACES[S.race].f)};startBattle();break}
     case 'dungeon':{const z=+v;ENC={z,zone:z,run:{type:'d',name:WORLD[z].dg.n,step:0,list:dungeonList(z),hp:1,potions:4}};startBattle();break}
