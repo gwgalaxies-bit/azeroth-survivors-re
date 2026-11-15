@@ -426,7 +426,7 @@ svg{display:block}
 .hero .hi{flex:1;min-width:0}
 .hero h2{font-size:21px;color:var(--parch);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hero .sub{font-size:13px}
-.stats{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px;font-size:12.5px;margin-top:5px}
+.stats{display:grid;grid-template-columns:1fr 1.25fr;gap:2px 6px;font-size:12px;margin-top:5px;white-space:nowrap}
 .stats b{color:var(--parch)}
 .xp{height:6px;border-radius:3px;background:#0008;margin-top:6px;overflow:hidden;border:1px solid #000}
 .xp i{display:block;height:100%;background:linear-gradient(#b27cff,#7b4ad8)}
@@ -1234,7 +1234,7 @@ function abTip(u,id,opts={}){
   const rs=RES[u.rk];
   const cost=a.cost?`${a.cost} ${rs.n}`:'Kostenlos';
   const cd=a.cd?`${a.cd} ${a.cd===1?'Zug':'Züge'} Abklingzeit`:'Sofort wirkbar';
-  let h=`<div class="tn" style="color:${racial?'#2a6a1a':'#2a1608'}">${a.ic} ${a.n}</div>`;
+  let h=`<div class="tn" style="color:${racial?'#2a6a1a':'#2a1608'}">${a.n}</div>`;
   h+=`<div class="tl"><span>${cost}</span><i>${cd}</i></div>`;
   h+=`<div class="tl"><span style="color:${SCHD[a.s]}">${SCH[a.s][0]}</span><i>${racial?'Völkerfähigkeit':mon?'':'Klassenfähigkeit'}</i></div>`;
   for(const l of abDesc(u,a))h+=`<div class="td w">${l}</div>`;
@@ -1254,7 +1254,7 @@ function stTip(s){
   if(m.inn)L.push(`${m.inn<0?'−':'+'}${pct(Math.abs(m.inn))} % erlittener Schaden`);
   if(m.dodge)L.push(`+${pct(m.dodge)} % Ausweichen`);
   if(m.spd)L.push(`${m.spd>0?'+':'−'}${pct(Math.abs(m.spd))} % Tempo`);
-  return`<div class="tn" style="color:${s.good?'#2a6a1a':'#a3201a'}">${s.ic} ${s.n}</div>`+L.map(l=>`<div class="td w">${l}</div>`).join('')+`<div class="tf">Noch ${s.t} Züge</div>`;
+  return`<div class="tn" style="color:${s.good?'#2a6a1a':'#a3201a'}">${s.n}</div>`+L.map(l=>`<div class="td w">${l}</div>`).join('')+`<div class="tf">Noch ${s.t} Züge</div>`;
 }
 
 /* ================================================================
@@ -1440,8 +1440,8 @@ function resolveTip(el){
       const i=c.ab.indexOf(a);u.lvl=1;
       return abTip(u,a,{lock:i>=0&&UL[a]>1?UL[a]:0});
     }
-    case 'pot':return`<div class="tn">🧪 Heiltrank</div>${S.pots?`<div class="td tg">Dazu ${Math.min(S.pots,3)} gekaufte Tränke aus deinem Vorrat (${S.pots}).</div>`:''}<div class="tl"><span>Gegenstand</span><i>Verbraucht deinen Zug</i></div><div class="td w">Stellt <b>40 %</b> deines maximalen Lebens wieder her.</div><div class="tf">Pro Kampf ${B?B.p.potions:2} übrig.</div>`;
-    case 'pass':return`<div class="tn">⏳ Abwarten</div><div class="td w">Du überspringst deinen Zug${B&&B.p.rk==='mana'?' und erhältst 10 Mana':''}.</div>`;
+    case 'pot':return`<div class="tn">Heiltrank</div>${S.pots?`<div class="td tg">Dazu ${Math.min(S.pots,3)} gekaufte Tränke aus deinem Vorrat (${S.pots}).</div>`:''}<div class="tl"><span>Gegenstand</span><i>Verbraucht deinen Zug</i></div><div class="td w">Stellt <b>40 %</b> deines maximalen Lebens wieder her.</div><div class="tf">Pro Kampf ${B?B.p.potions:2} übrig.</div>`;
+    case 'pass':return`<div class="tn">Abwarten</div><div class="td w">Du überspringst deinen Zug${B&&B.p.rk==='mana'?' und erhältst 10 Mana':''}.</div>`;
     case 'loot':return LOOT?itemTip(LOOT):null;
     case 'it':{const it=[...Object.values(S.eq),...S.bag,...((S.shop&&S.shop.items)||[])].find(x=>x&&x.id===a);return it?itemTip(it):null}
     case 'item':{const it=S.eq[a];return it?itemTip(it):`<div class="tn mut">Leerer Platz</div><div class="td w">Besiege Gegner, um Beute zu erhalten.</div>`}
@@ -1559,12 +1559,12 @@ function creation(){
     const rs=Object.keys(RACES);
     body=`<div class="fact a">Allianz</div><div class="grid4">${rs.filter(r=>RACES[r].f==='a').map(card).join('')}</div>
       <div class="fact h">Horde</div><div class="grid4">${rs.filter(r=>RACES[r].f==='h').map(card).join('')}</div>
-      ${CR.race?`<div class="panel infobox"><h3>${RACES[CR.race].n}</h3>${RACES[CR.race].d}<div class="pas">✦ ${RACES[CR.race].pas}</div><div style="margin-top:6px">${(()=>{const a=A['r_'+RACES[CR.race].ab];return`<span style="color:#7fe36a">${a.ic} ${a.n}</span> – Völkerfähigkeit`})()}</div></div>`:'<div class="hint">Tippe auf ein Volk, um Details zu sehen.</div>'}`;
+      ${CR.race?`<div class="panel infobox"><h3>${RACES[CR.race].n}</h3>${RACES[CR.race].d}<div class="pas">✦ ${RACES[CR.race].pas}</div><div style="margin-top:6px">${(()=>{const a=A['r_'+RACES[CR.race].ab];return`<span style="color:#7fe36a">${a.n}</span> – Völkerfähigkeit`})()}</div></div>`:'<div class="hint">Tippe auf ein Volk, um Details zu sehen.</div>'}`;
   }else if(st===1){
     const R=RACES[CR.race];
     const card=c=>{const C=CLASSES[c],ok=R.cls.includes(c);return`<button class="card ${CR.cls===c?'on':''} ${ok?'':'off'}" data-a="cls:${c}"><span class="ci${has('cls-'+c)?' im':''}" style="--c:${C.col}${has('cls-'+c)?`;background-image:var(--i-cls-${c})`:''}">${has('cls-'+c)?'':C.ic}</span><b>${C.n}</b>${ok?'':'<small>nicht für '+R.n+'</small>'}</button>`};
     body=`<div class="hint">${R.n}: ${R.cls.map(c=>CLASSES[c].n).join(', ')}</div><div class="grid3">${Object.keys(CLASSES).map(card).join('')}</div>
-      ${CR.cls?`<div class="panel infobox"><h3>${CLASSES[CR.cls].ic} ${CLASSES[CR.cls].n}</h3>${CLASSES[CR.cls].d}<div style="margin-top:6px;color:${RES[CLASSES[CR.cls].rk].c}">Ressource: ${RES[CLASSES[CR.cls].rk].n}</div></div>
+      ${CR.cls?`<div class="panel infobox"><h3>${CLASSES[CR.cls].n}</h3>${CLASSES[CR.cls].d}<div style="margin-top:6px;color:${RES[CLASSES[CR.cls].rk].c}">Ressource: ${RES[CLASSES[CR.cls].rk].n}</div></div>
       <div class="sec">Fähigkeiten – Symbol gedrückt halten für Details</div><div class="panel abrow">${CLASSES[CR.cls].ab.map((id,i)=>icoHTML(A[id],'',`data-tip="cr:${id}"`).replace('</button>',`${UL[id]>1?`<span class="lk"><span>🔒</span><small>Stufe ${UL[id]}</small></span>`:''}</button>`)).join('')}</div>`:''}`;
   }else{
     const R=RACES[CR.race],C=CLASSES[CR.cls];
@@ -1598,7 +1598,7 @@ function camp(){
     <div class="scroll">
       <div class="panel hero">${avatar(S.race,S.cls,86)}<div class="hi"><h2>${esc(S.name)}</h2>
         <div class="sub mut"><span style="color:${R.f==='a'?'#5ea6ff':'#ff6b5e'}">${R.f==='a'?'Allianz':'Horde'}</span> · ${R.n} ${C.n}</div>
-        <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.kills||0}</b></span><span>🪙 Gold <b>${S.gold}</b></span><span>◈ Staub <b>${S.dust}</b> · 💠 <b>${S.shard}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span></div></div></div>
+        <div class="stats"><span>Stufe <b>${lvl}</b></span><span>Siege <b>${S.kills||0}</b></span><span>Leben <b>${hero.hpMax}</b></span><span>Angriff <b>${Math.round(hero.ap)}</b></span><span>Rüstung <b>${Math.round(hero.arm)}</b></span><span>Widerst. <b>${Math.round(hero.mres)}</b></span><span>🪙 Gold <b>${S.gold}</b></span><span>◈ Magiestaub <b>${S.dust}</b></span><span>🧪 Tränke <b>${S.pots}</b></span><span>💠 Titanensplitter <b>${S.shard}</b></span></div></div></div>
       <div class="sec">Ausrüstung · Rucksack ${S.bag.length}/${bagCap()}</div><div class="panel slots">${slots.map(itemBtn).join('')}</div>
       <div class="sec">Symbole</div><div class="panel abrow">${C.ab.map((id,i)=>{const lk=lvl<UL[id];return icoHTML(A[id],lk?'nr':'',`data-tip="pv:${id}"`).replace('</button>',lk?`<span class="lk"><span>🔒</span><small>Stufe ${UL[id]}</small></span></button>`:'</button>')}).join('')}${icoHTML(A['r_'+R.ab],'racial',`data-tip="pv:r_${R.ab}"`)}</div>
       <div class="hint" style="margin-top:-6px">Details: mit der Maus darüberfahren oder gedrückt halten</div>
@@ -2050,7 +2050,7 @@ function raidScreen(r){
   mount(`<div class="scr"><div class="top"><button class="ib" data-a="map">‹</button><h2>${R.n}</h2><button class="ib" data-a="camp">👤</button></div>
     <div class="scroll">
       <div class="zhead" style="background-image:linear-gradient(#0000 40%,#000a),var(--i-raid-${r},var(--i-zone-${R.zone}))"><span>Raid · Stufe ${R.lvl}</span></div>
-      <div class="panel infobox"><h3>${R.ic} ${R.n}</h3>${R.d}<br>${bs.length} Bosse am Stück. Dein Leben bleibt zwischen den Kämpfen erhalten (+35 % Erholung), du hast 4 Heiltränke für den ganzen Raid. Der Endboss lässt <b class="r3t">epische</b> Beute fallen.${S.done['r'+r]?`<div class="pas">✔ ${S.done['r'+r]}× bezwungen</div>`:''}</div>
+      <div class="panel infobox"><h3>${R.n}</h3>${R.d}<br>${bs.length} Bosse am Stück. Dein Leben bleibt zwischen den Kämpfen erhalten (+35 % Erholung), du hast 4 Heiltränke für den ganzen Raid. Der Endboss lässt <b class="r3t">epische</b> Beute fallen.${S.done['r'+r]?`<div class="pas">✔ ${S.done['r'+r]}× bezwungen</div>`:''}</div>
       <div class="sec">Bosse</div>
       ${bs.map((b,i)=>`<div class="mrow">${monFig({mon:true,boss:true,n:b.n,ic:b.ic,col:b.c},46)}<div class="mi"><b>${b.n}</b><small>${b.fin?'Endboss':'Boss '+(i+1)} · <span style="color:${lvlCol(R.lvl+(b.fin?1:0))};font-weight:700">Stufe ${R.lvl+(b.fin?1:0)}</span></small></div></div>`).join('')}
       <button class="btn prime" data-a="raid:${r}">Raid betreten</button>
