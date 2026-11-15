@@ -32,13 +32,26 @@ button.all{margin-bottom:4px}
 .tips li::before{content:"✦";background:none;color:var(--red);font-size:16px}
 .tips li{display:list-item;list-style:none;display:block}
 .tips li::before{display:inline;margin-right:6px}
+.pg{display:flex;align-items:center;gap:10px;margin-bottom:6px;font-size:14px}
+.pb{flex:1;height:10px;border-radius:5px;background:#8a5a0033;overflow:hidden}.pb i{display:block;height:100%;background:linear-gradient(#3da04a,#1f6a2a);width:0;transition:width .3s}
+.tools{display:flex;gap:8px;margin-bottom:6px}.tools button{flex:1;padding:7px 6px;font-size:12.5px}
+button.gray{background:linear-gradient(#8a7a5a,#5a4a2e);border-color:#3a2e1a;box-shadow:0 2px 0 #2a2010}
+li::before{display:none}
+.chk{flex:none;position:relative;width:30px;height:30px;cursor:pointer}
+.chk input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;cursor:pointer}
+.chk i{display:block;width:30px;height:30px;border-radius:7px;border:2px solid #8a5a00;background:#fff8e6}
+.chk input:checked+i{background:#2f8a3a;border-color:#124a1a}
+.chk input:checked+i::after{content:"✓";display:block;color:#fff;font:800 20px/26px system-ui;text-align:center}
+li.done{background:#dff0c0cc;border-color:#6a9a4a}li.done .t{opacity:.55}li.done .t b{text-decoration:line-through}
+h2 em{white-space:nowrap;font:700 13px system-ui;font-style:normal;color:#5b4220;background:#fff8e6;border:1px solid #8a5a0066;border-radius:99px;padding:1px 9px;vertical-align:middle}
+h2.alldone em{background:#2f8a3a;color:#fff;border-color:#124a1a}
 </style>
 </head>
 <body>
 <div class="wrap">
 <h1>Azeroth Duell – Bildprompts für die Scherbenwelt und die neuen Questgeber</h1>
-<p class="lead">Jeder Eintrag ist ein <b>kompletter Prompt für genau ein Bild</b>. In Klammern steht der Dateiname, unter dem ich das Bild einbaue. Bis die Bilder da sind, zeigt das Spiel Emojis und Farbverläufe.</p>
-<div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Schmied, Biss, Streitkolben …"></div>
+<p class="lead">Jeder Eintrag ist ein <b>kompletter Prompt für genau ein Bild</b>. In Klammern steht der Dateiname, unter dem ich das Bild einbaue. Bis die Bilder da sind, zeigt das Spiel Emojis und Farbverläufe. <b>Hake ab, was du erzeugt hast</b> – die Häkchen merkt sich dieses Gerät.</p>
+<div class="bar"><div class="pg"><b id="prog"></b><div class="pb"><i id="pbar"></i></div></div><div class="tools"><button id="open">Nur offene zeigen</button><button id="reset" class="gray">Häkchen zurücksetzen</button></div><input id="q" type="search" placeholder="Suchen, z. B. Nagrand, Pin, Boss …"></div>
 
 <div id="out"></div>
 
@@ -67,24 +80,42 @@ function fallback(text,done){
   const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
   try{document.execCommand('copy');done()}catch(e){}t.remove();
 }
+const KEY='azd_prompts_scherbenwelt';
+let DONE={};try{DONE=JSON.parse(localStorage.getItem(KEY)||'{}')}catch(e){}
+const saveDone=()=>{try{localStorage.setItem(KEY,JSON.stringify(DONE))}catch(e){}};
+const total=G.reduce((a,g)=>a+g.items.length,0);
+let onlyOpen=false;
+function refresh(){
+  const q=document.getElementById('q').value.trim().toLowerCase();let done=0;
+  document.querySelectorAll('#out section').forEach(sec=>{
+    let d=0,n=0,vis=0;
+    sec.querySelectorAll('li').forEach(li=>{const ok=!!DONE[li.dataset.k];n++;if(ok){d++;done++}
+      li.classList.toggle('done',ok);li.querySelector('input').checked=ok;
+      const hide=(!!q&&!li.dataset.s.includes(q))||(onlyOpen&&ok);li.classList.toggle('hide',hide);if(!hide)vis++});
+    sec.querySelector('h2 em').textContent=`${d} / ${n}`;sec.querySelector('h2').classList.toggle('alldone',d===n);
+    sec.classList.toggle('hide',vis===0);
+  });
+  document.getElementById('prog').textContent=`${done} von ${total} erledigt`;
+  document.getElementById('pbar').style.width=(done/total*100)+'%';
+}
 for(const g of G){
-  const h=document.createElement('h2');h.textContent=g.title+` (${g.items.length})`;
+  const h=document.createElement('h2');h.innerHTML='<span></span> <em></em>';h.querySelector('span').textContent=g.title;
   const all=document.createElement('button');all.className='all';all.textContent='Alle dieser Gruppe kopieren';
   all.onclick=()=>copy(g.items.map(i=>i.n+':\n'+i.p).join('\n\n'),all);
   const ol=document.createElement('ol');
   for(const i of g.items){
-    const li=document.createElement('li');li.dataset.s=(g.title+' '+i.n+' '+i.p).toLowerCase();
-    li.innerHTML=`<div class="t"><b></b><span></span></div>`;
+    const li=document.createElement('li');li.dataset.s=(g.title+' '+i.n+' '+i.p).toLowerCase();li.dataset.k=i.n;
+    li.innerHTML=`<label class="chk"><input type="checkbox"><i></i></label><div class="t"><b></b><span></span></div>`;
     li.querySelector('b').textContent=i.n;li.querySelector('span').textContent=i.p;
+    li.querySelector('input').onchange=e=>{if(e.target.checked)DONE[i.n]=1;else delete DONE[i.n];saveDone();refresh()};
     const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(i.p,b);li.appendChild(b);ol.appendChild(li);
   }
   const wrap=document.createElement('section');wrap.append(h,all,ol);out.appendChild(wrap);
 }
-document.getElementById('q').addEventListener('input',e=>{
-  const q=e.target.value.trim().toLowerCase();
-  document.querySelectorAll('#out li').forEach(li=>li.classList.toggle('hide',!!q&&!li.dataset.s.includes(q)));
-  document.querySelectorAll('#out section').forEach(s=>s.classList.toggle('hide',!!q&&![...s.querySelectorAll('li')].some(l=>!l.classList.contains('hide'))));
-});
+document.getElementById('q').addEventListener('input',refresh);
+document.getElementById('open').onclick=e=>{onlyOpen=!onlyOpen;e.target.textContent=onlyOpen?'Alle zeigen':'Nur offene zeigen';refresh()};
+document.getElementById('reset').onclick=()=>{DONE={};saveDone();refresh()};
+refresh();
 </script>
 </body>
 </html>
