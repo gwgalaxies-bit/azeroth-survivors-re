@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Azeroth Duell – Neue Fähigkeiten</title>
+<style>
+:root{--ink:#2b1d0e;--gold:#8a5a00;--red:#a3201a}
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);
+  background:radial-gradient(120% 60% at 50% 0%,#f6e7c0,#e6cf99 70%,#d2b676);min-height:100vh}
+.wrap{max-width:760px;margin:0 auto;padding:18px 14px 80px}
+h1{font:800 28px Georgia,serif;margin:6px 0 2px;color:#5a3a06}
+h2{font:800 20px Georgia,serif;margin:26px 0 8px;color:var(--red);border-bottom:2px solid #8a5a0066;padding-bottom:4px}
+.lead{color:#5b4220;margin:0 0 12px}
+.bar{position:sticky;top:0;z-index:5;background:#e6cf99ee;padding:8px 0;backdrop-filter:blur(4px)}
+input{width:100%;padding:11px 12px;border-radius:8px;border:2px solid #8a5a00;background:#fff8e6;font-size:16px;color:var(--ink)}
+.style{background:#fff8e6;border:2px solid #8a5a0088;border-radius:10px;padding:10px 12px;margin:8px 0}
+.style b{color:var(--gold)}
+.style p{margin:4px 0 8px;font-size:13px;-webkit-user-select:text;user-select:text}
+ol{list-style:none;margin:0;padding:0;counter-reset:n}
+li{counter-increment:n;display:flex;gap:10px;align-items:flex-start;background:#fff8e6cc;border:1px solid #8a5a0055;border-radius:10px;padding:9px 10px;margin:7px 0}
+li::before{content:counter(n);flex:none;min-width:24px;height:24px;border-radius:12px;background:#5a3a06;color:#fff3cf;font:700 12px/24px system-ui;text-align:center}
+li .t{flex:1;min-width:0}
+li .t b{display:block;font-size:14px}
+li .t span{display:block;font-size:12.5px;color:#4a371c;-webkit-user-select:text;user-select:text;word-break:break-word}
+button{font:700 13px system-ui;color:#fff;background:linear-gradient(#d23a30,#8f1812);border:2px solid #5e0f0b;border-radius:4px;padding:8px 12px;cursor:pointer;box-shadow:0 2px 0 #4a0b08;flex:none}
+button:active{transform:translateY(2px);box-shadow:none}
+button.ok{background:linear-gradient(#3da04a,#1f6a2a);border-color:#124a1a}
+button.all{margin-bottom:4px}
+.hide{display:none!important}
+.tips li::before{content:"✦";background:none;color:var(--red);font-size:16px}
+.tips li{display:list-item;list-style:none;display:block}
+.tips li::before{display:inline;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Azeroth Duell – Bildprompts für die 72 neuen Fähigkeiten</h1>
+<p class="lead">Je Klasse acht neue Fähigkeiten. Jeder Eintrag ist ein <b>kompletter Prompt für genau ein Symbol</b>, mit schwarzem Hintergrund und ohne Rahmen oder Schrift. Bis die Bilder da sind, zeigt das Spiel Emojis.</p>
+<div class="bar"><input id="q" type="search" placeholder="Suchen, z. B. Krieger, Wirbelwind …"></div>
+
+<div id="out"></div>
+
+<h2>Tipps</h2>
+<ol class="tips">
+<li>Bitte ein Bild pro Prompt erzeugen. Einzelbilder kann ich sauberer ausschneiden als Bögen mit mehreren Motiven.</li>
+<li>Wenn doch ein Bogen entsteht: bitte ohne Text im Bild und mit gleichmäßigem Raster.</li>
+</ol>
+</div>
+<script>
+const G=[];
+const BLK=', solid pure black background (#000000), nothing else in the background, no text, no letters, no watermark';
+const ICON='flat vector game icon, bold clean shapes, thick dark brown outline, limited warm palette with one strong accent color, subtle cel-shaded highlights, centered single subject filling the square, high contrast, fantasy MMO style like classic World of Warcraft ability icons, one single icon only, no frame, square 1:1, 512x512';
+const add=(title,items)=>G.push({title,items:items.map(([n,col,m])=>({n,p:ICON+', '+col+' accent color, '+m+BLK}))});
+add('1. Krieger',[
+ ['Verwunden (Stufe 8)','steel gray','deep bleeding sword cut with blood drops'],
+ ['Donnerknall (Stufe 10)','steel gray','fist slamming the ground with a thunder shockwave ring'],
+ ['Sturmangriff (Stufe 13)','steel gray','armored warrior charging forward with speed lines and raised sword'],
+ ['Demoralisierender Ruf (Stufe 15)','steel gray','shouting warrior face with dark red sound waves and a cracked sword'],
+ ['Wirbelwind (Stufe 18)','steel gray','spinning circle of blades like a steel whirlwind'],
+ ['Schildwall (Stufe 20)','steel gray','large tower shield planted in front of a stone wall'],
+ ['Blutdurst (Stufe 23)','steel gray','bloody axe with a glowing red heart'],
+ ['Tödlicher Stoß (Stufe 25)','steel gray','huge two-handed sword thrust with a red impact flash']
+]);
+add('2. Paladin',[
+ ['Hammer des Zorns (Stufe 8)','gold','golden glowing hammer flying through the air with light trail'],
+ ['Weihe (Stufe 10)','gold','circle of holy golden fire burning on the ground'],
+ ['Hammer der Gerechtigkeit (Stufe 13)','gold','golden judge hammer striking with stars and a light burst'],
+ ['Handauflegung (Stufe 15)','gold','two open glowing hands with warm golden light between them'],
+ ['Siegel der Rechtschaffenheit (Stufe 18)','gold','golden holy seal emblem with a sword in the center'],
+ ['Läuterung (Stufe 20)','gold','pure water drop with golden sparkles washing away dark smoke'],
+ ['Heiliger Schild (Stufe 23)','gold','radiant golden shield with a sun emblem'],
+ ['Zornige Vergeltung (Stufe 25)','gold','blazing sun with a descending sword of light']
+]);
+add('3. Jäger',[
+ ['Arkaner Schuss (Stufe 8)','violet','arrow glowing with violet arcane energy'],
+ ['Skorpidstich (Stufe 10)','green','arrow with a scorpion stinger tip dripping green venom'],
+ ['Erschütternder Schuss (Stufe 13)','steel gray','arrow impact with a dizzying shockwave'],
+ ['Schnellfeuer (Stufe 15)','steel gray','bow firing a rapid stream of arrows with speed lines'],
+ ['Tötungsbefehl (Stufe 18)','steel gray','roaring bear pet leaping with claws out'],
+ ['Totstellen (Stufe 20)','steel gray','hunter lying motionless on the ground with small z letters shaped as leaves'],
+ ['Mungobiss (Stufe 23)','steel gray','fierce mongoose biting with sharp teeth'],
+ ['Sprengfalle (Stufe 25)','orange','steel trap exploding in orange fire']
+]);
+add('4. Schurke',[
+ ['Finsterer Stoß (Stufe 8)','steel gray','dark short sword slash with a purple-black trail'],
+ ['Ausweiden (Stufe 10)','steel gray','curved dagger ripping upward with a red slash'],
+ ['Solarplexus (Stufe 13)','steel gray','gloved fist punch into a torso with impact stars'],
+ ['Tödliches Gift (Stufe 15)','green','small vial of bubbling green poison with a skull label'],
+ ['Zerhäckseln (Stufe 18)','steel gray','two daggers slicing rapidly with yellow speed arcs'],
+ ['Adrenalinrausch (Stufe 20)','steel gray','red glowing heart with lightning bolts and energy lines'],
+ ['Rüstung schwächen (Stufe 23)','steel gray','cracked breastplate split open by a dagger'],
+ ['Hinterhalt (Stufe 25)','steel gray','hooded rogue leaping out of shadows with two daggers under a crescent moon']
+]);
+add('5. Priester',[
+ ['Gedankenschlag (Stufe 8)','dark purple','purple psychic blast hitting a head silhouette'],
+ ['Erneuerung (Stufe 10)','gold','soft golden star with rising healing sparkles'],
+ ['Psychischer Schrei (Stufe 13)','dark purple','screaming shadow face with purple shock rings'],
+ ['Vampirumarmung (Stufe 15)','dark purple','dark purple hands embracing a red glowing soul'],
+ ['Inneres Feuer (Stufe 18)','gold','golden flame burning inside a glowing chest silhouette'],
+ ['Krankheit heilen (Stufe 20)','gold','white healing light dissolving green sickness bubbles'],
+ ['Verschlingende Seuche (Stufe 23)','dark purple','purple-green plague cloud with tiny skulls'],
+ ['Gotteshymne (Stufe 25)','gold','golden angel wings with glowing music notes and light beams']
+]);
+add('6. Schamane',[
+ ['Frostschock (Stufe 8)','ice blue','burst of icy blue shock energy with snowflakes'],
+ ['Kettenblitz (Stufe 10)','green','lightning bolt jumping in a chain between three points'],
+ ['Lavaeruption (Stufe 13)','orange','erupting ball of molten lava with flying sparks'],
+ ['Steinhauttotem (Stufe 15)','green','carved stone totem with a glowing earth rune'],
+ ['Sturmschlag (Stufe 18)','steel gray','two weapons striking wrapped in wind and lightning'],
+ ['Wasserschild (Stufe 20)','green','orbiting globes of water forming a protective sphere'],
+ ['Totem der Erdstärke (Stufe 23)','green','wooden totem with a glowing green fist symbol'],
+ ['Geist reinigen (Stufe 25)','green','spirit wisp surrounded by clean blue water bubbles']
+]);
+add('7. Magier',[
+ ['Feuerschlag (Stufe 8)','orange','quick burst of orange flame from an open palm'],
+ ['Kältekegel (Stufe 10)','ice blue','cone of freezing wind and ice shards from two hands'],
+ ['Versengen (Stufe 13)','orange','small intense flame scorching a surface with black burn marks'],
+ ['Gegenzauber (Stufe 15)','violet','violet arcane hand shattering a spell rune'],
+ ['Hervorrufung (Stufe 18)','violet','glowing blue mana crystal with streams of energy flowing in'],
+ ['Eisbarriere (Stufe 20)','ice blue','translucent shield made of thick ice plates'],
+ ['Arkane Macht (Stufe 23)','violet','wizard silhouette surrounded by a violet arcane aura and floating runes'],
+ ['Pyroschlag (Stufe 25)','orange','gigantic blazing fire boulder with a long flame tail']
+]);
+add('8. Hexenmeister',[
+ ['Feuerbrand (Stufe 8)','orange','target engulfed in orange fel-tinted flames'],
+ ['Fluch der Pein (Stufe 10)','dark purple','purple curse rune with a screaming mouth'],
+ ['Fluch der Schwäche (Stufe 13)','dark purple','withered arm wrapped in dark purple curse chains'],
+ ['Dämonenrüstung (Stufe 15)','dark purple','spiked demonic armor plate glowing green-purple'],
+ ['Aderlass (Stufe 18)','dark purple','red life essence turning into blue mana in a cupped hand'],
+ ['Todesmantel (Stufe 20)','dark purple','green skull-shaped death coil projectile'],
+ ['Schattenbrand (Stufe 23)','dark purple','black and purple flame burning a soul silhouette'],
+ ['Chaosblitz (Stufe 25)','orange','huge green fel fire bolt with a dragon-like shape']
+]);
+add('9. Druide',[
+ ['Sternenfeuer (Stufe 8)','violet','beam of white-blue starlight falling from the night sky'],
+ ['Insektenschwarm (Stufe 10)','green','swarm of stinging insects in a green cloud'],
+ ['Hieb (Stufe 13)','steel gray','bear paw smashing down with impact stars'],
+ ['Baumrinde (Stufe 15)','green','arm covered in thick brown tree bark with small leaves'],
+ ['Nachwachsen (Stufe 18)','green','green vines and leaves regrowing around a glowing heart'],
+ ['Zerfleischen (Stufe 20)','steel gray','panther claws slashing with blood streaks'],
+ ['Anregen (Stufe 23)','green','green swirling nature energy flowing into a blue mana orb'],
+ ['Hurrikan (Stufe 25)','green','dark storm cyclone with lightning and flying leaves']
+]);
+const out=document.getElementById('out'),styles=document.getElementById('styles');
+const names={icon:'STIL-ICON (Fähigkeiten, Items, Wappen)',portrait:'STIL-PORTRAIT (Rassen)',monster:'STIL-MONSTER (Monster, Bosse)',ui:'STIL-UI (Hintergründe, Buttons, Rahmen)'};
+function copy(text,btn){
+  const done=()=>{const o=btn.textContent;btn.textContent='Kopiert ✓';btn.classList.add('ok');setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok')},1400)};
+  try{navigator.clipboard.writeText(text).then(done,()=>fallback(text,done))}catch(e){fallback(text,done)}
+}
+function fallback(text,done){
+  const t=document.createElement('textarea');t.value=text;t.style.position='fixed';t.style.opacity='0';document.body.appendChild(t);t.select();
+  try{document.execCommand('copy');done()}catch(e){}t.remove();
+}
+for(const g of G){
+  const h=document.createElement('h2');h.textContent=g.title+` (${g.items.length})`;
+  const all=document.createElement('button');all.className='all';all.textContent='Alle dieser Gruppe kopieren';
+  all.onclick=()=>copy(g.items.map(i=>i.n+':\n'+i.p).join('\n\n'),all);
+  const ol=document.createElement('ol');
+  for(const i of g.items){
+    const li=document.createElement('li');li.dataset.s=(g.title+' '+i.n+' '+i.p).toLowerCase();
+    li.innerHTML=`<div class="t"><b></b><span></span></div>`;
+    li.querySelector('b').textContent=i.n;li.querySelector('span').textContent=i.p;
+    const b=document.createElement('button');b.textContent='Kopieren';b.onclick=()=>copy(i.p,b);li.appendChild(b);ol.appendChild(li);
+  }
+  const wrap=document.createElement('section');wrap.append(h,all,ol);out.appendChild(wrap);
+}
+document.getElementById('q').addEventListener('input',e=>{
+  const q=e.target.value.trim().toLowerCase();
+  document.querySelectorAll('#out li').forEach(li=>li.classList.toggle('hide',!!q&&!li.dataset.s.includes(q)));
+  document.querySelectorAll('#out section').forEach(s=>s.classList.toggle('hide',!!q&&![...s.querySelectorAll('li')].some(l=>!l.classList.contains('hide'))));
+});
+</script>
+</body>
+</html>
