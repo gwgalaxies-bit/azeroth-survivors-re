@@ -102,6 +102,130 @@ Thin astronomer in a dark blue robe with star patterns and a pointed hood, holdi
 Agile scout woman in dark teal leather armor with a hooded cape, holding a glowing violet compass, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
 ```
 
+## Fähigkeiten
+
+Quadratisch, 1:1. Immer in der Aktionsleiste sichtbar.
+
+**Schmetterhieb (Krieger)** → `icons/sk_schmetterhieb.jpg`
+
+```
+Square fantasy RPG icon: a sword striking down with a white impact flash, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Klingensturm (Krieger)** → `icons/sk_klingensturm.jpg`
+
+```
+Square fantasy RPG icon: a whirlwind of spinning blades, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Kampfschrei (Krieger)** → `icons/sk_kampfschrei.jpg`
+
+```
+Square fantasy RPG icon: a war horn blasting golden sound waves, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Feuerkugel (Magier)** → `icons/sk_feuerkugel.jpg`
+
+```
+Square fantasy RPG icon: a blazing fireball, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Eislanze (Magier)** → `icons/sk_eislanze.jpg`
+
+```
+Square fantasy RPG icon: a jagged ice lance, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Arkanflut (Magier)** → `icons/sk_arkanflut.jpg`
+
+```
+Square fantasy RPG icon: a swirling violet arcane vortex, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Präziser Schuss (Jäger)** → `icons/sk_praeziser_schuss.jpg`
+
+```
+Square fantasy RPG icon: an arrow hitting the center of a target, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Pfeilhagel (Jäger)** → `icons/sk_pfeilhagel.jpg`
+
+```
+Square fantasy RPG icon: a rain of arrows falling from the sky, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Wolfsbiss (Jäger)** → `icons/sk_wolfsbiss.jpg`
+
+```
+Square fantasy RPG icon: a snarling grey wolf head, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Lichtstrahl (Priester)** → `icons/sk_lichtstrahl.jpg`
+
+```
+Square fantasy RPG icon: a golden beam of holy light from above, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Schattenpein (Priester)** → `icons/sk_schattenpein.jpg`
+
+```
+Square fantasy RPG icon: a purple shadow skull in dark smoke, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Segnung (Priester)** → `icons/sk_segnung.jpg`
+
+```
+Square fantasy RPG icon: glowing green healing hands, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Erdstoß (Krieger)** → `icons/sk_erdstoss.jpg`
+
+```
+Square fantasy RPG icon: an armored fist smashing into cracked ground with flying rocks and a shockwave, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Hinrichten (Krieger)** → `icons/sk_hinrichten.jpg`
+
+```
+Square fantasy RPG icon: a huge bloodied executioner axe falling in a red arc, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Sternenregen (Magier)** → `icons/sk_sternenregen.jpg`
+
+```
+Square fantasy RPG icon: glowing blue-white falling stars with long trails in a night sky, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Arkanes Finale (Magier)** → `icons/sk_arkanes_finale.jpg`
+
+```
+Square fantasy RPG icon: a violet arcane explosion bursting out of an open spellbook, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Schnellfeuer (Jäger)** → `icons/sk_schnellfeuer.jpg`
+
+```
+Square fantasy RPG icon: three arrows flying side by side with bright speed streaks, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Todesschuss (Jäger)** → `icons/sk_todesschuss.jpg`
+
+```
+Square fantasy RPG icon: a single black arrow with a glowing red tip piercing a skull, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Läuterndes Feuer (Priester)** → `icons/sk_laeuterndes_feuer.jpg`
+
+```
+Square fantasy RPG icon: a pillar of white-golden holy flame, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
+**Göttlicher Zorn (Priester)** → `icons/sk_goettlicher_zorn.jpg`
+
+```
+Square fantasy RPG icon: a golden hammer of light striking down from the clouds with lightning, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
+```
+
 ## Normale Monster
 
 Die siehst du ständig. Querformat oder quadratisch, Blick nach links.
@@ -822,82 +946,6 @@ Frozen citadel throne room, an ice throne, pale blue mist, dark blue banners, in
 
 ```
 Cosmic void throne at the bottom of a rift, tentacles rising from the floor, nebula sky, purple light, interior, wide 2D game battle backdrop, side view, flat open floor in the lower quarter, no characters, no text, stylized hand-painted fantasy MMO art, painterly brush strokes, saturated colors, dramatic lighting
-```
-
-## Fähigkeiten
-
-Quadratisch, 1:1. Immer in der Aktionsleiste sichtbar.
-
-**Schmetterhieb (Krieger)** → `icons/sk_schmetterhieb.jpg`
-
-```
-Square fantasy RPG icon: a sword striking down with a white impact flash, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Klingensturm (Krieger)** → `icons/sk_klingensturm.jpg`
-
-```
-Square fantasy RPG icon: a whirlwind of spinning blades, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Kampfschrei (Krieger)** → `icons/sk_kampfschrei.jpg`
-
-```
-Square fantasy RPG icon: a war horn blasting golden sound waves, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Feuerkugel (Magier)** → `icons/sk_feuerkugel.jpg`
-
-```
-Square fantasy RPG icon: a blazing fireball, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Eislanze (Magier)** → `icons/sk_eislanze.jpg`
-
-```
-Square fantasy RPG icon: a jagged ice lance, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Arkanflut (Magier)** → `icons/sk_arkanflut.jpg`
-
-```
-Square fantasy RPG icon: a swirling violet arcane vortex, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Präziser Schuss (Jäger)** → `icons/sk_praeziser_schuss.jpg`
-
-```
-Square fantasy RPG icon: an arrow hitting the center of a target, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Pfeilhagel (Jäger)** → `icons/sk_pfeilhagel.jpg`
-
-```
-Square fantasy RPG icon: a rain of arrows falling from the sky, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Wolfsbiss (Jäger)** → `icons/sk_wolfsbiss.jpg`
-
-```
-Square fantasy RPG icon: a snarling grey wolf head, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Lichtstrahl (Priester)** → `icons/sk_lichtstrahl.jpg`
-
-```
-Square fantasy RPG icon: a golden beam of holy light from above, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Schattenpein (Priester)** → `icons/sk_schattenpein.jpg`
-
-```
-Square fantasy RPG icon: a purple shadow skull in dark smoke, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
-```
-
-**Segnung (Priester)** → `icons/sk_segnung.jpg`
-
-```
-Square fantasy RPG icon: glowing green healing hands, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled border, bold saturated colors, no text
 ```
 
 ## Währungen und Menü

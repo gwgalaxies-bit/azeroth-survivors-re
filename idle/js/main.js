@@ -130,6 +130,21 @@ const Save = (() => {
 // ------------------------------------------------------------------------------------------ game boot & loop
 const Game = (() => {
   let last = 0, perT = 0, saveT = 0, hiddenAt = 0, started = false;
+  // the title screen holds the game still until the first tap (which also unlocks sound)
+  let titleEl = document.getElementById('title');
+  function closeTitle(now) {
+    const el = titleEl;
+    if (!el) return;
+    titleEl = null;
+    if (now) { el.remove(); return; }
+    Snd.unlock(); Snd.play('start');
+    el.classList.add('out');
+    setTimeout(() => el.remove(), 600);
+  }
+  if (titleEl) {
+    titleEl.addEventListener('click', () => closeTitle());
+    titleEl.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); closeTitle(); } });
+  }
 
   function adopt(s, showOffline = true) {
     S = migrate(s);
@@ -174,7 +189,7 @@ const Game = (() => {
   function loop(ts) {
     const dt = Math.min(0.25, (ts - last) / 1000 || 0);
     last = ts;
-    if (S && battle) {
+    if (S && battle && !titleEl) {
       safe(() => { let rest = dt; while (rest > 0) { const s = Math.min(0.05, rest); tickBattle(battle, s); rest -= s; } });
       safe(() => gatherTick(dt));
       perT -= dt;
@@ -206,19 +221,21 @@ const Game = (() => {
   async function start(hot) {
     await Scene.init(document.getElementById('scene'));
     UI.init();
+    if ((hot && hot.save) || /[?&]notitle\b/.test(location.search)) closeTitle(true);
     let local = Save.readLocal();
     if (hot && hot.save) { try { local = JSON.parse(hot.save); } catch (e) { /* ignore */ } }
     const cloudP = Save.connect();
     if (local) {
       adopt(local, !(hot && hot.save));
       cloudP.then((cloud) => {
-        if (cloud && cloud.lastSeen > (S ? S.lastSeen : 0) + 60000) { adopt(cloud, true); UI.toast('Spielstand aus deinem Konto geladen', 'scroll'); }
+        if (cloud && cloud.lastSeen > (S ? S.lastSeen : 0) + 60000) { adopt(cloud, true); UI.titleHero(); UI.toast('Spielstand aus deinem Konto geladen', 'scroll'); }
       });
     } else {
       const cloud = await Promise.race([cloudP, new Promise((r) => setTimeout(() => r(null), 2500))]);
       if (cloud) adopt(cloud, true);
       else UI.showCreate();
     }
+    UI.titleHero();
     document.addEventListener('visibilitychange', () => (document.hidden ? onHide() : onShow()));
     window.addEventListener('pagehide', () => Save.write(true));
     if (window.claude && window.claude.hot && typeof window.claude.hot.snapshot === 'function') {

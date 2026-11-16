@@ -112,6 +112,9 @@ const SKILLS = {
   goettlicher_zorn: { name: 'Göttlicher Zorn', icon: 'crown', lvl: 36, cd: 28, cost: 55, kind: 'dmg', mult: 4.5, fx: 'fx_holy', finisher: 0.45, desc: 'Das Urteil des Lichts: 450% Angriffsschaden.' },
 };
 
+// a painted icon named after the skill (art/icons/sk_<id>.jpg) replaces the stand-in
+for (const id in SKILLS) if (ATLAS.icons.map['sk_' + id]) SKILLS[id].icon = 'sk_' + id;
+
 const MOBS = {
   waldwolf: 'Waldwolf', kobold: 'Tunnelkobold', waldspinne: 'Waldspinne', graufang: 'Graufang', kragg: 'Grubenmeister Kragg',
   moorschleim: 'Moorschleim', sumpfkriecher: 'Sumpfkriecher', krokilisk: 'Moorkrokilisk', schlammbrocken: 'Uralter Schlammbrocken', morva: 'Moorhexe Morva',

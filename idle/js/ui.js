@@ -711,7 +711,7 @@ const UI = (() => {
   function viewGather() {
     const t = now();
     const mi = S.prof.mining, he = S.prof.herb;
-    let h = `<div class="card"><div class="row">${ico('pickaxe', 40)}<div class="grow"><h3 style="margin:0">Bergbau & Kräuterkunde</h3><div class="small muted">Dein Held sammelt alle 2 Minuten von selbst – auch offline.</div></div></div>
+    let h = `<div class="card"><div class="row">${ico('pickaxe', 40)}<div class="grow"><h3 style="margin:0">Bergbau & Kräuterkunde</h3><div class="small muted">Dein Held sammelt alle 30 Minuten von selbst, solange du spielst.</div></div></div>
       <div class="stack" style="margin-top:6px">${profBar(mi, `Bergbau · ${MAT_NAME[ORES[gatherTier(mi.skill)]]}`)}${profBar(he, `Kräuterkunde · ${MAT_NAME[HERBS[gatherTier(he.skill)]]}`)}</div>
       <div class="row between" style="margin-top:8px"><span class="small muted">Nächste Ernte ${tm(S.gatherT, 'in ')}</span>${btn(t >= S.gatherCd ? 'Jetzt sammeln' : `Sammeln ${tm(S.gatherCd, '')}`, 'gather', {}, t >= S.gatherCd ? 'gold' : '', t < S.gatherCd)}</div></div>`;
     h += '<div class="section-title">Material</div><div class="grid">';
@@ -1116,7 +1116,7 @@ const UI = (() => {
   const ACT = {
     noop() {},
     aura(d) { toast(`${d.n}: ${d.d}`, d.i, '#c8a050'); },
-    tab(d) { tab = d.t; forceRender(); Snd.play('click'); $('panel').scrollTop = 0; },
+    tab(d) { tab = d.t; forceRender(); Snd.play('click'); const p = $('panel'); p.scrollTop = 0; p.classList.remove('swap'); void p.offsetWidth; p.classList.add('swap'); },
     sub(d) { sub[d.g] = d.s; forceRender(); Snd.play('click'); },
     goto(d) { closeModal(); tab = d.t; if (d.s) sub[d.t] = d.s; forceRender(); },
     gotoinst(d) { tab = 'inst'; sub.inst = d.s; forceRender(); },
@@ -1382,7 +1382,14 @@ const UI = (() => {
     log('<span class="sys">Willkommen in Valdoran!</span>');
   }
 
+  // the title screen shows who is waiting behind it
+  function titleHero() {
+    const el = $('titleHero');
+    if (!el) return;
+    el.innerHTML = S ? `${spr(heroSprite(), 2.1)}<b>${esc(S.name)}</b><small>Stufe ${S.level} · ${esc(RACES[S.race] ? RACES[S.race].name : '')} · ${esc(CLASSES[S.cls].name)}</small>`
+      : '<small>Ein neues Abenteuer beginnt</small>';
+  }
   function rebuild() { buildActionbar(); lastHeroFace = null; abExtra = ''; forceRender(); }
 
-  return { init, update, toast, log, pulseSkill, showOffline, showCreate, raceTraits, showGot, rebuild, forceRender, closeModal, ico, get tab() { return tab; } };
+  return { init, update, titleHero, toast, log, pulseSkill, showOffline, showCreate, raceTraits, showGot, rebuild, forceRender, closeModal, ico, get tab() { return tab; } };
 })();

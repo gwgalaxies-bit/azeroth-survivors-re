@@ -43,9 +43,9 @@ Versorgungskiste, Weltboss-Fenster, Tagesquests und die tägliche Anmeldeserie.
 | `index.html`, `css/style.css` | Layout im Hochformat (max. 480 px breit): Einheitenrahmen, Minimap, Aktionsleiste, Steinpaneele, Goldrahmen, Pergament |
 | `js/data.js` | Inhalte: Klassen, Zonen, Quests, Dungeons, Raids, Talente, Berufe, Erfolge |
 | `js/game.js` | Zustand, Formeln, Kampfsimulation, Synergien, Beute, Quests, Erholungsbonus; kein DOM |
-| `js/scene.js` | Kampfszene: 240×160-Koordinaten, in voller Bildschirmauflösung geglättet gezeichnet |
+| `js/scene.js` | Kampfszene: 240×160-Koordinaten, in voller Bildschirmauflösung gezeichnet; füllt im Kampf-Tab fast die halbe Höhe (mehr Himmel, Kamera etwas näher). Die Figuren haben nur ein Bild: sie atmen, lehnen sich in den Schlag und strecken sich dabei; schwere Treffer halten das Bild kurz an und schieben die Kamera heran |
 | `js/ui.js` | Tabs, Ansichten, Modale, Toasts, Angel-Minispiel |
-| `js/main.js` | Start, Hauptschleife, Speichern, synthetisierte Soundeffekte |
+| `js/main.js` | Titelbild (hält das Spiel bis zum ersten Tippen an; `?notitle` überspringt es), Hauptschleife, Speichern, synthetisierte Soundeffekte |
 | `js/atlas.js` | Generierter Index der Sprite- und Icon-Atlanten |
 | `tools/faces.py` | Kopfposition und -größe jeder Figur für die runden Portraits (Kopf im oberen Drittel, darunter Schultern und Brust); `tools/faces_sheet.py` zeigt alle Portraits zur Kontrolle |
 | `tools/` | Python-Generator für alle Grafiken (`numpy`, `Pillow` mit WebP); `px.py` enthält den Pixel- und den gemalten Renderer |

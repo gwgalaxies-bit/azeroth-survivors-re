@@ -9,13 +9,16 @@ const Scene = (() => {
   let texts = [], projs = [], effects = [], parts = [];
   let shake = 0, redFlash = 0, warnText = null, banner = null, t = 0;
   let curBg = null, weather = null, lastBattle = null;
+  // camera: the canvas shows VW x VH logical units, bottom-aligned on the 240x160 stage (more sky above when taller)
+  let VZ = 1, VW = W, VH = H, VX0 = 0, VTOP = 0;
+  let hitstop = 0, punch = 0, fade = 0;
   const A = {
     hero: { x: 74, y: FEET, lunge: 0, flash: 0, alpha: 1, dead: 0 },
     enemy: { x: 178, y: FEET, lunge: 0, flash: 0, alpha: 0, dying: 0, spawn: 0, sprite: null },
     comps: {},
     pet: { x: 100, y: 158, lunge: 0 },
   };
-  const COMP_POS = { thorga: [108, 143], elyra: [42, 140], varrik: [16, 145], mirra: [30, 152] };
+  const COMP_POS = { thorga: [108, 143], elyra: [46, 140], varrik: [42, 145], mirra: [40, 152] };
   const COMP_SPRITE = { thorga: 'comp_tank', elyra: 'comp_heiler', varrik: 'comp_schuetze', mirra: 'comp_zauberin' };
   const RAR_COL = RARITY.map((r) => r.color);
 
@@ -34,6 +37,7 @@ const Scene = (() => {
     IMG.qTurn = qt;
     resize();
     window.addEventListener('resize', resize);
+    if (window.ResizeObserver) new ResizeObserver(resize).observe(canvas);
     canvas.addEventListener('pointerdown', onTap);
   }
 
@@ -44,11 +48,14 @@ const Scene = (() => {
 
   function resize() {
     const dpr = Math.min(3, window.devicePixelRatio || 1);
-    const cw = canvas.clientWidth || 360;
-    const pw = Math.max(W, Math.round(cw * dpr));
-    canvas.width = pw;
-    canvas.height = Math.round(pw * H / W);
+    const cw = canvas.clientWidth || 360, ch = canvas.clientHeight || cw * H / W;
+    const pw = Math.max(W, Math.round(cw * dpr)), ph = Math.max(1, Math.round(pw * ch / cw));
+    if (canvas.width !== pw || canvas.height !== ph) { canvas.width = pw; canvas.height = ph; }
     k = pw / W;
+    const a = ch / cw;
+    VZ = 1 + 0.14 * Math.max(0, Math.min(1, (a - 0.5) / 0.3)); // a tall stage moves the camera in a little
+    VW = W / VZ; VH = W * a / VZ;
+    VX0 = (W - VW) * 0.52; VTOP = VH - H;
   }
   const SC = (ATLAS.sprites.scale || 1), IC = (ATLAS.icons.cell || 32);
 
@@ -73,7 +80,7 @@ const Scene = (() => {
   function drawSprite(name, x, y, o = {}) {
     const r = spr(name);
     if (!r || !IMG.sprites) return;
-    const w = r[2] / SC * (o.scale || 1), h = r[3] / SC * (o.scale || 1);
+    const w = r[2] / SC * (o.scale || 1) * (o.sx || 1), h = r[3] / SC * (o.scale || 1) * (o.sy || 1);
     const dx = x - w / 2, dy = y - h;
     ctx.save();
     ctx.globalAlpha = o.alpha === undefined ? 1 : o.alpha;
@@ -91,7 +98,8 @@ const Scene = (() => {
       const f = flashOf(name);
       if (f) {
         ctx.globalAlpha = Math.min(1, o.flash * 6) * (o.alpha === undefined ? 1 : o.alpha) * 0.8;
-        if (o.rot || o.flip) ctx.drawImage(f, o.flip ? 0 : -w / 2, o.flip ? 0 : -h, w, h);
+        if (o.rot) ctx.drawImage(f, -w / 2, -h, w, h);
+        else if (o.flip) ctx.drawImage(f, 0, 0, w, h);
         else ctx.drawImage(f, dx, dy, w, h);
       }
     }
@@ -125,8 +133,8 @@ const Scene = (() => {
     if (!g) return;
     const y = A.hero.y;
     draws.push({ y: y + 1, fn: () => {
-      const cx = 190;
-      [-34, 0, 34].forEach((dx, i) => {
+      const cx = 178;
+      [-30, 0, 30].forEach((dx, i) => {
         const bob = Math.sin(t * 2.2 + i * 1.7) * 1.5;
         shadow(cx + dx, y + 2, 14);
         ctx.globalAlpha = 0.55 + 0.45 * g.frac;
@@ -207,6 +215,9 @@ const Scene = (() => {
           A.enemy.flash = 0.16; A.enemy.recoil = 0.16;
           text(fmt(amount) + (crit ? '!' : ''), ex, enemyTop(), { color: crit ? '#ffb020' : kind === 'dot' ? '#e0a0ff' : kind === 'tap' ? '#ffffff' : '#fff36a', size: crit ? 13 : kind === 'tap' ? 7 : 9 });
           if (crit) shake = Math.max(shake, 0.12);
+          // a beat of stillness and a small camera push sell the heavy hits
+          const heavy = kind === 'slash' || kind === 'whirl' || (kind && kind.startsWith('fx_') && kind !== 'fx_arrow');
+          if (crit || heavy) { hitstop = Math.max(hitstop, crit ? 0.09 : 0.05); punch = Math.max(punch, crit ? 1 : 0.55); }
         };
         const hx = A.hero.x + 12, hy = A.hero.y - 30;
         if (kind === 'arrow' || kind === 'fx_arrow') projectile('fx_arrow', [hx, hy], [ex, ey], 0.22, show);
@@ -227,7 +238,10 @@ const Scene = (() => {
       effect('ring', A.hero.x, A.hero.y - 22, { sprite: 'fx_ring_green', dur: 0.5 });
       for (let i = 0; i < 5; i++) parts.push({ x: A.hero.x + rnd(-10, 10), y: A.hero.y - rnd(4, 40), vx: 0, vy: -18, life: 0.7, col: '#90ff90', size: 1 });
     },
-    attack(who) { if (who === 'hero') A.hero.lunge = 0.2; else A.enemy.lunge = 0.3; },
+    attack(who) {
+      if (who === 'hero') { A.hero.lunge = 0.2; if (S.cls === 'krieger') effect('arc', A.hero.x + 16, A.hero.y - 30, { dur: 0.22 }); }
+      else A.enemy.lunge = 0.3;
+    },
     cast(id, sk) {
       text(sk.name, A.hero.x, heroTop() - 8, { color: '#ffe8a0', size: 7, vy: -10, life: 0.9 });
       if (sk.fx === 'ring') effect('ring', A.hero.x, A.hero.y - 22, { sprite: 'fx_ring', dur: 0.6 });
@@ -288,15 +302,15 @@ const Scene = (() => {
     if (typeof Snd !== 'undefined') Snd.unlock();
     if (battle.mode === 'adventure' && !S.walk && here().kind === 'hub') {
       const rect = canvas.getBoundingClientRect();
-      const lx = (ev.clientX - rect.left) / rect.width * W;
+      const lx = VX0 + (ev.clientX - rect.left) / rect.width * VW;
       if (lx > 120 && Hooks.npc) Hooks.npc(here().giver);
       return;
     }
     const d = tapAttack();
     if (d > 0) {
       const rect = canvas.getBoundingClientRect();
-      const lx = (ev.clientX - rect.left) / rect.width * W;
-      const ly = (ev.clientY - rect.top) / rect.height * H;
+      const lx = VX0 + (ev.clientX - rect.left) / rect.width * VW;
+      const ly = -VTOP + (ev.clientY - rect.top) / rect.height * VH;
       effect('slash', lx, ly, { small: true, dur: 0.22 });
       if (typeof Snd !== 'undefined') Snd.play('tap');
       shake = Math.max(shake, 0.05);
@@ -330,6 +344,9 @@ const Scene = (() => {
   // ------------------------------------------------------------------------------- frame
   function frame(dt) {
     if (!ctx) return;
+    const realDt = dt;
+    if (hitstop > 0) { hitstop -= dt; dt *= 0.08; }
+    punch = Math.max(0, punch - dt * 4.5);
     t += dt;
     const b = battle;
     if (b !== lastBattle) {
@@ -340,6 +357,7 @@ const Scene = (() => {
     }
     const bgName = b ? b.bg : 'bg_goldhain';
     if (bgName !== curBg) {
+      if (curBg) fade = 0.4; // a new backdrop fades in from black
       curBg = bgName;
       parts = [];
       const z = ZONES.find((zz) => zz.bg === bgName);
@@ -348,15 +366,17 @@ const Scene = (() => {
     spawnWeather(dt);
     const sx = shake > 0 ? Math.round(rnd(-2, 2)) : 0, sy = shake > 0 ? Math.round(rnd(-1, 1)) : 0;
     shake = Math.max(0, shake - dt);
-    ctx.setTransform(k, 0, 0, k, sx * k, sy * k);
+    const pz = punch * punch * 0.045, kz = k * VZ, fx0 = 150, fy0 = 118; // the push zooms towards the fight
+    ctx.setTransform(kz * (1 + pz), 0, 0, kz * (1 + pz), (fx0 - VX0 + sx - fx0 * (1 + pz)) * kz, (fy0 + VTOP + sy - fy0 * (1 + pz)) * kz);
     ctx.imageSmoothingEnabled = true;
     ctx.imageSmoothingQuality = 'high';
     const bgi = bg(bgName);
     if (bgi.complete && bgi.naturalWidth) {
       const v = viewFor(b);
-      const zw = W * v.zoom, zh = H * v.zoom;
-      ctx.drawImage(bgi, -(zw - W) * v.ox, -(zh - H) * 0.85, zw, zh);
-    } else { ctx.fillStyle = '#101018'; ctx.fillRect(0, 0, W, H); }
+      const f = Math.max(1, VH / H); // a taller stage needs a taller picture: the extra shows as sky
+      const zw = W * v.zoom * f, zh = H * v.zoom * f;
+      ctx.drawImage(bgi, -(zw - W) * v.ox, VH > H ? -VTOP - (zh - VH) * 0.85 : -(zh - H) * 0.85, zw, zh);
+    } else { ctx.fillStyle = '#101018'; ctx.fillRect(-8, -VTOP - 8, W + 16, VH + 16); }
 
     // actors (sorted by feet y)
     const draws = [];
@@ -374,9 +394,13 @@ const Scene = (() => {
     const walkBob = (ph) => -Math.abs(Math.sin(t * 9 + ph)) * 2.2;
     if (S) {
       const bob = heroDead ? 0 : walking ? -Math.abs(Math.sin(t * 9)) * 2.4 : Math.sin(t * 2.4) * 1.1;
-      const lx = hero.lunge > 0 ? Math.sin(Math.PI * (1 - hero.lunge / 0.2)) * 7 : 0;
-      const tilt = walking ? 0.05 * S.walk.dir : 0;
-      draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(heroSprite(), hero.x + lx, hero.y + bob, { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : tilt, grey: heroDead, flip: walking && S.walk.dir < 0 }); } });
+      // no frames to animate, so the one picture breathes, leans into its swing and stretches with it
+      const sw = hero.lunge > 0 ? Math.sin(Math.PI * (1 - hero.lunge / 0.2)) : 0;
+      const lx = sw * 9;
+      const br = heroDead || walking ? 0 : Math.sin(t * 2.2);
+      const tilt = walking ? 0.05 * S.walk.dir : sw * 0.07;
+      draws.push({ y: hero.y, fn: () => { shadow(hero.x, hero.y, 24); drawSprite(heroSprite(), hero.x + lx, hero.y + (walking ? bob : 0), { flash: hero.flash, rot: heroDead ? -Math.PI / 2 : tilt, grey: heroDead, flip: walking && S.walk.dir < 0,
+        sx: 1 - br * 0.008 + sw * 0.05, sy: 1 + br * 0.014 - sw * 0.035 }); } });
       if (!walking && b && b.mode === 'adventure' && here().kind === 'hub') drawNpcs(draws);
       if (!walking && b && b.mode === 'adventure') drawGather(draws);
       if (S.cls === 'jaeger' && !(ATLAS.sprites.painted || []).includes(heroSprite())) {
@@ -393,7 +417,8 @@ const Scene = (() => {
         const lx2 = p.lunge > 0 ? Math.sin(Math.PI * (1 - p.lunge / 0.2)) * 6 : 0;
         const bob2 = walking ? walkBob(p.x * 0.07) : Math.sin(t * 2.1 + p.x) * 1;
         const cx2 = mx(p.x) + lx2 * mirTarget;
-        draws.push({ y: p.y, fn: () => { shadow(cx2, p.y, 20); drawSprite(COMP_SPRITE[c.id], cx2, p.y + bob2, { flip: mirTarget < 0 }); } });
+        const br2 = walking ? 0 : Math.sin(t * 2.1 + p.x);
+        draws.push({ y: p.y, fn: () => { shadow(cx2, p.y, 20); drawSprite(COMP_SPRITE[c.id], cx2, p.y + (walking ? bob2 : 0), { flip: mirTarget < 0, sx: 1 - br2 * 0.008, sy: 1 + br2 * 0.014 }); } });
       }
     }
     const en = A.enemy;
@@ -404,10 +429,12 @@ const Scene = (() => {
       else if (en.dying > 0) { en.dying -= dt; en.alpha = Math.max(0, en.dying / 0.6); }
       else if (!b.enemy.dead) en.alpha = 1;
       const big = spriteHeight(en.sprite) > 60;
-      const bob = Math.sin(t * 2 + 1) * (big ? 1.6 : 1.1);
+      const ebr = Math.sin(t * (big ? 1.6 : 2.3) + 1);
       en.recoil = Math.max(0, (en.recoil || 0) - dt);
       const rec = en.recoil > 0 ? Math.sin(Math.PI * (1 - en.recoil / 0.16)) * 3 : 0;
-      const lx = (en.lunge > 0 ? -Math.sin(Math.PI * (1 - en.lunge / 0.3)) * 14 : 0) + rec;
+      const esw = en.lunge > 0 ? Math.sin(Math.PI * (1 - en.lunge / 0.3)) : 0;
+      const lx = -esw * 14 + rec;
+      const fall = en.dying > 0 ? 1 - en.dying / 0.6 : 0;
       const sink = en.dying > 0 ? (1 - en.dying / 0.6) * 6 : 0;
       const drop = en.spawn > 0 ? -en.spawn * 20 : 0;
       if (en.alpha > 0.01) {
@@ -422,7 +449,8 @@ const Scene = (() => {
             ctx.fill();
             ctx.restore();
           }
-          drawSprite(en.sprite, en.x + lx, en.y + bob + sink + drop, { flash: en.flash, alpha: en.alpha });
+          drawSprite(en.sprite, en.x + lx, en.y + sink + drop, { flash: en.flash, alpha: en.alpha, rot: fall * 0.28 + rec * 0.012 - esw * 0.05,
+            sx: (1 - ebr * 0.006 + esw * 0.05) * (1 - rec * 0.012), sy: (1 + ebr * (big ? 0.01 : 0.014) - esw * 0.03) * (1 - fall * 0.18) });
         } });
       }
     }
@@ -465,6 +493,14 @@ const Scene = (() => {
         ctx.translate(e.x, e.y);
         ctx.rotate(q * 12);
         ctx.drawImage(IMG.sprites, r[0], r[1], r[2], r[3], -20, -20, 40, 40);
+      } else if (e.kind === 'arc') {
+        ctx.translate(e.x, e.y);
+        ctx.rotate(-1.0 + q * 1.5);
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = (1 - q) * 0.45; ctx.strokeStyle = '#ffd98a'; ctx.lineWidth = 7 * (1 - q) + 1;
+        ctx.beginPath(); ctx.arc(-10, 0, 26, -0.75, 0.75); ctx.stroke();
+        ctx.globalAlpha = (1 - q) * 0.9; ctx.strokeStyle = '#fffbe6'; ctx.lineWidth = 2.5 * (1 - q) + 0.5;
+        ctx.beginPath(); ctx.arc(-8, 0, 26, -0.95, 0.95); ctx.stroke();
       } else if (e.kind === 'ring') {
         const r = spr(e.sprite);
         const s = 0.4 + q * 0.9;
@@ -547,14 +583,19 @@ const Scene = (() => {
       return true;
     });
 
+    // darker corners pull the eye to the fight
+    const vg = ctx.createRadialGradient(VX0 + VW / 2, H - VH * 0.45, VH * 0.45, VX0 + VW / 2, H - VH * 0.45, Math.max(VW, VH) * 0.85);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.5)');
+    ctx.fillStyle = vg;
+    ctx.fillRect(-8, -VTOP - 8, W + 16, VH + 16);
     if (redFlash > 0) {
       redFlash -= dt;
       ctx.fillStyle = `rgba(200,20,10,${Math.max(0, redFlash) * 0.6})`;
-      ctx.fillRect(-4, -4, W + 8, H + 8);
+      ctx.fillRect(-8, -VTOP - 8, W + 16, VH + 16);
     }
     if (heroDead) {
       ctx.fillStyle = 'rgba(30,30,60,0.35)';
-      ctx.fillRect(0, 0, W, H);
+      ctx.fillRect(-8, -VTOP - 8, W + 16, VH + 16);
       bigText('Du bist gestorben', W / 2, 58, '#d0d8ff', 13);
       ctx.font = '600 8px "Alegreya Sans", sans-serif';
       ctx.fillStyle = '#e8e8f8';
@@ -580,6 +621,11 @@ const Scene = (() => {
         if (banner.sub) { const sub = fitText(banner.sub, 10, 7, 400, W - 28); ctx.textAlign = 'center'; ctx.fillStyle = '#f0e6c8'; ctx.fillText(sub, W / 2, 68); }
         ctx.globalAlpha = 1;
       }
+    }
+    if (fade > 0) {
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(1, fade / 0.4)})`;
+      ctx.fillRect(-8, -VTOP - 8, W + 16, VH + 16);
+      fade -= realDt;
     }
   }
 
