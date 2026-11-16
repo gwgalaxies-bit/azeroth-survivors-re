@@ -60,6 +60,7 @@ Liegt in `art/` ein Bild mit passendem Namen, ersetzt es die erzeugte Grafik:
 | `art/hero_<klasse>.jpg`, `art/<monster>.jpg` | Figur; Schachbrett- oder einfarbiger Hintergrund wird freigestellt, auch eingemalte Schatten; Leuchteffekte bleiben weich |
 | `art/hero_<klasse>_<volk>.jpg` | Held eines anderen Volkes (Zwerg, Elf, Ork, Halbling, Untoter); Zwerge und Halblinge werden kleiner, Orks größer gezeichnet. Fehlt das Bild, steht dort das Menschenbild der Klasse |
 | `art/npc_<id>.jpg` | Auftraggeber, etwa so groß wie der Held |
+| `art/bg_map_<zone>.jpg` | Gemalte Gebietskarte im Hochformat 4:5 (Karte hinter den antippbaren Orten); ohne sie dient das Gebietsbild in Sepia auf Pergament |
 | `art/icons/<slot>.jpg` | Item-Icon; daraus entstehen sechs Stufen (Bronze, Eisen, Original, Gold, Leere, Legendär) |
 | `art/ui/<textur>.png`, `.webp` | Ersetzt oder ergänzt eine UI-Textur Datei für Datei (der Reskin: Rubin-Knöpfe, Banner, Stein- und Pergamentflächen, Rahmen) |
 | `art/icons/<name>.jpg` | Jedes andere Icon (Fähigkeiten, Währungen, Erze, Kräuter, Elixiere, Reittiere, Tabs); der eingemalte Rahmen wird erkannt und abgeschnitten |

@@ -937,26 +937,54 @@ const UI = (() => {
     return S.bag.find((it) => it.id === id);
   }
 
+  // where each place sits on the zone map (percent), and the road that joins them
+  const MAP_POS = { hub: [20, 79], n2: [50, 82], h0: [79, 73], s0: [57, 63], h1: [36, 60], s1: [16, 44], post: [42, 39], h2: [70, 44], n3: [83, 31], elite: [60, 22], boss: [33, 11] };
+  const MAP_ORDER = ['hub', 'n2', 'h0', 's0', 'h1', 's1', 'post', 'h2', 'n3', 'elite', 'boss'];
   function showZones() {
     const z = zoneOf(S.zone);
     const cur = S.walk ? null : S.loc.p;
-    let h = `<h2>${esc(z.name)}</h2><div class="small muted" style="text-align:center;margin:-6px 0 8px">Tippe auf einen Ort, um hinzugehen.</div>`;
+    let h = `<h2>${esc(z.name)}</h2><div class="small muted" style="text-align:center;margin:-6px 0 8px">Tippe auf einen Ort auf der Karte.</div>`;
     if (S.wtMax > 0) h += `<div class="row" style="justify-content:center;margin-bottom:8px"><span class="stepper">${btn('−', 'wt', { d: -1 }, 'sm', S.worldTier <= 0)}<b>Weltstufe ${S.worldTier}</b>${btn('+', 'wt', { d: 1 }, 'sm', S.worldTier >= S.wtMax)}</span></div>`;
-    h += '<div class="stack">';
+    // the zone as a map: every place is a medallion on a winding road from the village (bottom) to the boss's lair (top)
     const active = zoneQuests(S.zone).filter((x) => x.s === 'active');
-    for (const pl of placesOf(S.zone)) {
+    const places = placesOf(S.zone);
+    const order = MAP_ORDER.filter((id) => places.some((pl) => pl.id === id));
+    const here2 = S.walk ? S.walk.p : S.loc.p;
+    const sel = places.some((pl) => pl.id === U.mapSel) ? U.mapSel : here2;
+    const painted = ATLAS.backgrounds.includes('bg_map_' + z.id);
+    let m = `<div class="zmap ${painted ? 'painted' : ''}"><i class="zbase" style="background-image:url(assets/bg/${painted ? 'bg_map_' + z.id : z.bg}.webp)"></i>`;
+    for (let i = 0; i + 1 < order.length; i++) {
+      const [x0, y0] = MAP_POS[order[i]], [x1, y1] = MAP_POS[order[i + 1]];
+      const n = Math.max(2, Math.round(Math.hypot(x1 - x0, (y1 - y0) * 1.25) / 5.5));
+      for (let j = 1; j < n; j++) {
+        const q = j / n, bend = Math.sin(q * Math.PI) * (i % 2 ? 2.2 : -2.2);
+        m += `<i class="zdot" style="left:${(x0 + (x1 - x0) * q).toFixed(1)}%;top:${(y0 + (y1 - y0) * q + bend).toFixed(1)}%"></i>`;
+      }
+    }
+    for (const pl of places) {
+      const [x, y] = MAP_POS[pl.id];
       let mark = '';
-      if (pl.kind === 'hub') { const mk = giverMarker(S.zone, pl.giver); if (mk === 'avail') mark = uiImg('q_bang', 9, 14); if (mk === 'turnin') mark = uiImg('q_turnin', 9, 14); }
-      if (active.some((x) => x.place === pl.id)) mark += ` ${ico('swords', 16)}`;
-      const icon = pl.kind === 'hunt' || pl.kind === 'elite' || pl.kind === 'boss'
-        ? `<span class="bp" style="width:40px;height:40px;border-radius:50%;overflow:hidden;position:relative;display:inline-block;flex:none;box-shadow:0 0 0 1px #000,0 0 0 2px ${pl.kind === 'hunt' ? '#8a6a3a' : '#ff8a3a'}">${face(pl.mob, 40)}</span>`
-        : ico(pl.kind === 'spot' ? 'flag' : 'castle', 40);
-      const sub2 = pl.kind === 'spot' ? 'Sammelplatz' : pl.kind === 'hub' ? `${esc(giverOf(S.zone, pl.giver).name)}` : pl.kind === 'hunt' ? esc(MOBS[pl.mob]) : `${esc(MOBS[pl.mob])} · ${pl.kind === 'elite' ? 'Elite' : 'Boss'}`;
+      if (pl.kind === 'hub') { const mk = giverMarker(S.zone, pl.giver); if (mk === 'avail') mark = uiImg('q_bang', 10, 16); if (mk === 'turnin') mark = uiImg('q_turnin', 10, 16); }
+      if (active.some((x2) => x2.place === pl.id)) mark += ico('swords', 16);
+      const pic = pl.kind === 'spot' ? ico('flag', 30) : face(pl.kind === 'hub' ? npcSprite(S.zone, pl.giver) : pl.mob, 34);
+      m += `<button class="znode k-${pl.kind} ${pl.id === sel ? 'sel' : ''} ${pl.id === here2 ? 'here' : ''}" style="left:${x}%;top:${y}%" data-act="mapsel" data-p="${pl.id}" aria-label="${esc(pl.name)}">
+        <span class="zpic bp">${pic}</span>${mark ? `<span class="zmark">${mark}</span>` : ''}<span class="zname">${esc(pl.name)}</span></button>`;
+    }
+    const [hx, hy] = MAP_POS[here2];
+    m += `<span class="zhero ${S.walk ? 'walk' : ''}" style="left:${hx}%;top:${hy}%"><span class="bp">${face(heroSprite(), 22)}</span></span></div>`;
+    h += m;
+    {
+      const pl = places.find((x) => x.id === sel);
+      const sub2 = pl.kind === 'spot' ? 'Sammelplatz' : pl.kind === 'hub' ? `${esc(giverOf(S.zone, pl.giver).name)} · ${esc(giverOf(S.zone, pl.giver).role)}` : pl.kind === 'hunt' ? `Jagdgebiet · ${esc(MOBS[pl.mob])}` : `${esc(MOBS[pl.mob])} · ${pl.kind === 'elite' ? 'Elite' : 'Boss'}`;
+      const todo = zoneQuests(S.zone).filter((x) => (x.s === 'active' && x.place === pl.id) || (x.s === 'done' && giverPlace(x.tg) === pl.id)).map((x) => esc(x.q.t));
+      if (pl.kind === 'hub' && giverMarker(S.zone, pl.giver) === 'avail') todo.push('Neuer Auftrag');
       const from = S.walk ? S.walk : S.loc;
       const secs = Math.round(walkSeconds(from.z, from.p, S.zone, pl.id));
-      h += `<div class="li ${pl.id === cur ? 'claim' : ''}">${icon}<div class="grow"><div class="ttl ${pl.id === cur ? 'gold' : ''}">${esc(pl.name)} ${mark}</div><div class="small muted">${sub2}</div></div>${pl.id === cur ? '<span class="small goldtxt">Hier</span>' : btn(`${secs} Sek.`, 'goto', { z: S.zone, p: pl.id }, 'sm')}</div>`;
+      const isHere = !S.walk && pl.id === S.loc.p;
+      h += `<div class="li zinfo ${isHere ? 'claim' : ''}"><div class="grow"><div class="ttl gold">${esc(pl.name)}</div><div class="small muted">${sub2}</div>${todo.length ? `<div class="small goldtxt">${todo.join(' · ')}</div>` : ''}</div>
+        ${isHere ? '<span class="small goldtxt">Du bist hier</span>' : S.walk && S.walk.p === pl.id ? '<span class="small muted">Unterwegs…</span>' : btn(`Hingehen · ${secs} Sek.`, 'goto', { z: S.zone, p: pl.id }, 'sm gold')}</div>`;
     }
-    h += '</div><div class="section-title" style="margin-top:12px">Andere Gebiete</div><div class="stack">';
+    h += '<div class="section-title" style="margin-top:12px">Andere Gebiete</div><div class="stack">';
     ZONES.forEach((zz, i) => {
       if (i === S.zone) return;
       const open = i <= S.zoneMax;
@@ -1122,7 +1150,8 @@ const UI = (() => {
     gotoinst(d) { tab = 'inst'; sub.inst = d.s; forceRender(); },
     gotoberufe(d) { tab = 'berufe'; sub.berufe = d.s; forceRender(); },
     tut(d) { S.tut[d.k] = 1; forceRender(); },
-    zones() { showZones(); },
+    zones() { U.mapSel = null; showZones(); },
+    mapsel(d) { U.mapSel = d.p; Snd.play('click'); const sc = document.querySelector('#modal .mbox'); const y = sc ? sc.scrollTop : 0; showZones(); const sc2 = document.querySelector('#modal .mbox'); if (sc2) sc2.scrollTop = y; },
     travel(d) { if (travel(+d.z)) { closeModal(); tab = 'kampf'; forceRender(); toast(`Reise nach ${zoneOf(+d.z).name}`, 'map'); } },
     wt(d) { setWorldTier(S.worldTier + +d.d); forceRender(); if (U.modal === 'zones') showZones(); },
     boss(d) {

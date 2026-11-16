@@ -102,6 +102,58 @@ Thin astronomer in a dark blue robe with star patterns and a pointed hood, holdi
 Agile scout woman in dark teal leather armor with a hooded cape, holding a glowing violet compass, full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text
 ```
 
+## Gebietskarten
+
+Hochformat 4:5. Die Karte, auf der du die Orte eines Gebiets antippst; bis dahin dient das Gebietsbild in Sepia.
+
+**Goldhain** → `bg_map_goldhain.jpg`
+
+```
+Hand-drawn fantasy region map of a green forest valley with golden-leaved trees, farm fields, a walled town with blue roofs at the bottom and a dark wolf den in the hills at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
+**Nebelmoor** → `bg_map_nebelmoor.jpg`
+
+```
+Hand-drawn fantasy region map of a foggy swamp with stilt huts, reed islands, murky ponds and twisted trees, a village on dry land at the bottom and a sunken ruin at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
+**Rotfels** → `bg_map_rotfels.jpg`
+
+```
+Hand-drawn fantasy region map of a red rock canyon land with mesas, a caravan camp at the bottom, a wooden fort in the middle and an ogre stronghold at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
+**Sonnenglutwüste** → `bg_map_sonnenglut.jpg`
+
+```
+Hand-drawn fantasy region map of a golden sand desert with dunes, an excavation camp at the bottom, a palm oasis in the middle and a great pyramid at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
+**Frostgipfel** → `bg_map_frostgipfel.jpg`
+
+```
+Hand-drawn fantasy region map of snowy mountains with pine woods, a timber village at the bottom, a mountain pass with a watchtower and a frozen peak with an ice cave at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
+**Schattenhain** → `bg_map_schattenhain.jpg`
+
+```
+Hand-drawn fantasy region map of a haunted dark forest with dead trees, a small chapel at the bottom, a graveyard in the middle and a ruined castle at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
+**Glutschlund** → `bg_map_glutschlund.jpg`
+
+```
+Hand-drawn fantasy region map of a volcanic wasteland with lava rivers and black rock, a stone fortress at the bottom, a forge in the middle and an erupting crater at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
+**Leerenriss** → `bg_map_leerenriss.jpg`
+
+```
+Hand-drawn fantasy region map of shattered floating islands under a purple starry sky, an observatory tower at the bottom, crystal fields in the middle and a glowing violet rift at the top, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame
+```
+
 ## Fähigkeiten
 
 Quadratisch, 1:1. Immer in der Aktionsleiste sichtbar.

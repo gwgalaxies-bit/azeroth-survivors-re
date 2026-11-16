@@ -462,7 +462,7 @@ def catalogue(sc, known=None):
             B[name] = backdrop(name, anchor)
     for name in _art_names():
         if name.startswith('bg_') and name not in B:
-            B[name] = backdrop(name, 0.5)
+            B[name] = backdrop(name, 0.5, (720, 900)) if name.startswith('bg_map_') else backdrop(name, 0.5)
     taken = set(CHARACTERS) | {v[0] for v in CHARACTERS.values()}
     race_heroes = [n for n in _art_names() if re.fullmatch(r'hero_(krieger|magier|jaeger|priester)_[a-z]+', n)]
     taken |= set(race_heroes)

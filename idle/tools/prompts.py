@@ -12,6 +12,8 @@ ALLY = (', full body, side view facing right, standing idle pose, stylized hand-
         'proportions, oversized shoulder armor, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text')
 HALL = (', interior, wide 2D game battle backdrop, side view, flat open floor in the lower quarter, no characters, no text, '
         'stylized hand-painted fantasy MMO art, painterly brush strokes, saturated colors, dramatic lighting')
+MAP = ('Hand-drawn fantasy region map of {}, top-down view from above, old parchment paper with ink outlines and soft watercolor, a winding dirt road '
+       'from the bottom to the top, burnt darkened edges, portrait format 4:5, no text, no labels, no icons, no compass, no frame')
 NPC = (', full body, side view facing left, standing idle pose, friendly, stylized hand-painted fantasy MMO character, chunky heroic '
        'proportions, bold saturated colors, warm rim light, clean silhouette, isolated on transparent background, no text')
 ICON = ('Square fantasy RPG icon: {}, centered, hand-painted, glossy highlights, dark vignette background, thin dark beveled '
@@ -158,6 +160,16 @@ SECTIONS = [
         ('Alchemist Zosimos (Glutschlund, Rauchlabor)', 'npc_zosimos', 'Eccentric alchemist with wild white hair and brass goggles in a stained purple coat, holding a bubbling green flask'),
         ('Sternkundler Orlin (Leerenriss, Beobachtungsterrasse)', 'npc_orlin', 'Thin astronomer in a dark blue robe with star patterns and a pointed hood, holding a brass telescope'),
         ('Rissläuferin Vesna (Leerenriss, Rissläufer-Lager)', 'npc_vesna', 'Agile scout woman in dark teal leather armor with a hooded cape, holding a glowing violet compass'),
+    ]),
+    ('Gebietskarten', 'Hochformat 4:5. Die Karte, auf der du die Orte eines Gebiets antippst; bis dahin dient das Gebietsbild in Sepia.', MAP, [
+        ('Goldhain', 'bg_map_goldhain', 'a green forest valley with golden-leaved trees, farm fields, a walled town with blue roofs at the bottom and a dark wolf den in the hills at the top'),
+        ('Nebelmoor', 'bg_map_nebelmoor', 'a foggy swamp with stilt huts, reed islands, murky ponds and twisted trees, a village on dry land at the bottom and a sunken ruin at the top'),
+        ('Rotfels', 'bg_map_rotfels', 'a red rock canyon land with mesas, a caravan camp at the bottom, a wooden fort in the middle and an ogre stronghold at the top'),
+        ('Sonnenglutwüste', 'bg_map_sonnenglut', 'a golden sand desert with dunes, an excavation camp at the bottom, a palm oasis in the middle and a great pyramid at the top'),
+        ('Frostgipfel', 'bg_map_frostgipfel', 'snowy mountains with pine woods, a timber village at the bottom, a mountain pass with a watchtower and a frozen peak with an ice cave at the top'),
+        ('Schattenhain', 'bg_map_schattenhain', 'a haunted dark forest with dead trees, a small chapel at the bottom, a graveyard in the middle and a ruined castle at the top'),
+        ('Glutschlund', 'bg_map_glutschlund', 'a volcanic wasteland with lava rivers and black rock, a stone fortress at the bottom, a forge in the middle and an erupting crater at the top'),
+        ('Leerenriss', 'bg_map_leerenriss', 'shattered floating islands under a purple starry sky, an observatory tower at the bottom, crystal fields in the middle and a glowing violet rift at the top'),
     ]),
     ('Dungeon- und Raid-Hintergründe', 'Querformat 3:2 oder 16:9.', HALL, [
         ('Die Kobaltminen', 'bg_mine', 'Abandoned underground mine tunnel, wooden support beams, lanterns, glowing blue ore veins in the rock walls, rail tracks'),
