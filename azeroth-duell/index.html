@@ -1758,6 +1758,7 @@ document.addEventListener('pointerdown',e=>{
   if(pressMouse)return;
   tipShown=false;
   const action=el.hasAttribute('data-do')||el.hasAttribute('data-a');
+  if(!action){pressEl=null;return}
   const go=()=>{if(tipGo(el)){el.classList.add('hold');if(navigator.vibrate)try{navigator.vibrate(12)}catch(_){}}};
   if(action)tipTimer=setTimeout(go,330);else go();
 });
@@ -2449,7 +2450,7 @@ function bagScreen(back){
   mount(`<div class="scr bagscr"><div class="top"><button class="ib" data-a="${BAGBACK}">‹</button><h2>Rucksack</h2><button class="ib" data-a="camp">👤</button></div>
     <div class="bagres"><span>🎒 <b>${bagUsed()} / ${bagCap()}</b></span><span>🪙 <b>${S.gold}</b></span><span>◈ <b>${S.dust}</b></span><span>💠 <b>${S.shard}</b></span></div>
     <div class="baggrid" id="baggrid">${cells.join('')}</div>
-    <div class="baghint">Antippen = Details · Gedrückt halten und ziehen = wegwerfen<br>Anlegen kannst du Ausrüstung im Charakterfenster.</div>
+    <div class="baghint">Antippen oder darüberwischen = Details · Gedrückt halten und ziehen = wegwerfen<br>Anlegen kannst du Ausrüstung im Charakterfenster.</div>
     ${TRASH}</div>`,'leather');
 }
 function bagTipHTML(bi){
@@ -2470,18 +2471,17 @@ const trashEl=()=>$$('trashf')||$$('trash');
 function dragEnd(){clearTimeout(DR.timer);const tf=$$('trashf');if(tf)tf.parentNode.removeChild(tf);if(DR.ghost)DR.ghost.parentNode.removeChild(DR.ghost);if(DR.el)DR.el.classList.remove('lift');const t=$$('trash');if(t)t.classList.remove('hot','armed');DR.el=DR.ghost=null;DR.drag=false}
 const overTrash=e=>{const t=trashEl();if(!t)return false;const r=t.getBoundingClientRect();return e.clientY>=r.top-10&&e.clientX>=r.left&&e.clientX<=r.right};
 document.addEventListener('pointerdown',e=>{
-  if(DR.tip){hideTip();DR.tip=false}
   const el=e.target.closest('[data-bi]');if(!el)return;
   dragEnd();DR.el=el;DR.x=e.clientX;DR.y=e.clientY;
   DR.timer=setTimeout(()=>{
-    if(!DR.el)return;DR.drag=true;el.classList.add('lift');
+    if(!DR.el)return;DR.drag=true;SC.on=false;SC.keep=false;hideTip();el.classList.add('lift');
     const r=el.getBoundingClientRect(),g=el.cloneNode(true);g.className+=' ghost';g.style.cssText+=`;width:${r.width}px;height:${r.height}px;left:${DR.x}px;top:${DR.y}px`;
     document.body.appendChild(g);DR.ghost=g;
     const t0=$$('trash'),tr=t0.getBoundingClientRect();
     if(tr.bottom>innerHeight-4||tr.top<0){const f=t0.cloneNode(true);f.id='trashf';f.classList.add('float');document.body.appendChild(f)}
     trashEl().classList.add('armed');
     if(navigator.vibrate)try{navigator.vibrate(15)}catch(_){}
-  },260);
+  },420);
 });
 document.addEventListener('pointermove',e=>{
   if(!DR.el)return;
@@ -2492,9 +2492,33 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',e=>{
   const el=DR.el;if(!el)return;const was=DR.drag,bi=el.dataset.bi,hit=was&&overTrash(e);dragEnd();
   if(hit)return bagTrash(bi);
-  if(!was){const h=bagTipHTML(bi);if(h)setTimeout(()=>{showTip(h,el);DR.tip=true;SFX.ui()},30)}
 });
 document.addEventListener('pointercancel',dragEnd);
+// Mit dem Finger über Gegenstände wischen: Details folgen dem Finger
+const SC={on:false,el:null,t0:0,moved:false,keep:false};
+const tipFor=el=>el.dataset.bi?bagTipHTML(el.dataset.bi):resolveTip(el);
+const scrubAt=(x,y)=>{const e=document.elementFromPoint(x,y);return e?e.closest('[data-bi],[data-tip]'):null};
+function scrubShow(el){SC.el=el;const h=el&&tipFor(el);if(h)showTip(h,el);else hideTip()}
+document.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse')return;
+  const el=e.target.closest('[data-bi],[data-tip]');
+  if(SC.keep){SC.keep=false;hideTip()}
+  if(!el||(!el.dataset.bi&&(el.hasAttribute('data-do')||el.hasAttribute('data-a'))))return;
+  SC.on=true;SC.t0=performance.now();SC.moved=false;scrubShow(el);
+});
+document.addEventListener('pointermove',e=>{
+  if(!SC.on||e.pointerType==='mouse'||DR.drag)return;
+  const t=scrubAt(e.clientX,e.clientY);
+  if(t!==SC.el){SC.moved=true;scrubShow(t)}
+});
+const scrubEnd=()=>{
+  if(!SC.on)return;SC.on=false;
+  if(!SC.moved&&SC.el&&performance.now()-SC.t0<350)SC.keep=true;else hideTip();
+};
+document.addEventListener('pointerup',scrubEnd);
+// Beim Ziehen/Wischen keine Browser-Gesten (sonst wird der nächste Tipp als Wisch-Stopp verschluckt)
+document.addEventListener('touchmove',e=>{if(DR.drag||DR.el||SC.on)e.preventDefault()},{passive:false});
+document.addEventListener('pointercancel',scrubEnd);
 function questLog(){
   const rows=WORLD.map((W,z)=>{if(S.lvl<ZREQ[z])return'';
     return[0,1,2].map(g=>{const q=qInfo(z,g),def=q.def;if(!def)return'';
