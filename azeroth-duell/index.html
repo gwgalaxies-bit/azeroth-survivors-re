@@ -827,7 +827,13 @@ button.mrow:active{transform:translateY(2px);box-shadow:0 1px 0 #5a3a10aa}
 .bagpane .trash{margin:0 8px 8px;padding:7px}.bagpane .trash span{font-size:20px}
 .bagpane .ico::before{inset:-5px}
 .trash.float{position:fixed;left:max(10px,calc(50vw - 230px));right:max(10px,calc(50vw - 230px));bottom:10px;margin:0;z-index:75;box-shadow:0 0 30px #000}
-#lootbox .bagpane .baggrid{grid-template-columns:repeat(auto-fill,minmax(46px,1fr));--bs:40px;gap:10px 4px}
+/* neuer Leder-Rucksack auch im Kampf und bei der Beute */
+.bagbox{border:16px solid transparent;border-image:var(--i-bag-frame) 12% fill/16px stretch;background:#2a180d;box-shadow:0 6px 16px #000c;border-radius:0;padding:4px 0 0}
+#lootbox .bagpane{border:12px solid transparent;border-image:var(--i-bag-frame) 12% fill/12px stretch;background:#2a180d;border-radius:0;box-shadow:0 4px 10px #000a;padding:4px 0 0}
+.bagpane .baggrid{--bc:4;gap:10px 8px;padding:12px 8px;margin:0 4px;background:#0000002e;border:2px solid #1a0e06;box-shadow:inset 0 0 18px #000c,0 1px 0 #ffffff12;justify-content:center}
+.bagbox .baggrid{--bs:min(calc((100vw - 150px) / 4),66px)}
+#lootbox .bagpane .baggrid{--bs:min(calc((100vw - 190px) / 4),58px)}
+.bagpane .bagres{background:#00000066}
 /* ---- Pergament-Theme (Menüs) ---- */
 #app.lite{--txt:#3a2410;--mut:#6a4f2e;--parch:#3a2410;--gold:#7a1f12;--gold2:#8a5a1c;--gold3:#7a5420;color:var(--txt)}
 .lite .top h2{color:#7a1f12;text-shadow:0 1px 0 #fff8}
@@ -2449,7 +2455,7 @@ function bagCells(){
 const TRASH='<div class="trash" id="trash"><span>🗑</span><b>Wegschmeißen</b><small>Teil hierher ziehen</small></div>';
 // Rucksack als Einblendung (Kampf, Beute)
 const bagPane=()=>`<div class="bagpane"><div class="bagres"><span>🎒 <b>${bagUsed()} / ${bagCap()}</b></span><span>🪙 <b>${S.gold}</b></span><span>◈ <b>${S.dust}</b></span><span>💠 <b>${S.shard}</b></span></div>
-  <div class="baggrid">${bagCells().join('')}</div><div class="baghint">Antippen = Details · Gedrückt halten und ziehen = wegwerfen</div>${TRASH}</div>`;
+  <div class="baggrid">${bagCells().join('')}</div><div class="baghint">Antippen oder darüberwischen = Details · Halten und ziehen = wegwerfen</div>${TRASH}</div>`;
 function bagScreen(back){
   if(back)BAGBACK=back;hero=heroUnit(S);B=null;
   const cells=bagCells();
